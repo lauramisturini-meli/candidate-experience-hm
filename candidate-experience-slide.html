@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Candidate Experience | TA Transportes Brasil</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --brand-dark: #333333;
+    --brand-yellow: #FFDB00;
+    --brand-yellow-soft: #fff7cc;
+    --ink: #333333;
+    --ink-soft: #666;
+    --ink-muted: #999;
+    --divider: #ececec;
+    --surface: #ffffff;
+    --surface-alt: #fafafa;
+    --success: #00a650;
+    --danger: #e53935;
+    --danger-deep: #c62828;
+  }
+
+  body {
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #f0f1f4;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 28px;
+    min-height: 100vh;
+    color: var(--ink);
+  }
+
+  .slide {
+    width: 1120px;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  /* ===== Branded header ===== */
+  .brand-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 32px;
+    background: var(--brand-dark);
+    color: #fff;
+    border-bottom: 4px solid var(--brand-yellow);
+  }
+  .brand-logo {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: center;
+  }
+  .brand-logo img,
+  .brand-logo svg { height: 100%; width: auto; display: block; }
+  .brand-logo .logo-fallback {
+    display: none;
+    font-weight: 900; font-size: 18px; letter-spacing: 0.5px;
+    color: var(--brand-yellow); text-transform: lowercase;
+    padding: 6px 14px; border-radius: 22px;
+    background: rgba(255,219,0,0.08); border: 1px solid var(--brand-yellow);
+  }
+  .brand-logo img.broken + .logo-fallback { display: inline-block; }
+  .brand-logo img.broken { display: none; }
+  .brand-titles { display: flex; flex-direction: column; gap: 2px; }
+  .brand-title {
+    font-size: 16px; font-weight: 800; letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .brand-sub {
+    font-size: 10.5px; color: var(--brand-yellow);
+    font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .brand-spacer { flex: 1; }
+  .brand-pill {
+    background: rgba(255,219,0,0.12); color: var(--brand-yellow);
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; padding: 6px 14px; border-radius: 20px;
+    border: 1px solid rgba(255,219,0,0.3);
+  }
+
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--divider);
+    background: var(--surface);
+    padding: 0 24px;
+  }
+  .tab-btn {
+    background: none; border: none;
+    border-bottom: 3px solid transparent;
+    padding: 14px 20px 11px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--ink-muted); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--brand-yellow); }
+  .tab-btn .tab-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #ccc; margin-left: 6px; vertical-align: middle;
+  }
+  .tab-btn.has-data .tab-dot { background: #00a650; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-tag {
+    display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
+    font-size: 11px; font-weight: 800;
+    padding: 6px 16px; margin: 22px 0 0 32px;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    border-radius: 4px;
+  }
+  .section-tag.gray { background: #666; color: #fff; }
+
+  .tab-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 32px 0 32px;
+    gap: 12px;
+  }
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand-dark); color: var(--brand-yellow);
+    border: none; padding: 8px 16px; border-radius: 20px;
+    font-size: 10.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.08s;
+  }
+  .upload-btn:hover { background: #444; }
+  .upload-btn:active { transform: translateY(1px); }
+  .upload-btn.secondary {
+    background: #fff; color: var(--brand-dark); border: 1px solid #ddd;
+  }
+  .upload-btn.secondary:hover { background: #f7f7f7; border-color: #bbb; }
+  .upload-btn[disabled] { opacity: 0.5; cursor: wait; }
+  .upload-hint { font-size: 11px; color: var(--ink-soft); }
+
+  .main {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    padding: 0; min-height: 520px;
+  }
+  .col-left { padding: 20px 32px 24px 32px; border-right: 1px solid #ddd; }
+
+  .data-headline {
+    font-size: 13px; font-weight: 800;
+    color: #333333; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 16px;
+  }
+
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+  .kpi-box {
+    border: 1px solid var(--divider); border-radius: 10px;
+    padding: 16px 14px; text-align: center;
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .kpi-box:hover { border-color: #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .kpi-box .kpi-val { font-size: 32px; font-weight: 900; line-height: 1.05; }
+  .kpi-box .kpi-label { font-size: 10px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+  .kpi-box .kpi-sub { font-size: 9.5px; color: var(--ink-muted); margin-top: 2px; }
+
+  .kpi-total { border-left: 3px solid var(--brand-yellow); }
+  .kpi-total .kpi-val   { color: var(--brand-dark); }
+  .kpi-fav   { border-left: 3px solid var(--success); }
+  .kpi-fav   .kpi-val   { color: var(--success); }
+  .kpi-desfav { border-left: 3px solid var(--danger); }
+  .kpi-desfav .kpi-val  { color: var(--danger); }
+  .kpi-detrac .kpi-val  { color: var(--danger-deep); }
+
+  .detractor-callout {
+    background: #fff6f6; border: 1px solid #ffcdd2;
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 22px;
+  }
+  .detractor-callout .dc-title { font-size: 10.5px; font-weight: 800; color: var(--danger-deep); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .detractor-callout .dc-text { font-size: 11.5px; color: var(--ink); line-height: 1.55; }
+
+  .dim-section-title {
+    font-size: 11px; font-weight: 800; color: var(--brand-dark);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--brand-yellow);
+    display: inline-block;
+  }
+  .dim-table { width: 100%; border-collapse: collapse; }
+  .dim-table td { padding: 8px 10px; font-size: 11.5px; border-bottom: 1px solid var(--divider); }
+  .dim-table td:first-child { padding-left: 0; }
+  .dim-table td:last-child  { padding-right: 0; }
+  .dim-table tr:last-child td { border-bottom: none; }
+  .dim-table .dim-name { color: var(--ink); width: 46%; }
+  .dim-table .dim-fav  { color: var(--success); font-weight: 800; text-align: center; width: 27%; }
+  .dim-table .dim-desf { color: var(--danger); font-weight: 800; text-align: center; width: 27%; }
+  .dim-table thead td  { font-size: 9.5px; font-weight: 800; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.6px; padding-bottom: 8px; border-bottom: 1px solid var(--divider); }
+  .dim-highlight { background: var(--brand-yellow-soft); }
+
+  .col-right { padding: 22px 32px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .insight-title {
+    font-size: 13px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 10px;
+    padding-bottom: 6px; border-bottom: 2px solid;
+    display: inline-block;
+  }
+  .insight-title.highs   { color: var(--success); border-color: var(--success); }
+  .insight-title.lows    { color: var(--danger); border-color: var(--danger); }
+  .insight-title.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
+  .insight-list { list-style: none; padding: 0; }
+  .insight-list li { font-size: 11.5px; color: var(--ink); line-height: 1.55; padding: 4px 0; padding-left: 16px; position: relative; }
+  .insight-list li::before { content: ""; position: absolute; left: 0; top: 11px; width: 7px; height: 7px; border-radius: 50%; }
+  .insight-list.highs-list   li::before { background: var(--success); }
+  .insight-list.lows-list    li::before { background: var(--danger); }
+  .insight-list.actions-list li::before { background: var(--brand-yellow); border: 1px solid #e8c400; }
+  .insight-list li strong { font-weight: 800; }
+
+  .footer {
+    border-top: 1px solid var(--divider); padding: 12px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface-alt);
+  }
+  .footer-text { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }
+  .footer-badge {
+    background: var(--brand-yellow); color: var(--brand-dark);
+    font-size: 9.5px; font-weight: 800; padding: 4px 12px;
+    letter-spacing: 0.8px; border-radius: 3px;
+  }
+
+  .skeleton-panel {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 520px; gap: 16px; color: #bbb; padding: 40px;
+  }
+  .skeleton-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 3px dashed #ddd; display: flex; align-items: center;
+    justify-content: center; font-size: 22px;
+  }
+  .skeleton-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #ccc; }
+  .skeleton-sub { font-size: 11px; color: #bbb; text-align: center; max-width: 380px; line-height: 1.6; }
+  .skeleton-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 600px; margin-top: 8px; }
+  .skeleton-kpi { border: 1px dashed #e0e0e0; border-radius: 6px; padding: 16px 10px; text-align: center; }
+  .skeleton-kpi .sk-val { font-size: 26px; font-weight: 900; color: #ddd; }
+  .skeleton-kpi .sk-label { font-size: 9px; color: #ccc; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .pdf-pill-list {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    max-width: 70%;
+  }
+  .pdf-pill {
+    display: inline-flex; align-items: center;
+    background: #f5f5f5; border: 1px solid var(--divider);
+    border-radius: 14px; font-size: 10px; padding: 3px 4px 3px 4px;
+    gap: 5px; color: var(--ink); max-width: 260px;
+  }
+  .pdf-pill .pill-range {
+    background: var(--brand-dark); color: var(--brand-yellow);
+    font-weight: 800; font-size: 9px; padding: 2px 6px; border-radius: 8px;
+    letter-spacing: 0.3px; white-space: nowrap;
+  }
+  .pdf-pill .pill-range.all { background: var(--success); color: #fff; }
+  .pdf-pill .pill-range.low { background: var(--danger-deep); color: #fff; }
+  .pdf-pill .pill-range.high { background: var(--success); color: #fff; }
+  .pdf-pill .pill-name {
+    max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pdf-pill .pill-remove {
+    background: none; border: none; cursor: pointer;
+    color: #999; font-size: 14px; line-height: 1;
+    padding: 0 4px;
+  }
+  .pdf-pill .pill-remove:hover { color: #c62828; }
+  .pdf-pill .pill-n { color: #888; font-size: 9.5px; }
+
+  .status-bar {
+    padding: 6px 32px; font-size: 10.5px;
+    border-bottom: 1px solid #eee; background: #fafafa;
+    display: none;
+  }
+  .status-bar.show { display: block; }
+  .status-bar.error { background: #fff3f3; color: #c62828; border-color: #ffcdd2; }
+  .status-bar.success { background: #f1f8f3; color: #00a650; border-color: #c8e6c9; }
+  .status-bar.loading { background: #fffde7; color: #8a6d00; border-color: #ffe082; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand-header">
+    <div class="brand-logo">
+      <img src="./assets/logo.png" alt="Mercado Livre"
+           onerror="this.classList.add('broken')">
+      <span class="logo-fallback">mercado livre</span>
+    </div>
+    <div class="brand-titles">
+      <div class="brand-title">KPIs TA Transportes 2026</div>
+    </div>
+    <div class="brand-spacer"></div>
+    <div class="brand-pill">Talent Acquisition</div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="ytd">YTD<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="actual">Actual Date<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="internal">Internal Candidate<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="hm">Hiring Manager<span class="tab-dot"></span></button>
+  </div>
+
+  <div id="tab-ytd" class="tab-panel active"></div>
+  <div id="tab-actual" class="tab-panel"></div>
+  <div id="tab-internal" class="tab-panel"></div>
+  <div id="tab-hm" class="tab-panel"></div>
+</div>
+
+<input type="file" id="pdf-file-input" accept="application/pdf" multiple style="display:none">
+
+<script>
+/* ==================================================================
+ * PDF.js worker config
+ * ================================================================== */
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ==================================================================
+ * Tab metadata
+ * ================================================================== */
+const TAB_META = {
+  ytd:      { label: 'YTD',                     section: 'External Candidate Experience', sectionColor: 'black' },
+  actual:   { label: 'Actual Date',             section: 'External Candidate Experience', sectionColor: 'black' },
+  internal: { label: 'Internal Candidate',      section: 'Internal Candidate Experience', sectionColor: 'gray'  },
+  hm:       { label: 'Hiring Manager',          section: 'Hiring Manager Experience',     sectionColor: 'gray'  }
+};
+
+/* ==================================================================
+ * Tab data store — each tab holds an array of parsed PDFs.
+ * Empty pdfs array → skeleton state.
+ * ================================================================== */
+const tabsData = {
+  ytd:      { pdfs: [] },
+  actual:   { pdfs: [] },
+  internal: { pdfs: [] },
+  hm:       { pdfs: [] }
+};
+
+/* ==================================================================
+ * Tab switching
+ * ================================================================== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ==================================================================
+ * Renderer — given tabId, render current tab state (skeleton or full)
+ * ================================================================== */
+function renderTab(tabId, status) {
+  const container = document.getElementById('tab-' + tabId);
+  const tabState = tabsData[tabId];
+  const meta = TAB_META[tabId];
+  const statusHtml = status ? `<div class="status-bar show ${status.type}">${escapeHtml(status.msg)}</div>` : '';
+
+  if (!tabState.pdfs.length) {
+    container.innerHTML = `
+      ${statusHtml}
+      <div class="section-tag ${meta.sectionColor === 'gray' ? 'gray' : ''}">${escapeHtml(meta.section)}</div>
+      <div class="tab-toolbar">
+        <div class="upload-hint">Faça upload de um ou mais PDFs do Qualtrics (inclusive filtrados por nota) para preencher esta aba.</div>
+        <button class="upload-btn" onclick="triggerUpload('${tabId}')">⬆ Upload PDF(s)</button>
+      </div>
+      <div class="skeleton-panel">
+        <div class="skeleton-icon">&#9881;</div>
+        <div class="skeleton-title">${escapeHtml(meta.section)}</div>
+        <div class="skeleton-sub">
+          Exporte o dashboard do Qualtrics em PDF e carregue aqui.<br>
+          Aceita múltiplos PDFs — ex.: um geral + um filtrado 1–2 (detratores) + um 3 (neutros) + um 4–5 (promotores).<br>
+          KPIs, dimensões e Highs/Lows/Actions são gerados automaticamente.
+        </div>
+        <div class="skeleton-grid">
+          <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Respostas</div></div>
+          <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Favorabilidade</div></div>
+          <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Neutros</div></div>
+          <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Desfavorabilidade</div></div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="footer-text">${escapeHtml(meta.section)} · TA Transportes Brasil · Aguardando dados</div>
+      </div>`;
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.remove('has-data');
+    return;
+  }
+
+  document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('has-data');
+
+  const data = buildMergedView(tabState.pdfs, tabId);
+
+  const dimRows = data.dimensions.map(d => {
+    const isWorst = d.name === data.worstDimensionName;
+    return `<tr${isWorst ? ' class="dim-highlight"' : ''}>
+      <td class="dim-name">${isWorst ? '<strong>' : ''}${escapeHtml(d.name)}${isWorst ? ' ⚠</strong>' : ''}</td>
+      <td class="dim-fav">${escapeHtml(d.fav)}</td>
+      <td class="dim-desf">${isWorst ? '<strong>' + escapeHtml(d.desfav) + '</strong>' : escapeHtml(d.desfav)}</td>
+    </tr>`;
+  }).join('');
+
+  const highsHtml  = data.highs.map(h => `<li>${h}</li>`).join('');
+  const lowsHtml   = data.lows.map(l => `<li>${l}</li>`).join('');
+  const actionsHtml= data.actions.map(a => `<li>${a}</li>`).join('');
+
+  const pillsHtml = tabState.pdfs.map((pdf, idx) => {
+    const range = pdf.overallRange || 'ALL';
+    const rangeClass = range === 'ALL' ? 'all'
+                     : /^1/.test(range) ? 'low'
+                     : /5$/.test(range) ? 'high' : '';
+    const diag = `${pdf.fileName}\nRespostas: ${pdf.respostas ?? '?'} · Favorabilidade: ${pdf.fav} · Desfavorabilidade: ${pdf.desfav}\nComentários extraídos: ${pdf.comments.length}`;
+    return `<span class="pdf-pill" title="${escapeHtml(diag)}">
+      <span class="pill-range ${rangeClass}">${escapeHtml(range)}</span>
+      <span class="pill-name">${escapeHtml(pdf.fileName)}</span>
+      <span class="pill-n">n=${escapeHtml(String(pdf.respostas || '?'))} · ${pdf.comments.length}💬</span>
+      <button class="pill-remove" onclick="removePdf('${tabId}', ${idx})" title="Remover">×</button>
+    </span>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${statusHtml}
+    <div class="section-tag ${meta.sectionColor === 'gray' ? 'gray' : ''}">${escapeHtml(meta.section)}</div>
+    <div class="tab-toolbar">
+      <div class="pdf-pill-list">${pillsHtml}</div>
+      <div>
+        <button class="upload-btn secondary" onclick="resetTab('${tabId}')">↺ Resetar</button>
+        <button class="upload-btn" onclick="triggerUpload('${tabId}')">⬆ Adicionar PDF</button>
+      </div>
+    </div>
+    <div class="tab-toolbar" style="padding-top:4px;">
+      <div class="upload-hint">Período: <strong>${escapeHtml(data.periodLabel)}</strong></div>
+    </div>
+    <div class="main">
+      <div class="col-left">
+        <div class="kpi-grid">
+          <div class="kpi-box kpi-total">
+            <div class="kpi-val">${escapeHtml(String(data.kpis.respostas))}</div>
+            <div class="kpi-label">Respostas</div>
+          </div>
+          <div class="kpi-box kpi-fav">
+            <div class="kpi-val">${escapeHtml(data.kpis.favorabilidade)}</div>
+            <div class="kpi-label">Favorabilidade</div>
+          </div>
+          <div class="kpi-box" style="border-color:#ffe082;">
+            <div class="kpi-val" style="color:#c08000;">${escapeHtml(data.kpis.neutros)}</div>
+            <div class="kpi-label">Neutros</div>
+            <div class="kpi-sub">${escapeHtml(data.kpis.neutrosSub)}</div>
+          </div>
+          <div class="kpi-box kpi-desfav">
+            <div class="kpi-val">${escapeHtml(data.kpis.desfavorabilidade)}</div>
+            <div class="kpi-label">Desfavorabilidade</div>
+          </div>
+        </div>
+        ${tabId === 'hm' ? '' : `
+        <div class="detractor-callout">
+          <div class="dc-title">Detratores (notas 1–2)</div>
+          <div class="dc-text">${data.detractorHtml}</div>
+        </div>`}
+        <div class="dim-section-title">Favorabilidade por Dimensão</div>
+        <table class="dim-table">
+          <thead><tr>
+            <td class="dim-name">Dimensão</td>
+            <td class="dim-fav">Favorabilidade</td>
+            <td class="dim-desf">Desfavorabilidade</td>
+          </tr></thead>
+          <tbody>${dimRows}</tbody>
+        </table>
+      </div>
+      <div class="col-right">
+        <div class="insight-block">
+          <div class="insight-title highs">Highs</div>
+          <ul class="insight-list highs-list">${highsHtml}</ul>
+        </div>
+        <div class="insight-block">
+          <div class="insight-title lows">Lows</div>
+          <ul class="insight-list lows-list">${lowsHtml}</ul>
+        </div>
+        <div class="insight-block">
+          <div class="insight-title actions">Actions</div>
+          <ul class="insight-list actions-list">${actionsHtml}</ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="footer-text">${escapeHtml(meta.section)} · TA Transportes Brasil · ${escapeHtml(data.periodLabel)}</div>
+    </div>`;
+}
+
+function resetTab(tabId) {
+  tabsData[tabId] = { pdfs: [] };
+  renderTab(tabId);
+}
+
+function removePdf(tabId, idx) {
+  tabsData[tabId].pdfs.splice(idx, 1);
+  renderTab(tabId);
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+/* ==================================================================
+ * Initial render: all tabs start as skeleton
+ * ================================================================== */
+['ytd','actual','internal','hm'].forEach(id => renderTab(id));
+
+/* ==================================================================
+ * Upload pipeline
+ * ================================================================== */
+let currentUploadTab = null;
+const fileInput = document.getElementById('pdf-file-input');
+
+function triggerUpload(tabId) {
+  currentUploadTab = tabId;
+  fileInput.value = '';
+  fileInput.click();
+}
+
+fileInput.addEventListener('change', async (ev) => {
+  const files = Array.from(ev.target.files || []);
+  if (!files.length || !currentUploadTab) return;
+  const tabId = currentUploadTab;
+
+  let added = 0;
+  let totalComments = 0;
+  for (const file of files) {
+    renderTab(tabId, { type: 'loading', msg: `Processando "${file.name}"… (${added + 1}/${files.length})` });
+    try {
+      const extracted = await extractPdfText(file);
+      const parsed = isHmReport(extracted.fullText)
+        ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
+        : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
+      parsed.fileName = file.name;
+      tabsData[tabId].pdfs.push(parsed);
+      added++;
+      totalComments += parsed.comments.length;
+    } catch (err) {
+      console.error(err);
+      renderTab(tabId, { type: 'error', msg: `Erro em "${file.name}": ${err.message}` });
+      return;
+    }
+  }
+
+  renderTab(tabId, {
+    type: 'success',
+    msg: `✓ ${added} PDF(s) processado(s) — ${totalComments} comentários somados. Total carregado: ${tabsData[tabId].pdfs.length}.`
+  });
+  setTimeout(() => { if (tabsData[tabId].pdfs.length) renderTab(tabId); }, 4500);
+});
+
+async function extractPdfText(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const pageTexts = [];
+  const positionalPages = [];
+  let fullText = '';
+  let positionalFullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    const pageText = tc.items.map(it => it.str).join('\n');
+    pageTexts.push(pageText);
+    fullText += '\n' + pageText;
+
+    // Positional view: sort items by (y desc, x asc) so text reads in visual order
+    const items = tc.items.filter(it => it.str && it.transform);
+    items.sort((a, b) => {
+      const yDiff = b.transform[5] - a.transform[5];
+      if (Math.abs(yDiff) > 3) return yDiff;
+      return a.transform[4] - b.transform[4];
+    });
+    let posText = '';
+    let lastY = null;
+    for (const it of items) {
+      const y = it.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 3) posText += '\n';
+      else if (posText && !/\s$/.test(posText)) posText += ' ';
+      posText += it.str;
+      lastY = y;
+    }
+    positionalPages.push(posText);
+    positionalFullText += '\n' + posText;
+  }
+  return { fullText, pageTexts, positionalFullText, positionalPages };
+}
+
+/* ==================================================================
+ * HM report detection + dedicated parser
+ * The HM dashboard export uses a different structure than the candidate
+ * survey — single-question donut, no fav/desfav breakdown, no 1-5 rating
+ * filters. So we detect HM PDFs and parse with a simpler, HM-specific
+ * extractor.
+ * ================================================================== */
+function isHmReport(fullText) {
+  return /Respuestas\s+acumuladas/i.test(fullText)
+      || /El\s+equipo\s+de\s+TA\s+contribuy/i.test(fullText)
+      || /Hiring\s+Manager\s+Experience/i.test(fullText);
+}
+
+const HM_QUESTIONS = [
+  { name: 'Visibilidade sobre o avanço do processo',                       keyword: /Tuve\s+visibilidad/i,           isOverall: false },
+  { name: 'Perfis avaliados alinhados ao perfil definido',                 keyword: /Los\s+perfiles\s+evaluados/i,   isOverall: false },
+  { name: 'Recomendações de valor do time de TA durante o processo',       keyword: /recomendaciones\s+de\s+valor/i, isOverall: false },
+  { name: 'TA contribuiu ativamente na identificação do melhor talento',   keyword: /El\s+equipo\s+de\s+TA/i,        isOverall: true  }
+];
+
+// Find the first "NN%" that appears AFTER a given text position.
+function findPercentAfter(text, startIdx, windowSize) {
+  const slice = text.slice(startIdx, startIdx + (windowSize || 2500));
+  const m = slice.match(/(\d{1,3})\s*%/);
+  if (!m) return null;
+  const val = parseInt(m[1], 10);
+  return (isNaN(val) || val > 100) ? null : val;
+}
+
+function parseHmReport(fullText, pageTexts) {
+  // Strip accents so regex matching is resilient to pdf.js rendering quirks
+  const normText = fullText.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  // Helper: find first NN% after a given index, within a window
+  const pctAfter = (idx, win) => {
+    const slice = normText.slice(idx, idx + (win || 1200));
+    const m = slice.match(/(\d{1,3})\s*%/);
+    if (!m) return null;
+    const v = parseInt(m[1], 10);
+    return (isNaN(v) || v > 100) ? null : v;
+  };
+  // Helper: find first bare integer (no %) after a given index, within a window
+  const numAfter = (idx, win) => {
+    const slice = normText.slice(idx, idx + (win || 400));
+    const m = slice.match(/\b(\d{1,6})\b(?!\s*%)/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  // === 1) Respostas — from "Respuestas acumuladas" block ===
+  let respostas = null;
+  const respIdx = normText.search(/Respuestas\s+acumuladas/i);
+  if (respIdx !== -1) {
+    respostas = numAfter(respIdx + 'Respuestas acumuladas'.length, 300);
+  }
+
+  // === 2) Dimensions — each HM question has a % next to it ===
+  const dimensions = [];
+  let overallFav = null;
+  for (const q of HM_QUESTIONS) {
+    const km = q.keyword.exec(normText);
+    if (!km) continue;
+    const pct = pctAfter(km.index + km[0].length, 1500);
+    if (pct == null) continue;
+    dimensions.push({ name: q.name, fav: pct + '%', desfav: (100 - pct) + '%' });
+    if (q.isOverall) overallFav = pct;
+  }
+
+  // Overall favorability comes from the "El equipo de TA contribuyó..." block
+  if (overallFav == null && dimensions.length) {
+    const pcts = dimensions.map(d => parseInt(d.fav, 10)).filter(v => !isNaN(v));
+    if (pcts.length) overallFav = Math.max(...pcts);
+  }
+
+  const fav = overallFav != null ? overallFav + '%' : null;
+  const desfav = fav ? '0%' : null;
+
+  // === 3) Comments — from "¿Qué aspectos positivos y qué áreas de oportunidad destacas?" ===
+  const comments = [];
+  // Normalized version for section anchor, but we operate on original text (with accents) for display
+  const rawText = fullText;
+  const rawNorm = rawText.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const sectionAnchor = rawNorm.search(/Que\s+aspectos\s+positivos/i);
+
+  if (sectionAnchor !== -1) {
+    // Operate on the slice from the section onward in the original (accented) text
+    const sectionText = rawText.slice(sectionAnchor);
+    const sectionNorm = rawNorm.slice(sectionAnchor);
+
+    // Each entry looks like:  Shipping\n<email>\n<free text>
+    // until the next "Shipping" or end of the feedback block.
+    // We split by "Shipping" label, which in the positional text comes on its own line.
+    const blocks = sectionText.split(/\n\s*Shipping\s*\n/i);
+    // blocks[0] is the pre-label content (the question header); skip it.
+    for (let i = 1; i < blocks.length; i++) {
+      const block = blocks[i];
+      const emailMatch = block.match(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+)/);
+      if (!emailMatch) continue;
+      const emailIdx = emailMatch.index + emailMatch[0].length;
+      const tail = block.slice(emailIdx);
+      // Stop at the next section marker if present
+      const stop = tail.search(/\n\s*(¿|Pregunta|Respuestas\s+acumuladas|Sin\s+cambio|P\u00E1gina)/i);
+      const raw = stop !== -1 ? tail.slice(0, stop) : tail;
+      const text = raw.replace(/\s+/g, ' ').trim();
+      if (text.length < 5) continue;
+      const email = emailMatch[1];
+      const name = email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+      comments.push({ score: 5, name, text });
+    }
+
+    // Fallback: if "Shipping"-based split failed, collect email + subsequent text
+    if (!comments.length) {
+      const emailRegex = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+)/g;
+      const hits = [];
+      let em;
+      while ((em = emailRegex.exec(sectionText)) !== null) hits.push({ email: em[1], idx: em.index });
+      for (let i = 0; i < hits.length; i++) {
+        const start = hits[i].idx + hits[i].email.length;
+        const end = i + 1 < hits.length ? hits[i+1].idx : Math.min(start + 2000, sectionText.length);
+        const raw = sectionText.slice(start, end);
+        const text = raw.replace(/\s+/g, ' ').trim();
+        if (text.length < 10) continue;
+        const name = hits[i].email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+        comments.push({ score: 5, name, text });
+      }
+    }
+  }
+
+  console.debug('[parseHmReport]', {
+    respostas, fav, desfav,
+    dimensions: dimensions.length,
+    comments: comments.length,
+    hasRespBlock: respIdx !== -1,
+    hasCommentsSection: sectionAnchor !== -1,
+    textPreview: normText.slice(0, 600)
+  });
+
+  return {
+    respostas,
+    fav,
+    desfav,
+    dimensions,
+    comments,
+    filters: {},
+    overallRange: 'ALL',
+    periodLabel: '2026',
+    isHm: true
+  };
+}
+
+/* ==================================================================
+ * Qualtrics parser
+ * ================================================================== */
+function parseQualtricsReport(fullText, pageTexts) {
+  const firstPage = pageTexts[0] || '';
+
+  // 1) Cantidad de Respuestas — try a few shapes
+  let respostas = null;
+  const respPatterns = [
+    /Cantidad de\s*\n?\s*Respuestas[\s\S]*?\n\s*(\d{1,6})\s*\n/,
+    /Cantidad de\s+Respuestas[\s\S]{0,200}?(\d{1,6})/,
+    /Respuestas[\s\S]{0,80}?\n(\d{1,6})\b/
+  ];
+  for (const re of respPatterns) {
+    const m = firstPage.match(re);
+    if (m) { respostas = parseInt(m[1], 10); break; }
+  }
+
+  // 2) Favorabilidad / Desfavorabilidad (multi-strategy)
+  const { fav, desfav } = extractFavDesfav(firstPage);
+
+  // 3) Dimensions — 5 rows with fav/desfav
+  const dimensions = extractDimensions(firstPage);
+
+  // 4) Filters
+  const filters = extractFilters(firstPage);
+
+  // 5) Comments from all pages — with fallback
+  let comments = extractComments(fullText);
+  if (!comments.length) comments = extractCommentsLoose(fullText);
+
+  const out = {
+    respostas,
+    fav: fav || '—',
+    desfav: desfav || '—',
+    dimensions,
+    filters,
+    comments,
+    overallRange: normalizeOverallRange(filters)
+  };
+
+  // Diagnostic — helps when a new PDF layout shows up
+  console.debug('[parseQualtricsReport]', {
+    respostas: out.respostas, fav: out.fav, desfav: out.desfav,
+    dimensions: out.dimensions.length, comments: out.comments.length,
+    overallRange: out.overallRange,
+    firstPagePreview: firstPage.slice(0, 400)
+  });
+
+  return out;
+}
+
+/* ---------- Fav / Desfav extraction (multi-strategy) ---------------
+ * pdf.js text extraction is authoring-dependent. For Qualtrics donut
+ * charts we've seen two shapes in the wild:
+ *
+ *   (A) Concatenated: the center value and label chars arrive in ONE
+ *       token, interleaved — e.g. "9Fav6orabi%lidad" (=96%),
+ *       "F0avora%bilidad" (=0%), "5Desfa0vorab%ilidad" (=50%).
+ *
+ *   (B) Separated: the value is one token and the label another —
+ *       "96%" on one line, "Favorabilidad" on the next (or the reverse).
+ *
+ * Critically in (A), a desfav token may start with a digit (not "de"),
+ * so we classify by letters-only prefix, not by the raw string start.
+ * For (B), we locate the label token and scan neighbours for a bare %.
+ * Scale labels (0%, 30%, 70%, 100% for fav / 0%, 20%, 50%, 100% for
+ * desfav) are filtered out — we pick the CLOSEST percentage, since the
+ * center value is authored adjacent to its label in the PDF stream. */
+function extractFavDesfav(pageText) {
+  const tokens = pageText.split(/\s+/).filter(Boolean);
+  let fav = null, desfav = null;
+
+  const setValue = (kind, val) => {
+    if (!val) return;
+    if (kind === 'fav' && fav == null) fav = val;
+    else if (kind === 'desfav' && desfav == null) desfav = val;
+  };
+
+  // Pass 1 — concatenated tokens: strip the keyword letters and keep the rest
+  for (const tok of tokens) {
+    if (!/lidad/i.test(tok)) continue;
+    const lettersOnly = tok.toLowerCase().replace(/[^a-z]/g, '');
+    let kind = null, keyword = null;
+    if (lettersOnly.startsWith('desfavorabilidad')) { kind = 'desfav'; keyword = 'Desfavorabilidad'; }
+    else if (lettersOnly.startsWith('favorabilidad')) { kind = 'fav'; keyword = 'Favorabilidad'; }
+    else continue;
+
+    const residual = stripKeyword(tok, keyword);
+    const m = residual.match(/(\d{1,3})/);
+    if (m) setValue(kind, m[1] + '%');
+  }
+
+  // Pass 2 — separated tokens: label is standalone, look at neighbours for a %
+  if (fav == null || desfav == null) {
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (!/lidad/i.test(tok)) continue;
+      const lettersOnly = tok.toLowerCase().replace(/[^a-z]/g, '');
+      let kind = null;
+      if (lettersOnly === 'desfavorabilidad') kind = 'desfav';
+      else if (lettersOnly === 'favorabilidad') kind = 'fav';
+      else continue;
+      if ((kind === 'fav' && fav != null) || (kind === 'desfav' && desfav != null)) continue;
+
+      const val = findNearestPercent(tokens, i, kind);
+      if (val) setValue(kind, val);
+    }
+  }
+
+  return { fav, desfav };
+}
+
+/* Find the percentage value closest to tokens[labelIdx] while rejecting
+ * the donut's radial scale labels (0,30,70,100 for fav / 0,20,50,100 for
+ * desfav). Searches outward from the label position. */
+function findNearestPercent(tokens, labelIdx, kind) {
+  const scaleFav = new Set([0, 30, 70, 100]);
+  const scaleDesfav = new Set([0, 20, 50, 100]);
+  const scale = kind === 'desfav' ? scaleDesfav : scaleFav;
+
+  const parseTok = s => {
+    const m = (s || '').match(/^(\d{1,3})%$/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  const candidates = [];
+  for (let dist = 1; dist <= 6; dist++) {
+    for (const sign of [-1, 1]) {
+      const j = labelIdx + sign * dist;
+      if (j < 0 || j >= tokens.length) continue;
+      const v = parseTok(tokens[j]);
+      if (v != null) candidates.push({ v, dist, scaleHit: scale.has(v) });
+    }
+  }
+  // Prefer a non-scale value first; otherwise the closest scale hit
+  const nonScale = candidates.find(c => !c.scaleHit);
+  if (nonScale) return nonScale.v + '%';
+  if (candidates.length) return candidates[0].v + '%';
+  return null;
+}
+
+function normalizePct(s) {
+  if (!s) return null;
+  return s.endsWith('%') ? s : s + '%';
+}
+
+function containsLettersInOrder(haystack, needle) {
+  let j = 0;
+  for (let i = 0; i < haystack.length && j < needle.length; i++) {
+    if (haystack[i] === needle[j]) j++;
+  }
+  return j === needle.length;
+}
+
+function stripKeyword(cluster, keyword) {
+  const kLower = keyword.toLowerCase();
+  const cLower = cluster.toLowerCase();
+  let result = '';
+  let kIdx = 0;
+  for (let i = 0; i < cluster.length; i++) {
+    if (kIdx < kLower.length && cLower[i] === kLower[kIdx]) {
+      kIdx++;
+    } else {
+      result += cluster[i];
+    }
+  }
+  return result;
+}
+
+/* ---------- Dimensions extraction --------------------------------- */
+const DIM_TRANSLATIONS = {
+  'Comprensión de proceso':   'Compreensão do processo',
+  'Descripción posición':     'Descrição da posição',
+  'Excelencia en entrevista': 'Excelência na entrevista',
+  'Ser yo mism@':             'Ser eu mesmo(a)',
+  'Visibilidad proceso':      'Visibilidade do processo'
+};
+const DIM_ORDER_ES = [
+  'Comprensión de proceso',
+  'Descripción posición',
+  'Excelencia en entrevista',
+  'Ser yo mism@',
+  'Visibilidad proceso'
+];
+
+function extractDimensions(pageText) {
+  const parts = pageText.split('Favorabilidad por sentencia');
+  if (parts.length < 2) return [];
+
+  const afterFav = parts[1];
+  const [favBlock, afterDesfavRaw] = afterFav.split('Desfavorabilidad por sentencia');
+  const desfavBlock = (afterDesfavRaw || '').split(/Campo abierto|Pregunta abierto|Filtros/)[0] || '';
+
+  const favLines    = favBlock.split('\n').map(l => l.trim()).filter(Boolean);
+  const desfavLines = desfavBlock.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Expected: 5 dimension names, then 5 values (% or '-')
+  const favValues    = pickValues(favLines, 5);
+  const desfavValues = pickValues(desfavLines, 5);
+
+  return DIM_ORDER_ES.map((esName, i) => ({
+    name:   DIM_TRANSLATIONS[esName] || esName,
+    fav:    favValues[i]    || '-',
+    desfav: desfavValues[i] || '-'
+  })).filter(d => d.fav !== '-' || d.desfav !== '-');
+}
+
+function pickValues(lines, expectedCount) {
+  // Take the last `expectedCount` lines that look like values (% or "-")
+  const isValue = s => /^-$/.test(s) || /^\d+%$/.test(s);
+  const vals = lines.filter(isValue);
+  return vals.slice(0, expectedCount);
+}
+
+/* ---------- Filters extraction ------------------------------------ */
+function extractFilters(pageText) {
+  const m = pageText.match(/Filtros\s*\n([\s\S]+?)(?=\n(?:Candidate Experience|Cantidad de|Pregunta abierto|$))/);
+  if (!m) return {};
+  const raw = m[1].replace(/\s+/g, ' ').trim();
+  const result = { raw };
+  const keys = ['País','División','TA Owner','Evaluación overall','Fecha inicio encuesta','Seniority'];
+  const keyAlt = keys.map(k => k.replace(/ /g, '\\s+')).join('|');
+  const re = new RegExp('(' + keyAlt + ')\\s*:\\s*([^:]+?)(?=\\s+(?:' + keyAlt + ')\\s*:|$)', 'g');
+  let match;
+  while ((match = re.exec(raw)) !== null) {
+    const key = match[1].replace(/\s+/g, ' ');
+    result[key] = match[2].trim();
+  }
+  return result;
+}
+
+/* Normalize "Evaluación overall" filter to a short range label like "1-3" */
+function normalizeOverallRange(filters) {
+  const raw = filters['Evaluación overall'];
+  if (!raw) return 'ALL';
+  const m = raw.match(/(\d)\s*-\s*(\d)/);
+  if (!m) return 'ALL';
+  const lo = parseInt(m[1], 10), hi = parseInt(m[2], 10);
+  if (lo === 1 && hi === 5) return 'ALL';
+  return `${lo}-${hi}`;
+}
+
+/* ---------- Comments extraction -----------------------------------
+ * Each feedback block in "Pregunta abierto" follows the shape:
+ *   <score 1-5>
+ *   <division with parens, e.g. "Shipping (Shipping)">
+ *   <candidate name>
+ *   <free-form text, possibly multiple lines>
+ *
+ * Strict pass handles the common case. The loose pass (regex over the
+ * whole joined text) catches layouts where pdf.js merges chunks or adds
+ * stray characters next to the score bubble. */
+const BOUNDARY_RES = [
+  /^Cantidad de$/, /^Filtros$/, /Candidate Experience Survey/,
+  /^Favorabilidad por sentencia$/, /^Desfavorabilidad por sentencia$/,
+  /^Campo abierto$/, /^Pregunta abierto$/, /^Recuento$/,
+  /^Siendo 1 malo y 5 excelente/
+];
+const isScoreLine = s => /^[1-5]$/.test(s);
+const isDivisionLine = s => !!s && /\([^)]+\)/.test(s) && !s.includes('%') && s.length < 120;
+const isBoundaryLine = s => BOUNDARY_RES.some(re => re.test(s));
+
+function extractComments(fullText) {
+  const lines = fullText.split('\n').map(l => l.trim());
+  const comments = [];
+
+  let i = 0;
+  while (i < lines.length) {
+    if (isScoreLine(lines[i]) && isDivisionLine(lines[i + 1])) {
+      const score = parseInt(lines[i], 10);
+      const division = lines[i + 1];
+      const name = lines[i + 2] || '';
+      let text = '';
+      let j = i + 3;
+      while (j < lines.length) {
+        const peek = lines[j];
+        if (isScoreLine(peek) && isDivisionLine(lines[j + 1])) break;
+        if (isBoundaryLine(peek)) break;
+        if (peek) text += (text ? ' ' : '') + peek;
+        j++;
+      }
+      if (name && !isScoreLine(name) && !isDivisionLine(name)) {
+        comments.push({ score, division, name, text: text.trim() });
+      }
+      i = j;
+      continue;
+    }
+    i++;
+  }
+  return comments;
+}
+
+/* Loose fallback — a single regex across the joined text. Used when the
+ * strict line-by-line parser returns nothing (e.g. pdf.js merges the
+ * score bubble with adjacent chunks). */
+function extractCommentsLoose(fullText) {
+  const comments = [];
+  const re = /(?:^|\n)\s*([1-5])\s*\n\s*([^\n]*\([^)]+\)[^\n]*)\s*\n\s*([^\n]+?)\s*\n([\s\S]*?)(?=\n\s*[1-5]\s*\n\s*[^\n]*\([^)]+\)|\n\s*(?:Cantidad de|Filtros|Campo abierto|Pregunta abierto|Favorabilidad por sentencia|Desfavorabilidad por sentencia|Recuento|Candidate Experience Survey)\b|\n{3,}|$)/g;
+  let m;
+  while ((m = re.exec(fullText)) !== null) {
+    const name = m[3].trim();
+    if (!name || /^[1-5]$/.test(name)) continue;
+    comments.push({
+      score: parseInt(m[1], 10),
+      division: m[2].trim(),
+      name,
+      text: m[4].trim().replace(/\s+/g, ' ')
+    });
+  }
+  return comments;
+}
+
+/* ==================================================================
+ * Build the merged view from one or more parsed PDFs.
+ *
+ * When multiple PDFs are loaded, we treat each as a (possibly filtered)
+ * slice of the same survey:
+ *   - overall "ALL" or "1-5" → full set (preferred source for KPIs)
+ *   - overall "1-2" / "1-3"  → detractors / detractors+neutros
+ *   - overall "4-5" / "3-5"  → promotores / neutros+promotores
+ *   - overall "3-3" or "3"   → neutros only
+ *
+ * Comments are merged and deduped across PDFs by (score, name, text prefix).
+ * KPIs come from the broadest PDF when available; otherwise we stitch
+ * them together (fav from a "*-5" slice, desfav from a "1-*" slice).
+ * Neutros is always derived as 100 - fav - desfav when both are known.
+ * ================================================================== */
+function buildMergedView(pdfs, tabId) {
+  // ---- pick a "primary" PDF (unfiltered / 1-5 / largest respostas) ----
+  let primary = pdfs.find(p => p.overallRange === 'ALL');
+  if (!primary) {
+    primary = pdfs.reduce((a, b) =>
+      ((a && a.respostas) || 0) >= ((b && b.respostas) || 0) ? a : b, null);
+  }
+
+  // ---- merge + dedupe comments across all PDFs ----
+  const seen = new Set();
+  const allComments = [];
+  for (const pdf of pdfs) {
+    for (const c of pdf.comments) {
+      const key = `${c.score}|${(c.name || '').trim()}|${(c.text || '').slice(0, 80)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      allComments.push(c);
+    }
+  }
+
+  // ---- KPIs: fav, desfav, total respostas ----
+  let fav = (primary && primary.overallRange === 'ALL') ? primary.fav : '—';
+  let desfav = (primary && primary.overallRange === 'ALL') ? primary.desfav : '—';
+
+  if (fav === '—' || fav == null) {
+    // Prefer a promoter-inclusive slice (e.g. 4-5 or 3-5) for fav
+    const promo = pdfs.find(p => /-5$/.test(p.overallRange) && p.fav && p.fav !== '—')
+               || pdfs.find(p => p.fav && p.fav !== '—');
+    if (promo) fav = promo.fav;
+  }
+  if (desfav === '—' || desfav == null) {
+    // Prefer a detractor-inclusive slice (e.g. 1-2 or 1-3) for desfav
+    const detr = pdfs.find(p => /^1-/.test(p.overallRange) && p.desfav && p.desfav !== '—')
+              || pdfs.find(p => p.desfav && p.desfav !== '—');
+    if (detr) desfav = detr.desfav;
+  }
+
+  const totalResp = (primary && primary.respostas)
+                 || allComments.length
+                 || 0;
+
+  // ---- Neutros: always derive as 100 - fav - desfav when both known ----
+  let neutrosPct = '—';
+  let neutrosSub = '';
+  const favNum = parseInt((fav || '').replace('%',''), 10);
+  const desfavNum = parseInt((desfav || '').replace('%',''), 10);
+  const neutrals = allComments.filter(c => c.score === 3);
+  if (!isNaN(favNum) && !isNaN(desfavNum)) {
+    const n = Math.max(0, 100 - favNum - desfavNum);
+    neutrosPct = n + '%';
+    neutrosSub = neutrals.length ? `Nota 3 · ~${neutrals.length} candidatos` : 'Nota 3';
+  } else if (allComments.length > 0) {
+    neutrosPct = Math.round((neutrals.length / allComments.length) * 100) + '%';
+    neutrosSub = `Nota 3 · ~${neutrals.length} candidatos`;
+  }
+
+  // ---- Dimensions: use primary's, fallback to first non-empty ----
+  let dimensions = (primary && primary.dimensions && primary.dimensions.length)
+    ? primary.dimensions
+    : (pdfs.find(p => p.dimensions && p.dimensions.length) || {}).dimensions || [];
+
+  // ---- Worst dimension & detractor callout ----
+  const detractors = allComments.filter(c => c.score <= 2);
+  const positives  = allComments.filter(c => c.score >= 4);
+
+  let worstName = null, worstDesfav = -1;
+  for (const d of dimensions) {
+    const v = parseInt((d.desfav || '').replace('%',''), 10);
+    if (!isNaN(v) && v > worstDesfav) { worstDesfav = v; worstName = d.name; }
+  }
+
+  const topNegDims = [...dimensions]
+    .filter(d => /\d/.test(d.desfav))
+    .sort((a,b) => parseInt(b.desfav) - parseInt(a.desfav))
+    .slice(0, 3);
+  let detractorHtml = `<strong>${detractors.length} respostas</strong> de nota 1–2`;
+  if (topNegDims.length > 0) {
+    detractorHtml += '<br>Piores dimensões:<br>';
+    detractorHtml += topNegDims.map(d => `${escapeHtml(d.name)}: <strong>${escapeHtml(d.desfav)} de desfavorabilidade</strong>`).join('<br>');
+  }
+
+  // ---- Highs / Lows / Actions from merged comments ----
+  // HM comments mix positive + opportunity feedback, so scan every comment against HM-specific
+  // themes (Spanish patterns matching the HM survey, with Portuguese display for presentation).
+  const isHm = !!(primary && primary.isHm);
+  const highs = isHm
+    ? buildHighs(allComments, allComments, { themes: HM_HIGH_THEMES, minMatches: 1, skipTaMentions: true })
+    : buildHighs(positives, allComments);
+  const lows = isHm
+    ? buildLows(allComments, { themes: HM_LOW_THEMES, skipScoreFilter: true })
+    : buildLows(allComments);
+  const actions = isHm
+    ? buildActions(lows, { map: HM_ACTION_MAP })
+    : buildActions(lows);
+
+  // ---- Period / filters label from primary (or first) ----
+  const refFilters = (primary && primary.filters) || (pdfs[0] && pdfs[0].filters) || {};
+  const periodLabel = isHm
+    ? (primary.periodLabel || '2026')
+    : deriveTabPeriod(refFilters, tabId);
+  const filtersLabel = isHm ? '' : buildFiltersLabel(refFilters);
+
+  return {
+    headline: `${TAB_META[tabId].label} — Dados extraídos do PDF`,
+    periodLabel,
+    filtersLabel,
+    kpis: {
+      respostas: totalResp,
+      favorabilidade: fav || '—',
+      neutros: neutrosPct,
+      neutrosSub,
+      desfavorabilidade: desfav || '—'
+    },
+    dimensions,
+    worstDimensionName: worstName,
+    detractorHtml,
+    highs,
+    lows,
+    actions
+  };
+}
+
+function deriveTabPeriod(filters, tabId) {
+  if (tabId === 'ytd') return String(new Date().getFullYear());
+  const fecha = filters['Fecha inicio encuesta'] || '';
+  if (fecha) {
+    const map = {
+      'Este año':        String(new Date().getFullYear()),
+      'El año pasado':   'Ano passado',
+      'Este mes':        'Mês atual',
+      'Últimos 7 días':  'Últimos 7 dias',
+      'Últimos 30 días': 'Últimos 30 dias',
+      'Últimas 4 semanas':'Últimas 4 semanas'
+    };
+    // Translate any remaining "Hoy" → "Hoje" and strip trailing non-textual PDF artifacts
+    // (calendar icons, bullets, combining marks, arrows, etc.) from date-range values.
+    let label = (map[fecha] || fecha).replace(/\bHoy\b/gi, 'Hoje');
+    label = label.replace(/[^A-Za-zÀ-ÿ0-9\s\-–—.,()/:]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return label;
+  }
+  return TAB_META[tabId].label;
+}
+
+function buildFiltersLabel(filters) {
+  const parts = [];
+  if (filters['País'])     parts.push(`País: ${filters['País']}`);
+  if (filters['División']) parts.push(`Div: ${filters['División']}`);
+  if (filters['Evaluación overall']) parts.push(`Nota: ${filters['Evaluación overall']}`);
+  if (filters['Seniority']) parts.push(`Sen: ${filters['Seniority']}`);
+  return parts.join(' · ');
+}
+
+/* ==================================================================
+ * Theme extractors — Highs / Lows / Actions
+ * ================================================================== */
+const HIGH_THEMES = [
+  {
+    key: 'feedback',
+    pattern: /feedback[\s\S]{0,80}(personalizado|detalhado|construtivo|excelente|sincero|transparente|genuin|honesto|útil|util|claro|incr[íi]vel)/i,
+    bullet: 'Feedback personalizado',
+    desc:    'diferencial raro no mercado, valorizado mesmo em reprovações'
+  },
+  {
+    key: 'empatia',
+    pattern: /(empatia|humana|humano|humanidade|acolhedor|acolhimento|cuidado|respeito|atenciosa|atencioso)/i,
+    bullet: 'Humanização e empatia dos TAs',
+    desc:    'conduta acolhedora reconhecida como diferencial'
+  },
+  {
+    key: 'clareza',
+    pattern: /(clareza|claro|claras|transparente|transparência)[\s\S]{0,40}(etapa|processo|comunica)/i,
+    bullet: 'Clareza e transparência nas etapas',
+    desc:    'comunicação objetiva e respeitosa destacada pelos candidatos'
+  },
+  {
+    key: 'estrutura',
+    pattern: /(bem estruturado|estruturado|organizado|organização|bem conduzido|condução impec[áa]vel|processo bem|maestria)/i,
+    bullet: 'Processo bem estruturado e conduzido',
+    desc:    'fluxo claro e profissionalismo destacados'
+  },
+  {
+    key: 'flexibilidade',
+    pattern: /(flexibilidade|disponibilidade|agendamento|adaptar.{0,20}hor[áa]rio|disponib)/i,
+    bullet: 'Flexibilidade no agendamento',
+    desc:    'disponibilidade para ajustar horários valorizada'
+  }
+];
+
+/* HM-specific themes — Spanish patterns (from HM survey), Portuguese display */
+const HM_HIGH_THEMES = [
+  {
+    key: 'alinhamento',
+    pattern: /(alineaci[óo]n|alineado|alineados|perfil.{0,40}(adecuad|correct|alineado)|entendimiento.{0,20}perfil)/i,
+    bullet: 'Alinhamento de perfil',
+    desc:    'TA compreende e entrega perfis coerentes com a vaga'
+  },
+  {
+    key: 'comunicacao',
+    pattern: /(comunicaci[óo]n|informad|transparen|claridad|clar[ao]s?)/i,
+    bullet: 'Comunicação clara e transparente',
+    desc:    'TA mantém o gestor informado ao longo do processo'
+  },
+  {
+    key: 'agilidade',
+    pattern: /(r[áa]pid|[áa]gil|agilidad|tiempo.{0,20}(respuesta|entrega)|pronto)/i,
+    bullet: 'Agilidade no processo',
+    desc:    'tempo de resposta e entrega reconhecidos pelos gestores'
+  },
+  {
+    key: 'parceria',
+    pattern: /(proactiv|proactividad|asociaci[óo]n|socio|partner|acompañamiento|acompan[ñn]amiento|apoy[oa]|soporte)/i,
+    bullet: 'Parceria e proatividade do TA',
+    desc:    'atuação como parceiro estratégico do gestor'
+  },
+  {
+    key: 'qualidade',
+    pattern: /(calidad.{0,30}(candidat|perfiles|talento)|buenos candidatos|candidatos.{0,20}calificad|talento.{0,20}adecuad)/i,
+    bullet: 'Qualidade dos candidatos apresentados',
+    desc:    'perfis relevantes e com nível técnico adequado'
+  },
+  {
+    key: 'processo',
+    pattern: /(proceso.{0,20}(estructurad|organizad|claro|bien)|bien.{0,10}(llevad|conducid|estructurad))/i,
+    bullet: 'Processo bem estruturado',
+    desc:    'fluxo organizado e conduzido com profissionalismo'
+  }
+];
+
+const HM_LOW_THEMES = [
+  {
+    key: 'Volume',
+    pattern: /(pocos.{0,20}(candidatos|perfiles)|cantidad.{0,20}(baja|insuficiente)|poca.{0,20}cantidad|volumen.{0,20}(bajo|limitado)|m[áa]s.{0,10}candidatos|mayor.{0,10}(cantidad|volumen))/i,
+    bullet: 'Volume baixo de candidatos',
+    desc:    'gestores pedem maior número de perfis para avaliar'
+  },
+  {
+    key: 'Perfil',
+    pattern: /(perfil.{0,30}(no.{0,10}(alineado|adecuado|coincide)|desalineado|no cumple)|no.{0,10}coinciden.{0,10}perfil|candidatos.{0,30}no.{0,10}(alineados|adecuados))/i,
+    bullet: 'Desalinhamento de perfil',
+    desc:    'candidatos apresentados não atendem plenamente à vaga'
+  },
+  {
+    key: 'Demora',
+    pattern: /(lent|demora|tard|tiempo.{0,30}(largo|prolongad|excesiv)|much[oa].{0,10}tiempo|proceso.{0,20}largo)/i,
+    bullet: 'Demora no processo',
+    desc:    'tempo entre etapas percebido como longo'
+  },
+  {
+    key: 'Comunicação',
+    pattern: /(falta.{0,15}(comunicaci[óo]n|informaci[óo]n|visibilidad|feedback)|poca.{0,15}(visibilidad|comunicaci[óo]n|informaci[óo]n)|sin.{0,15}(respuesta|feedback)|no.{0,20}(informad|actualiza))/i,
+    bullet: 'Visibilidade insuficiente do andamento',
+    desc:    'gestor sem atualizações regulares sobre o status do processo'
+  },
+  {
+    key: 'Mercado',
+    pattern: /(mercado.{0,30}(limitad|escaso|restrict|dif[íi]cil)|escas[ae]z|talento.{0,20}escaso|dif[íi]cil.{0,20}encontrar)/i,
+    bullet: 'Escassez de talentos no mercado',
+    desc:    'limitação externa reconhecida pelos gestores'
+  },
+  {
+    key: 'Feedback',
+    pattern: /(m[áa]s.{0,10}feedback|feedback.{0,20}(detallad|construct|específic|continuo)|retorno.{0,20}(detalhad|frequente))/i,
+    bullet: 'Feedback de candidatos mais detalhado',
+    desc:    'gestores desejam devolutivas mais ricas sobre os avaliados'
+  }
+];
+
+const HM_ACTION_MAP = [
+  { key:'Volume',        action:'<strong>Ampliar funil de captação</strong> — revisar canais de sourcing com o gestor e alinhar critérios flexíveis para aumentar volume qualificado' },
+  { key:'Perfil',        action:'<strong>Reforçar briefing de perfil</strong> — reunião de alinhamento mais profunda no kick-off (must-have x nice-to-have) antes de iniciar a busca' },
+  { key:'Demora',        action:'<strong>Acordar SLA por etapa</strong> com o gestor e comunicar desvios proativamente' },
+  { key:'Comunicação',   action:'<strong>Check-ins semanais com o gestor</strong> — status report curto (novos candidatos, etapa, próximos passos)' },
+  { key:'Mercado',       action:'<strong>Mapear cenário de mercado</strong> — compartilhar com o gestor benchmark salarial e disponibilidade de perfis antes de abrir a vaga' },
+  { key:'Feedback',      action:'<strong>Padronizar devolutiva pós-entrevista</strong> — template com pontos fortes, gaps e recomendação objetiva' }
+];
+
+const TA_NAMES = [
+  'Beatriz','Bia','Maria Beatriz','Carolina','Carol','Carolina Zanotti',
+  'Cardoso','Laura','Laura Luize','Thais','Thaís','Thais Andrade','Thais Carvalho',
+  'Aline','Marianne','Katia','Kátia','Kitty','Bruna','Bruna Santos',
+  'Letícia Navarro','Leticia Navarro','Juliana'
+];
+
+function buildHighs(positives, allComments, opts) {
+  const themes = (opts && opts.themes) || HIGH_THEMES;
+  const minMatches = (opts && opts.minMatches) || 2;
+  const skipTaMentions = !!(opts && opts.skipTaMentions);
+  const result = [];
+  for (const theme of themes) {
+    const matches = positives.filter(c => theme.pattern.test(c.text));
+    if (matches.length >= minMatches) {
+      result.push(`<strong>${theme.bullet}</strong> — ${theme.desc} <em style="color:#888;">(${matches.length} menções)</em>`);
+    }
+  }
+  if (skipTaMentions) {
+    if (result.length === 0) {
+      result.push('<strong>Comentários positivos</strong> — sem temas recorrentes detectados automaticamente. Revise os comentários no PDF.');
+    }
+    return result.slice(0, 6);
+  }
+
+  // TA names cited
+  const mentioned = new Set();
+  for (const c of allComments.filter(x => x.score >= 4)) {
+    for (const ta of TA_NAMES) {
+      const re = new RegExp('\\b' + ta.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b','i');
+      if (re.test(c.text)) {
+        const norm = ta.replace(/^(Maria )?Beatriz$/,'Beatriz')
+                       .replace(/^Thaís$/,'Thais')
+                       .replace(/^Kátia$/,'Katia')
+                       .replace(/^Carolina Zanotti$/,'Carolina')
+                       .replace(/^Laura Luize$/,'Laura')
+                       .replace(/^Bruna Santos$/,'Bruna')
+                       .replace(/^(Thais Andrade|Thais Carvalho)$/,'Thais');
+        mentioned.add(norm);
+      }
+    }
+  }
+  if (mentioned.size > 0) {
+    const names = [...mentioned].slice(0, 8).join(', ');
+    result.push(`<strong>TAs citados por nome</strong> — ${names} reconhecidos(as) nominalmente nos comentários`);
+  }
+
+  if (result.length === 0) {
+    result.push('<strong>Comentários positivos</strong> — sem temas recorrentes detectados automaticamente. Revise os comentários nota 5 no PDF.');
+  }
+  return result.slice(0, 6);
+}
+
+const LOW_THEMES = [
+  {
+    key: 'demora',
+    pattern: /(demora|demorado|demorada|tempo.{0,25}(longo|processo)|muito.{0,15}tempo|semana.{0,20}(sem|espera)|retorno.{0,15}(lento|demorado)|2\+?\s*semanas|aguardo|aguardando)/i,
+    bullet: 'Demora entre etapas',
+    desc:    'devolutivas lentas / sem posicionamento citadas repetidamente'
+  },
+  {
+    key: 'gestor',
+    pattern: /(gestor|gestora|supervisor|superior).{0,60}(atraso|atrasou|despreparad|desatent|sem preparo|olhando|perdid|imatur|n[aã]o prest)/i,
+    bullet: 'Gestores despreparados na entrevista',
+    desc:    'desatenção, atrasos ou perguntas desalinhadas à vaga'
+  },
+  {
+    key: 'salario',
+    pattern: /(sal[áa]rio|benef[íi]cios|turno|remunera).{0,80}(vago|n[aã]o.{0,10}inform|omitid|final|descobrir|só.{0,15}depois|desde o in[íi]cio)/i,
+    bullet: 'Salário, turno e benefícios pouco claros',
+    desc:    'candidatos chegam à etapa final sem essas informações'
+  },
+  {
+    key: 'cancelamento',
+    pattern: /(cancelamento.{0,30}vaga|vaga.{0,30}cancelad|republicaram a vaga|bloqueio interno|desclassificado|eliminad.{0,30}sem|reprovad.{0,30}sem)/i,
+    bullet: 'Cancelamentos e bloqueios internos sem explicação',
+    desc:    'candidatos eliminados/bloqueados sem clareza de motivo'
+  },
+  {
+    key: 'criterios',
+    pattern: /(perfil operacional|requisito.{0,30}n[aã]o|formação.{0,30}espec[íi]fica|crit[ée]rio.{0,30}(eliminat|n[aã]o|oculto)|JD|descrição.{0,15}vaga|rejeitado por n[aã]o)/i,
+    bullet: 'Critérios eliminatórios não descritos na JD',
+    desc:    'reprovações por requisitos não divulgados na vaga'
+  },
+  {
+    key: 'falta-feedback',
+    pattern: /(manter.{0,15}candidato.{0,15}informado|sem.{0,15}posicionamento|falta.{0,15}feedback|sem.{0,15}feedback|n[aã]o.{0,20}retorn)/i,
+    bullet: 'Falta de posicionamento entre etapas',
+    desc:    'candidatos sem retorno sobre status/resultado'
+  },
+  {
+    key: 'multiplos-gestores',
+    pattern: /(3.{0,10}gestor|tr[êe]s.{0,10}gestor|gestores.{0,30}30.{0,10}min|pouco tempo.{0,30}(respost|di[áa]logo))/i,
+    bullet: 'Entrevista sobrecarregada (múltiplos gestores em pouco tempo)',
+    desc:    'formato limita profundidade das respostas'
+  }
+];
+
+function buildLows(allComments, opts) {
+  const themes = (opts && opts.themes) || LOW_THEMES;
+  const skipScoreFilter = !!(opts && opts.skipScoreFilter);
+  const negatives = skipScoreFilter
+    ? allComments.filter(c => c.text && c.text.length > 20)
+    : allComments.filter(c => c.score <= 3 && c.text && c.text.length > 20);
+  const result = [];
+  for (const theme of themes) {
+    const matches = negatives.filter(c => theme.pattern.test(c.text));
+    if (matches.length >= 1) {
+      const names = matches.slice(0, 4).map(m => (m.name || '').split(' ')[0]).filter(Boolean).join(', ');
+      const exSuffix = names ? ` · ex.: ${escapeHtml(names)}` : '';
+      result.push(`<strong>${theme.bullet}</strong> — ${theme.desc} <em style="color:#888;">(${matches.length}×${exSuffix})</em>`);
+    }
+  }
+  if (result.length === 0) {
+    result.push('<strong>Nenhum tema negativo recorrente detectado automaticamente</strong> — revise os comentários no PDF.');
+  }
+  return result.slice(0, 6);
+}
+
+const ACTION_MAP = [
+  { key:'Demora',          action:'<strong>Definir SLA de retorno</strong> entre etapas (máx. 5 dias úteis) com atualização proativa ao candidato' },
+  { key:'Gestores',        action:'<strong>Reforço no alinhamento de perfil</strong> — TA pontua postura esperada (foco, pontualidade, evitar desmarcações) e compartilha material de apoio para entrevista estruturada' },
+  { key:'Salário',         action:'<strong>Incluir faixa salarial e turno</strong> desde o 1º contato para alinhar expectativas' },
+  { key:'Cancelamentos',   action:'<strong>Protocolo de comunicação</strong> para cancelamentos de vaga e bloqueios internos' },
+  { key:'Critérios',       action:'<strong>Revisar JDs com TA + gestor</strong> para explicitar critérios eliminatórios antes da divulgação' },
+  { key:'Falta',           action:'<strong>Ciclo de comunicação proativa</strong> com status a cada etapa, mesmo sem decisão final' },
+  { key:'sobrecarregada',  action:'<strong>Rever formato de painel</strong> — evitar 3 gestores em 30 min; priorizar tempo para diálogo' }
+];
+
+function buildActions(lows, opts) {
+  const map = (opts && opts.map) || ACTION_MAP;
+  const result = [];
+  for (const { key, action } of map) {
+    if (lows.some(l => l.includes(key))) result.push(action);
+  }
+  if (result.length === 0) {
+    result.push('<strong>Definir plano de ação</strong> com base nos pontos de atenção identificados');
+  }
+  return result;
+}
+</script>
+</body>
+</html>

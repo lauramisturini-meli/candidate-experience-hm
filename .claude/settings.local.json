@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ':*)",
+      "Bash(python3 -c ':*)",
+      "Bash(pdftotext -layout \"C:\\\\Users\\\\lmisturini\\\\Downloads\\\\dashboard-export-06-39-pm-2026-04-12.pdf\" -)",
+      "Bash(python:*)",
+      "Bash(python3 -c \"import PyPDF2; print\\('PyPDF2 available'\\)\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\lmisturini\\\\Documents\\\\projetos\\\\candidate-hm-experience\\\\candidate-experience-slide.html' | Select-Object -Last 10\")"
+    ]
+  }
+}
