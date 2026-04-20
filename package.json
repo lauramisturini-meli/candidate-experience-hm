@@ -1,0 +1,9 @@
+{
+  "name": "ta-transportes-kpis",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dashboard de KPIs de Candidate & Hiring Manager Experience — TA Transportes Brasil",
+  "scripts": {
+    "vercel-build": "node build-config.js"
+  }
+}
