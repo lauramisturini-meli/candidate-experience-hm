@@ -304,12 +304,18 @@
     <button class="tab-btn" data-tab="actual">Actual Date<span class="tab-dot"></span></button>
     <button class="tab-btn" data-tab="internal">Internal Candidate<span class="tab-dot"></span></button>
     <button class="tab-btn" data-tab="hm">Hiring Manager<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="tonh">TO NH<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="pcd">PCD<span class="tab-dot"></span></button>
+    <button class="tab-btn" data-tab="hpc">HP Completion<span class="tab-dot"></span></button>
   </div>
 
   <div id="tab-ytd" class="tab-panel active"></div>
   <div id="tab-actual" class="tab-panel"></div>
   <div id="tab-internal" class="tab-panel"></div>
   <div id="tab-hm" class="tab-panel"></div>
+  <div id="tab-tonh" class="tab-panel"></div>
+  <div id="tab-pcd" class="tab-panel"></div>
+  <div id="tab-hpc" class="tab-panel"></div>
 </div>
 
 <input type="file" id="pdf-file-input" accept="application/pdf" multiple style="display:none">
@@ -327,7 +333,10 @@ const TAB_META = {
   ytd:      { label: 'YTD',                     section: 'External Candidate Experience', sectionColor: 'black' },
   actual:   { label: 'Actual Date',             section: 'External Candidate Experience', sectionColor: 'black' },
   internal: { label: 'Internal Candidate',      section: 'Internal Candidate Experience', sectionColor: 'gray'  },
-  hm:       { label: 'Hiring Manager',          section: 'Hiring Manager Experience',     sectionColor: 'gray'  }
+  hm:       { label: 'Hiring Manager',          section: 'Hiring Manager Experience',     sectionColor: 'gray'  },
+  tonh:     { label: 'TO NH',                   section: 'Turn Over New Hire',            sectionColor: 'gray'  },
+  pcd:      { label: 'PCD',                     section: 'PCD',                           sectionColor: 'gray'  },
+  hpc:      { label: 'HP Completion',           section: 'Hiring Plan Completion',        sectionColor: 'gray'  }
 };
 
 /* ==================================================================
@@ -338,7 +347,10 @@ const tabsData = {
   ytd:      { pdfs: [] },
   actual:   { pdfs: [] },
   internal: { pdfs: [] },
-  hm:       { pdfs: [] }
+  hm:       { pdfs: [] },
+  tonh:     { pdfs: [] },
+  pcd:      { pdfs: [] },
+  hpc:      { pdfs: [] }
 };
 
 /* ==================================================================
@@ -362,28 +374,32 @@ function renderTab(tabId, status) {
   const meta = TAB_META[tabId];
   const statusHtml = status ? `<div class="status-bar show ${status.type}">${escapeHtml(status.msg)}</div>` : '';
 
+  const hideInstructions = ['internal','hm','tonh','pcd','hpc'].includes(tabId);
+  const hideKpiGrid = ['pcd','hpc'].includes(tabId);
   if (!tabState.pdfs.length) {
     container.innerHTML = `
       ${statusHtml}
       <div class="section-tag ${meta.sectionColor === 'gray' ? 'gray' : ''}">${escapeHtml(meta.section)}</div>
       <div class="tab-toolbar">
-        <div class="upload-hint">Faça upload de um ou mais PDFs do Qualtrics (inclusive filtrados por nota) para preencher esta aba.</div>
+        <div class="upload-hint">${hideInstructions ? '' : 'Faça upload de um ou mais PDFs do Qualtrics (inclusive filtrados por nota) para preencher esta aba.'}</div>
         <button class="upload-btn" onclick="triggerUpload('${tabId}')">⬆ Upload PDF(s)</button>
       </div>
       <div class="skeleton-panel">
         <div class="skeleton-icon">&#9881;</div>
         <div class="skeleton-title">${escapeHtml(meta.section)}</div>
+        ${hideInstructions ? '' : `
         <div class="skeleton-sub">
           Exporte o dashboard do Qualtrics em PDF e carregue aqui.<br>
           Aceita múltiplos PDFs — ex.: um geral + um filtrado 1–2 (detratores) + um 3 (neutros) + um 4–5 (promotores).<br>
           KPIs, dimensões e Highs/Lows/Actions são gerados automaticamente.
-        </div>
+        </div>`}
+        ${hideKpiGrid ? '' : `
         <div class="skeleton-grid">
           <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Respostas</div></div>
           <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Favorabilidade</div></div>
           <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Neutros</div></div>
           <div class="skeleton-kpi"><div class="sk-val">—</div><div class="sk-label">Desfavorabilidade</div></div>
-        </div>
+        </div>`}
       </div>
       <div class="footer">
         <div class="footer-text">${escapeHtml(meta.section)} · TA Transportes Brasil · Aguardando dados</div>
@@ -511,7 +527,7 @@ function escapeHtml(str) {
 /* ==================================================================
  * Initial render: all tabs start as skeleton
  * ================================================================== */
-['ytd','actual','internal','hm'].forEach(id => renderTab(id));
+['ytd','actual','internal','hm','tonh','pcd','hpc'].forEach(id => renderTab(id));
 
 /* ==================================================================
  * Upload pipeline
