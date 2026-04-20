@@ -544,27 +544,39 @@ function escapeHtml(str) {
  * Shareable link — serialize parsed state into the URL so a teammate
  * opening the link sees the same dashboard without re-uploading PDFs.
  *
- * Encoding:
- *   tabsData (parsed, without raw PDF binaries)
- *     → JSON → gzip (CompressionStream) → base64url → ?d=…
+ * Encoding (v2 — compact):
+ *   Each PDF becomes a tuple: [resp, favNum, desfavNum, [[dimName, favNum, desfNum]...],
+ *                              [[score, name, text]...], filters, overallRange, periodLabel, isHm01, fileName]
+ *   → JSON → gzip (CompressionStream) → base64url → ?d=…
+ * Keys are dropped entirely; positional tuples + numeric percentages
+ * shrink the raw JSON by ~40-60% before gzip compresses the rest.
  * ================================================================== */
+const pctToNum = v => {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  const m = String(v).match(/-?\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : null;
+};
+const numToPct = n => (n == null ? '—' : `${n}%`);
+
 async function encodeShareableState() {
-  const payload = {};
+  const payload = { v: 2, t: {} };
   for (const [tab, data] of Object.entries(tabsData)) {
     if (!data.pdfs.length) continue;
-    payload[tab] = data.pdfs.map(p => ({
-      respostas: p.respostas,
-      fav: p.fav,
-      desfav: p.desfav,
-      dimensions: p.dimensions,
-      comments: p.comments,
-      filters: p.filters,
-      overallRange: p.overallRange,
-      periodLabel: p.periodLabel,
-      isHm: p.isHm,
-      fileName: p.fileName
-    }));
+    payload.t[tab] = data.pdfs.map(p => [
+      p.respostas ?? null,
+      pctToNum(p.fav),
+      pctToNum(p.desfav),
+      (p.dimensions || []).map(d => [d.name, pctToNum(d.fav), pctToNum(d.desfav)]),
+      (p.comments || []).map(c => [c.score ?? null, c.name || '', c.text || '']),
+      p.filters || {},
+      p.overallRange || 'ALL',
+      p.periodLabel || '',
+      p.isHm ? 1 : 0,
+      p.fileName || ''
+    ]);
   }
+  if (!Object.keys(payload.t).length) return '';
   const json = JSON.stringify(payload);
   const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
   const buf = await new Response(stream).arrayBuffer();
@@ -582,7 +594,30 @@ async function decodeShareableState(b64) {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   const text = await new Response(stream).text();
-  return JSON.parse(text);
+  const parsed = JSON.parse(text);
+
+  // v2 compact tuple format
+  if (parsed && parsed.v === 2 && parsed.t) {
+    const out = {};
+    for (const [tab, tuples] of Object.entries(parsed.t)) {
+      out[tab] = tuples.map(t => ({
+        respostas: t[0],
+        fav: numToPct(t[1]),
+        desfav: numToPct(t[2]),
+        dimensions: (t[3] || []).map(d => ({ name: d[0], fav: numToPct(d[1]), desfav: numToPct(d[2]) })),
+        comments: (t[4] || []).map(c => ({ score: c[0], name: c[1], text: c[2] })),
+        filters: t[5] || {},
+        overallRange: t[6] || 'ALL',
+        periodLabel: t[7] || '',
+        isHm: !!t[8],
+        fileName: t[9] || ''
+      }));
+    }
+    return out;
+  }
+
+  // legacy verbose format (pre-v2 links)
+  return parsed;
 }
 
 async function copyShareableLink() {
