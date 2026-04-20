@@ -140,6 +140,21 @@
   .upload-btn[disabled] { opacity: 0.5; cursor: wait; }
   .upload-hint { font-size: 11px; color: var(--ink-soft); }
 
+  .share-toast {
+    position: fixed; right: 24px; bottom: 24px; z-index: 9999;
+    max-width: 360px;
+    background: var(--brand-dark); color: var(--brand-yellow);
+    padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; line-height: 1.35;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .share-toast.show { opacity: 1; transform: translateY(0); }
+  .share-toast.success { background: var(--brand-dark); color: var(--brand-yellow); }
+  .share-toast.error { background: #8a1f1f; color: #fff; }
+
   .main {
     display: grid; grid-template-columns: 1fr 1fr; gap: 0;
     padding: 0; min-height: 520px;
@@ -446,6 +461,7 @@ function renderTab(tabId, status) {
       <div class="pdf-pill-list">${pillsHtml}</div>
       <div>
         <button class="upload-btn secondary" onclick="resetTab('${tabId}')">↺ Resetar</button>
+        <button class="upload-btn secondary" onclick="copyShareableLink()">🔗 Copiar link</button>
         <button class="upload-btn" onclick="triggerUpload('${tabId}')">⬆ Adicionar PDF</button>
       </div>
     </div>
@@ -525,9 +541,103 @@ function escapeHtml(str) {
 }
 
 /* ==================================================================
- * Initial render: all tabs start as skeleton
+ * Shareable link — serialize parsed state into the URL so a teammate
+ * opening the link sees the same dashboard without re-uploading PDFs.
+ *
+ * Encoding:
+ *   tabsData (parsed, without raw PDF binaries)
+ *     → JSON → gzip (CompressionStream) → base64url → ?d=…
  * ================================================================== */
-['ytd','actual','internal','hm','tonh','pcd','hpc'].forEach(id => renderTab(id));
+async function encodeShareableState() {
+  const payload = {};
+  for (const [tab, data] of Object.entries(tabsData)) {
+    if (!data.pdfs.length) continue;
+    payload[tab] = data.pdfs.map(p => ({
+      respostas: p.respostas,
+      fav: p.fav,
+      desfav: p.desfav,
+      dimensions: p.dimensions,
+      comments: p.comments,
+      filters: p.filters,
+      overallRange: p.overallRange,
+      periodLabel: p.periodLabel,
+      isHm: p.isHm,
+      fileName: p.fileName
+    }));
+  }
+  const json = JSON.stringify(payload);
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+  const buf = await new Response(stream).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function decodeShareableState(b64) {
+  let str = b64.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) str += '=';
+  const bin = atob(str);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const text = await new Response(stream).text();
+  return JSON.parse(text);
+}
+
+async function copyShareableLink() {
+  try {
+    const encoded = await encodeShareableState();
+    if (!encoded) {
+      flashToast('Nada para compartilhar ainda — faça upload de um PDF primeiro.', 'error');
+      return;
+    }
+    const url = `${location.origin}${location.pathname}?d=${encoded}`;
+    await navigator.clipboard.writeText(url);
+    flashToast('✓ Link copiado! Compartilhe com seu time.', 'success');
+  } catch (err) {
+    console.error('[shareable]', err);
+    flashToast('Falha ao gerar link: ' + err.message, 'error');
+  }
+}
+
+function flashToast(msg, kind) {
+  const el = document.createElement('div');
+  el.className = 'share-toast ' + (kind || '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 250);
+  }, 2800);
+}
+
+async function loadShareableStateFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const d = params.get('d');
+  if (!d) return false;
+  try {
+    const payload = await decodeShareableState(d);
+    for (const [tab, pdfs] of Object.entries(payload)) {
+      if (tabsData[tab]) tabsData[tab] = { pdfs };
+    }
+    return true;
+  } catch (err) {
+    console.error('[shareable decode]', err);
+    flashToast('Link compartilhado inválido ou corrompido.', 'error');
+    return false;
+  }
+}
+
+/* ==================================================================
+ * Initial render: all tabs start as skeleton, unless a shareable
+ * ?d=… param rehydrates them with previously parsed data.
+ * ================================================================== */
+(async () => {
+  await loadShareableStateFromUrl();
+  ['ytd','actual','internal','hm','tonh','pcd','hpc'].forEach(id => renderTab(id));
+})();
 
 /* ==================================================================
  * Upload pipeline
