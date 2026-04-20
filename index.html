@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Candidate Experience | TA Transportes Brasil</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -541,98 +543,60 @@ function escapeHtml(str) {
 }
 
 /* ==================================================================
- * Shareable link — serialize parsed state into the URL so a teammate
- * opening the link sees the same dashboard without re-uploading PDFs.
- *
- * Encoding (v2 — compact):
- *   Each PDF becomes a tuple: [resp, favNum, desfavNum, [[dimName, favNum, desfNum]...],
- *                              [[score, name, text]...], filters, overallRange, periodLabel, isHm01, fileName]
- *   → JSON → gzip (CompressionStream) → base64url → ?d=…
- * Keys are dropped entirely; positional tuples + numeric percentages
- * shrink the raw JSON by ~40-60% before gzip compresses the rest.
+ * Shareable link — backend storage via Supabase.
+ * O estado parseado é salvo em uma tabela `shares` e a URL carrega
+ * apenas um ID curto (~6 chars). Funciona como um pastebin privado.
  * ================================================================== */
-const pctToNum = v => {
-  if (v == null) return null;
-  if (typeof v === 'number') return v;
-  const m = String(v).match(/-?\d+(?:\.\d+)?/);
-  return m ? Number(m[0]) : null;
-};
-const numToPct = n => (n == null ? '—' : `${n}%`);
+const CFG = window.__CONFIG__ || {};
+const SUPABASE_URL  = CFG.SUPABASE_URL  || '';
+const SUPABASE_ANON = CFG.SUPABASE_ANON || '';
+const sb = (SUPABASE_URL && SUPABASE_ANON &&
+            window.supabase && typeof window.supabase.createClient === 'function')
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  : null;
+if (!sb) console.warn('[config] Supabase não configurado — verifique config.js');
 
-async function encodeShareableState() {
-  const payload = { v: 2, t: {} };
+function buildSharePayload() {
+  const payload = {};
   for (const [tab, data] of Object.entries(tabsData)) {
     if (!data.pdfs.length) continue;
-    payload.t[tab] = data.pdfs.map(p => [
-      p.respostas ?? null,
-      pctToNum(p.fav),
-      pctToNum(p.desfav),
-      (p.dimensions || []).map(d => [d.name, pctToNum(d.fav), pctToNum(d.desfav)]),
-      (p.comments || []).map(c => [c.score ?? null, c.name || '', c.text || '']),
-      p.filters || {},
-      p.overallRange || 'ALL',
-      p.periodLabel || '',
-      p.isHm ? 1 : 0,
-      p.fileName || ''
-    ]);
+    payload[tab] = data.pdfs.map(p => ({
+      respostas: p.respostas,
+      fav: p.fav,
+      desfav: p.desfav,
+      dimensions: p.dimensions || [],
+      comments: p.comments || [],
+      filters: p.filters || {},
+      overallRange: p.overallRange || 'ALL',
+      periodLabel: p.periodLabel || '',
+      isHm: !!p.isHm,
+      fileName: p.fileName || ''
+    }));
   }
-  if (!Object.keys(payload.t).length) return '';
-  const json = JSON.stringify(payload);
-  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
-  const buf = await new Response(stream).arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return Object.keys(payload).length ? payload : null;
 }
 
-async function decodeShareableState(b64) {
-  let str = b64.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) str += '=';
-  const bin = atob(str);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  const text = await new Response(stream).text();
-  const parsed = JSON.parse(text);
-
-  // v2 compact tuple format
-  if (parsed && parsed.v === 2 && parsed.t) {
-    const out = {};
-    for (const [tab, tuples] of Object.entries(parsed.t)) {
-      out[tab] = tuples.map(t => ({
-        respostas: t[0],
-        fav: numToPct(t[1]),
-        desfav: numToPct(t[2]),
-        dimensions: (t[3] || []).map(d => ({ name: d[0], fav: numToPct(d[1]), desfav: numToPct(d[2]) })),
-        comments: (t[4] || []).map(c => ({ score: c[0], name: c[1], text: c[2] })),
-        filters: t[5] || {},
-        overallRange: t[6] || 'ALL',
-        periodLabel: t[7] || '',
-        isHm: !!t[8],
-        fileName: t[9] || ''
-      }));
-    }
-    return out;
-  }
-
-  // legacy verbose format (pre-v2 links)
-  return parsed;
+function genShareId() {
+  const alphabet = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = '';
+  for (let i = 0; i < 8; i++) id += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return id;
 }
 
 async function copyShareableLink() {
+  if (!sb) { flashToast('Supabase não carregou — verifique a conexão.', 'error'); return; }
+  const payload = buildSharePayload();
+  if (!payload) { flashToast('Nada para compartilhar ainda — faça upload de um PDF primeiro.', 'error'); return; }
   try {
-    const encoded = await encodeShareableState();
-    if (!encoded) {
-      flashToast('Nada para compartilhar ainda — faça upload de um PDF primeiro.', 'error');
-      return;
-    }
-    const url = `${location.origin}${location.pathname}?d=${encoded}`;
+    const id = genShareId();
+    const { error } = await sb.from('shares').insert({ id, payload });
+    if (error) throw error;
+    const url = `${location.origin}${location.pathname}?s=${id}`;
     await navigator.clipboard.writeText(url);
     flashToast('✓ Link copiado! Compartilhe com seu time.', 'success');
   } catch (err) {
-    console.error('[shareable]', err);
-    flashToast('Falha ao gerar link: ' + err.message, 'error');
+    console.error('[share save]', err);
+    flashToast('Falha ao salvar link: ' + (err.message || err), 'error');
   }
 }
 
@@ -649,25 +613,26 @@ function flashToast(msg, kind) {
 }
 
 async function loadShareableStateFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const d = params.get('d');
-  if (!d) return false;
+  const id = new URLSearchParams(location.search).get('s');
+  if (!id) return false;
+  if (!sb) { flashToast('Supabase não carregou — não foi possível abrir o link.', 'error'); return false; }
   try {
-    const payload = await decodeShareableState(d);
-    for (const [tab, pdfs] of Object.entries(payload)) {
+    const { data, error } = await sb.from('shares').select('payload').eq('id', id).single();
+    if (error || !data) throw error || new Error('Link não encontrado');
+    for (const [tab, pdfs] of Object.entries(data.payload)) {
       if (tabsData[tab]) tabsData[tab] = { pdfs };
     }
     return true;
   } catch (err) {
-    console.error('[shareable decode]', err);
-    flashToast('Link compartilhado inválido ou corrompido.', 'error');
+    console.error('[share load]', err);
+    flashToast('Link não encontrado ou expirado.', 'error');
     return false;
   }
 }
 
 /* ==================================================================
  * Initial render: all tabs start as skeleton, unless a shareable
- * ?d=… param rehydrates them with previously parsed data.
+ * ?s=… param rehydrates them with previously saved Supabase payload.
  * ================================================================== */
 (async () => {
   await loadShareableStateFromUrl();
