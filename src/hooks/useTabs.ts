@@ -4,7 +4,7 @@ import type { TabId, TabsState, TabsAction } from '../types';
 
 const initialState: TabsState = Object.fromEntries(
   TAB_IDS.map(id => [id, { pdfs: [] }])
-) as TabsState;
+) as unknown as TabsState;
 
 function tabsReducer(state: TabsState, action: TabsAction): TabsState {
   switch (action.type) {

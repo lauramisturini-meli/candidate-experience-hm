@@ -2,12 +2,9 @@ import { useRef, useEffect, useState, useCallback, type Dispatch } from 'react';
 import { extractPdfText } from '../lib/pdf-extractor';
 import { isHmReport, parseHmReport } from '../lib/parser-hm';
 import { parseQualtricsReport } from '../lib/parser-qualtrics';
-import type { TabId, TabsAction, StatusMessage, ToastKind } from '../types';
+import type { TabId, TabsAction, StatusMessage } from '../types';
 
-export function useUpload(
-  dispatch: Dispatch<TabsAction>,
-  showToast: (msg: string, kind: ToastKind) => void,
-) {
+export function useUpload(dispatch: Dispatch<TabsAction>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const currentTabRef = useRef<TabId | null>(null);
   const [status, setStatus] = useState<Partial<Record<TabId, StatusMessage | null>>>({});

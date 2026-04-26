@@ -15,7 +15,7 @@ export function App() {
   const { tabsData, dispatch, activeTab, setActiveTab } = useTabs();
   const { toasts, showToast } = useToast();
   const { copyShareableLink, isShareLoading } = useShare(tabsData, dispatch, showToast);
-  const { inputRef, triggerUpload, status } = useUpload(dispatch, showToast);
+  const { inputRef, triggerUpload, status } = useUpload(dispatch);
 
   return (
     <div className={s.slide}>
