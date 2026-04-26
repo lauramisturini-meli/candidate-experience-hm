@@ -1,9 +1,28 @@
 {
   "name": "ta-transportes-kpis",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Dashboard de KPIs de Candidate & Hiring Manager Experience — TA Transportes Brasil",
+  "type": "module",
   "scripts": {
-    "vercel-build": "node build-config.js"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@supabase/supabase-js": "^2.49.4",
+    "pdfjs-dist": "3.11.174"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.3",
+    "vite": "^6.0.7",
+    "vitest": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0"
   }
 }
