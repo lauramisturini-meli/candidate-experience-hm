@@ -10,7 +10,7 @@ interface Props {
 }
 
 const HIDE_INSTRUCTIONS: TabId[] = ['tonh', 'pcd', 'hpc'];
-const HIDE_KPI_GRID: TabId[] = ['pcd', 'hpc'];
+const HIDE_KPI_GRID: TabId[] = ['tonh', 'pcd', 'hpc'];
 
 export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
   const hideInstructions = HIDE_INSTRUCTIONS.includes(tabId);
