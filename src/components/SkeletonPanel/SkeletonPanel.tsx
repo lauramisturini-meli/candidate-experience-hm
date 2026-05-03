@@ -9,7 +9,7 @@ interface Props {
   onUpload: () => void;
 }
 
-const HIDE_INSTRUCTIONS: TabId[] = ['internal', 'hm', 'tonh', 'pcd', 'hpc'];
+const HIDE_INSTRUCTIONS: TabId[] = ['tonh', 'pcd', 'hpc'];
 const HIDE_KPI_GRID: TabId[] = ['pcd', 'hpc'];
 
 export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
