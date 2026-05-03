@@ -1,5 +1,5 @@
 import { escapeHtml } from './utils';
-import { buildHighs, buildLows, buildActions, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
+import { buildHighs, buildLows, buildActions, buildHpHighs, buildHpLows, buildHpActions, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
 import type { PdfData, MergedView, TabId } from '../types';
 
 function deriveTabPeriod(filters: Record<string, string>, _tabId: TabId): string {
@@ -21,6 +21,32 @@ function deriveTabPeriod(filters: Record<string, string>, _tabId: TabId): string
 }
 
 export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
+  const isHp = pdfs.some(p => p.isHp);
+  if (isHp) {
+    const primary = pdfs.find(p => p.isHp && p.hpPayload) ?? pdfs[0];
+    const hp = primary?.hpPayload;
+    if (hp) {
+      const lows = buildHpLows(hp);
+      return {
+        periodLabel: hp.year,
+        kpis: {
+          respostas: hp.posicionesTotal,
+          favorabilidade: hp.porcentajeAvance.toFixed(2).replace('.', ',') + '%',
+          neutros: '—',
+          neutrosSub: '',
+          desfavorabilidade: '—',
+        },
+        dimensions: [],
+        worstDimensionName: null,
+        detractorHtml: '',
+        highs: buildHpHighs(hp),
+        lows,
+        actions: buildHpActions(lows),
+        hpPayload: hp,
+      };
+    }
+  }
+
   let primary = pdfs.find(p => p.overallRange === 'ALL') ?? null;
   if (!primary) {
     primary = pdfs.reduce<PdfData | null>((a, b) =>

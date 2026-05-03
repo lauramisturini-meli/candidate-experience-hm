@@ -11,6 +11,29 @@ export interface Comment {
   text: string;
 }
 
+export interface HpLayerRow {
+  equipo: string;
+  agrupLayer: string;
+  cerradas: number;
+  sinActivar: number;
+  onGoing: number;
+  reemplazosProyectados: number;
+  rotacionesProyectadas: number;
+}
+
+export interface HpPayload {
+  title: string;
+  year: string;
+  posicionesTotal: number;
+  cerradas: number;
+  onGoing: number;
+  sinActivar: number;
+  reemplazosProyectados: number;
+  operadoresProyectados: number;
+  porcentajeAvance: number;
+  rows: HpLayerRow[];
+}
+
 export interface PdfData {
   respostas: number | null;
   fav: string;
@@ -22,6 +45,8 @@ export interface PdfData {
   periodLabel: string;
   isHm: boolean;
   fileName: string;
+  isHp?: boolean;
+  hpPayload?: HpPayload;
 }
 
 export type TabId = 'external' | 'internal' | 'hm' | 'tonh' | 'pcd' | 'hpc' | 'outsla';
@@ -57,6 +82,7 @@ export interface MergedView {
   highs: string[];
   lows: string[];
   actions: string[];
+  hpPayload?: HpPayload;
 }
 
 export interface ExtractedPdf {

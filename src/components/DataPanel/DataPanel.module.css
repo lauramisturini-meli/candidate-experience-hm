@@ -112,3 +112,37 @@
 .highsList li::before   { background: var(--success); }
 .lowsList li::before    { background: var(--danger); }
 .actionsList li::before { background: var(--brand-yellow); border: 1px solid #e8c400; }
+
+/* HP KPI grid */
+.hpKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.hpKpiGrid .kpiBox { padding: 12px 10px; }
+.hpKpiGrid .kpiVal { font-size: 26px; }
+.hpKpiFechadas  { border-left: 3px solid var(--success); }
+.hpKpiFechadas .kpiVal  { color: var(--success); }
+.hpKpiOnGoing   { border-left: 3px solid var(--brand-yellow); }
+.hpKpiOnGoing .kpiVal   { color: var(--brand-dark); }
+.hpKpiInativas  { border-left: 3px solid var(--danger); }
+.hpKpiInativas .kpiVal  { color: var(--danger); }
+.hpKpiReemplazos { border-left: 3px solid #94a3b8; }
+.hpKpiReemplazos .kpiVal { color: #475569; }
+.hpKpiOperadores { border-left: 3px solid #94a3b8; }
+.hpKpiOperadores .kpiVal { color: #475569; }
+.hpKpiTotal     { border-left: 3px solid var(--brand-dark); }
+.hpKpiTotal .kpiVal     { color: var(--brand-dark); }
+.hpKpiAvance {
+  grid-column: 1 / -1;
+  border-left: none;
+  border-top: 3px solid var(--brand-yellow);
+  background: var(--brand-dark);
+}
+.hpKpiAvance .kpiVal  { font-size: 36px; color: var(--brand-yellow); }
+.hpKpiAvance .kpiLabel { color: rgba(255,255,255,0.7); }
+
+/* HP breakdown table */
+.hpCol { color: var(--ink); font-weight: 700; text-align: center; width: 13%; font-size: 11.5px; }
+.hpColDanger { color: var(--danger); }

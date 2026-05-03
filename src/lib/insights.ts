@@ -1,5 +1,5 @@
 import { escapeHtml } from './utils';
-import type { Comment } from '../types';
+import type { Comment, HpPayload, HpLayerRow } from '../types';
 
 interface Theme {
   key: string;
@@ -288,6 +288,101 @@ export function buildActions(lows: string[], opts?: BuildActionsOpts): string[] 
   }
   if (result.length === 0) {
     result.push('<strong>Definir plano de ação</strong> com base nos pontos de atenção identificados');
+  }
+  return result;
+}
+
+// ── HP Completion insights ────────────────────────────────────────────────────
+
+export function buildHpHighs(hp: HpPayload): string[] {
+  const result: string[] = [];
+
+  if (hp.porcentajeAvance >= 25) {
+    result.push(
+      `<strong>Bom ritmo de avanço</strong> — ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% do HP concluído até o momento`
+    );
+  }
+
+  if (hp.onGoing > 0) {
+    result.push(
+      `<strong>Pipeline ativo</strong> — ${hp.onGoing} posições em andamento, demonstrando esforço contínuo do time`
+    );
+  }
+
+  if (hp.rows.length > 0) {
+    const topLayer = [...hp.rows].sort((a, b) => b.cerradas - a.cerradas)[0] as HpLayerRow;
+    result.push(
+      `<strong>Destaque: ${escapeHtml(topLayer.agrupLayer)}</strong> lidera em fechamentos com ${topLayer.cerradas} posições fechadas`
+    );
+  }
+
+  const allLayersWithClosures = hp.rows.length >= 2 && hp.rows.every(r => r.cerradas > 0);
+  if (allLayersWithClosures) {
+    result.push('<strong>Avanço distribuído</strong> — todas as layers registram fechamentos no período');
+  }
+
+  if (result.length === 0) {
+    result.push('<strong>Dados carregados</strong> — analise os KPIs e a tabela de breakdown para contexto completo');
+  }
+  return result;
+}
+
+export function buildHpLows(hp: HpPayload): string[] {
+  const result: string[] = [];
+
+  const inativasPct = hp.posicionesTotal > 0
+    ? Math.round((hp.sinActivar / hp.posicionesTotal) * 100)
+    : 0;
+  if (hp.sinActivar > 0 && inativasPct >= 30) {
+    result.push(
+      `<strong>Alto volume de posições inativas</strong> — ${hp.sinActivar} sin activar (${inativasPct}% do total), risco de atraso no HP`
+    );
+  }
+
+  if (hp.rows.length > 0) {
+    const highRotRow = [...hp.rows].sort((a, b) => b.rotacionesProyectadas - a.rotacionesProyectadas)[0] as HpLayerRow;
+    if (highRotRow.rotacionesProyectadas > 0) {
+      result.push(
+        `<strong>Risco de rotação elevado em ${escapeHtml(highRotRow.agrupLayer)}</strong> — ${highRotRow.rotacionesProyectadas} rotações projetadas demandam reposição antecipada`
+      );
+    }
+  }
+
+  if (hp.porcentajeAvance < 50) {
+    result.push(
+      `<strong>Ritmo abaixo de 50%</strong> — com ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% de avanço, é necessário acelerar fechamentos no semestre`
+    );
+  }
+
+  if (result.length === 0) {
+    result.push('<strong>Nenhum ponto crítico detectado automaticamente</strong> — revise os dados do HP para contexto adicional');
+  }
+  return result;
+}
+
+export function buildHpActions(lows: string[]): string[] {
+  const result: string[] = [];
+
+  if (lows.some(l => l.includes('inativas'))) {
+    result.push(
+      '<strong>Acionar posições inativas</strong> — priorizar ativação imediata das vagas sin activar e alinhar com os TAs responsáveis por layer'
+    );
+  }
+
+  if (lows.some(l => l.includes('rotação'))) {
+    result.push(
+      '<strong>Antecipar reposições</strong> — criar pipeline preventivo para as layers com maior projeção de rotação'
+    );
+  }
+
+  if (lows.some(l => l.includes('Ritmo'))) {
+    result.push(
+      '<strong>Revisar cadência de fechamento</strong> — definir metas mensais por layer e monitorar desvios semanalmente para atingir o HP'
+    );
+  }
+
+  if (result.length === 0) {
+    result.push('<strong>Manter ritmo atual</strong> — acompanhar evolução mensal e ajustar foco conforme necessário');
   }
   return result;
 }

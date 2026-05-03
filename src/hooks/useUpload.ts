@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, type Dispatch } from 'react';
 import { extractPdfText } from '../lib/pdf-extractor';
+import { isHpReport, parseHpReport } from '../lib/parser-hp';
 import { isHmReport, parseHmReport } from '../lib/parser-hm';
 import { parseQualtricsReport } from '../lib/parser-qualtrics';
 import type { TabId, TabsAction, StatusMessage } from '../types';
@@ -28,9 +29,11 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
         setTabStatus(tabId, { type: 'loading', msg: `Processando "${file.name}"… (${added + 1}/${files.length})` });
         try {
           const extracted = await extractPdfText(file);
-          const parsed = isHmReport(extracted.fullText)
-            ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
-            : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
+          const parsed = isHpReport(extracted.fullText)
+            ? parseHpReport(extracted.positionalFullText)
+            : isHmReport(extracted.fullText)
+              ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
+              : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
           parsed.fileName = file.name;
           dispatch({ type: 'ADD_PDF', tabId, pdf: parsed });
           added++;
