@@ -1,5 +1,5 @@
 import { escapeHtml } from './utils';
-import type { Comment, HpPayload, HpLayerRow } from '../types';
+import type { Comment, HpPayload, HpLayerRow, HpSummary } from '../types';
 
 interface Theme {
   key: string;
@@ -294,35 +294,56 @@ export function buildActions(lows: string[], opts?: BuildActionsOpts): string[] 
 
 // ── HP Completion insights ────────────────────────────────────────────────────
 
+function hpPaceIdeal(): number {
+  // Fraction of year elapsed × 100 — e.g., May (month 5) = 41.67%
+  return ((new Date().getMonth() + 1) / 12) * 100;
+}
+
+function hpLayerRatio(row: HpLayerRow): number {
+  const denom = row.cerradas + row.sinActivar;
+  return denom === 0 ? 0 : row.cerradas / denom;
+}
+
 export function buildHpHighs(hp: HpPayload): string[] {
   const result: string[] = [];
 
-  if (hp.porcentajeAvance >= 25) {
+  // 1. Absolute volume of closed positions + top layer
+  if (hp.cerradas > 0) {
+    const topLayer = hp.rows.length > 0
+      ? [...hp.rows].sort((a, b) => b.cerradas - a.cerradas)[0] as HpLayerRow
+      : null;
+    const layerSuffix = topLayer
+      ? ` — <strong>${escapeHtml(topLayer.agrupLayer)}</strong> lideran com ${topLayer.cerradas} fechamentos, indicando boa velocidade na camada operacional crítica`
+      : '';
+    result.push(`<strong>${hp.cerradas} posições cerradas</strong>${layerSuffix}.`);
+  }
+
+  // 2. On Going pipeline + projected pct if converted
+  if (hp.onGoing > 0 && hp.posicionesTotal > 0) {
+    const projectedPct = Math.round((hp.cerradas + hp.onGoing) / hp.posicionesTotal * 100);
+    const suffix = projectedPct > 50
+      ? `superando a metade do plano`
+      : `aproximando o plano da metade`;
     result.push(
-      `<strong>Bom ritmo de avanço</strong> — ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% do HP concluído até o momento`
+      `<strong>${hp.onGoing} posições On Going</strong> — pipeline ativo relevante que, se convertido, empurraria o avanço para ~${projectedPct}%, ${suffix}.`
     );
   }
 
-  if (hp.onGoing > 0) {
-    result.push(
-      `<strong>Pipeline ativo</strong> — ${hp.onGoing} posições em andamento, demonstrando esforço contínuo do time`
-    );
-  }
-
+  // 3. Best layer by closed/(closed+notActivated) ratio
   if (hp.rows.length > 0) {
-    const topLayer = [...hp.rows].sort((a, b) => b.cerradas - a.cerradas)[0] as HpLayerRow;
-    result.push(
-      `<strong>Destaque: ${escapeHtml(topLayer.agrupLayer)}</strong> lidera em fechamentos com ${topLayer.cerradas} posições fechadas`
-    );
-  }
-
-  const allLayersWithClosures = hp.rows.length >= 2 && hp.rows.every(r => r.cerradas > 0);
-  if (allLayersWithClosures) {
-    result.push('<strong>Avanço distribuído</strong> — todas as layers registram fechamentos no período');
+    const bestRow = [...hp.rows].sort((a, b) => hpLayerRatio(b) - hpLayerRatio(a))[0] as HpLayerRow;
+    const ratio = hpLayerRatio(bestRow);
+    if (ratio >= 0.45) {
+      const total = bestRow.cerradas + bestRow.sinActivar;
+      const pct = Math.round(ratio * 100);
+      result.push(
+        `<strong>Camada ${escapeHtml(bestRow.agrupLayer)} em proporção saudável</strong>: ${bestRow.cerradas} cerradas de ${total} totais (~${pct}%), melhor taxa relativa entre os grupos.`
+      );
+    }
   }
 
   if (result.length === 0) {
-    result.push('<strong>Dados carregados</strong> — analise os KPIs e a tabela de breakdown para contexto completo');
+    result.push('<strong>Dados carregados</strong> — analise os KPIs e a tabela de breakdown para contexto completo.');
   }
   return result;
 }
@@ -330,59 +351,112 @@ export function buildHpHighs(hp: HpPayload): string[] {
 export function buildHpLows(hp: HpPayload): string[] {
   const result: string[] = [];
 
+  // 1. Not-activated share
   const inativasPct = hp.posicionesTotal > 0
     ? Math.round((hp.sinActivar / hp.posicionesTotal) * 100)
     : 0;
-  if (hp.sinActivar > 0 && inativasPct >= 30) {
+  if (hp.sinActivar > 0 && inativasPct >= 25) {
     result.push(
-      `<strong>Alto volume de posições inativas</strong> — ${hp.sinActivar} sin activar (${inativasPct}% do total), risco de atraso no HP`
+      `<strong>${hp.sinActivar} posições sem ativar</strong> — maior bloco do funil (${inativasPct}% do total). Representa risco real de atraso se as ativações não acelerarem nos próximos meses.`
     );
   }
 
+  // 2. Progress below expected pace
+  if (hp.porcentajeAvance < hpPaceIdeal()) {
+    result.push(
+      `<strong>Apenas ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% de avanço no HP</strong> — com ${hp.year} já em andamento, o ritmo atual exigiria forte aceleração para fechar o ano dentro do plano.`
+    );
+  }
+
+  // 3. Worst layer bottleneck (most represed — lowest closed/total ratio)
   if (hp.rows.length > 0) {
-    const highRotRow = [...hp.rows].sort((a, b) => b.rotacionesProyectadas - a.rotacionesProyectadas)[0] as HpLayerRow;
-    if (highRotRow.rotacionesProyectadas > 0) {
+    const worstRow = [...hp.rows].sort((a, b) => hpLayerRatio(a) - hpLayerRatio(b))[0] as HpLayerRow;
+    if (hpLayerRatio(worstRow) < 0.50) {
       result.push(
-        `<strong>Risco de rotação elevado em ${escapeHtml(highRotRow.agrupLayer)}</strong> — ${highRotRow.rotacionesProyectadas} rotações projetadas demandam reposição antecipada`
+        `<strong>${escapeHtml(worstRow.agrupLayer)} têm ${worstRow.sinActivar} posições sem ativar contra ${worstRow.cerradas} cerradas</strong> — camada mais represada, impacto direto na capacidade operacional.`
       );
     }
   }
 
-  if (hp.porcentajeAvance < 50) {
+  // 4. Planned rotations drag
+  if (hp.totalRotations > 0 && hp.posicionesTotal > 0 && (hp.totalRotations / hp.posicionesTotal) > 0.10) {
     result.push(
-      `<strong>Ritmo abaixo de 50%</strong> — com ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% de avanço, é necessário acelerar fechamentos no semestre`
+      `<strong>${hp.totalRotations} rotações projetadas</strong> — reposições já esperadas que consumirão parte do esforço de recrutamento sem gerar crescimento líquido.`
     );
   }
 
   if (result.length === 0) {
-    result.push('<strong>Nenhum ponto crítico detectado automaticamente</strong> — revise os dados do HP para contexto adicional');
+    result.push('<strong>Nenhum ponto crítico detectado automaticamente</strong> — revise os dados do HP para contexto adicional.');
   }
   return result;
 }
 
-export function buildHpActions(lows: string[]): string[] {
+export function buildHpActions(hp: HpPayload): string[] {
   const result: string[] = [];
+  const inativasPct = hp.posicionesTotal > 0
+    ? Math.round((hp.sinActivar / hp.posicionesTotal) * 100) : 0;
+  const progressLow = hp.porcentajeAvance < hpPaceIdeal();
+  const rotationHigh = hp.totalRotations > 0 && hp.posicionesTotal > 0
+    && (hp.totalRotations / hp.posicionesTotal) > 0.10;
 
-  if (lows.some(l => l.includes('inativas'))) {
+  // Worst layer for bottleneck action
+  const worstRow = hp.rows.length > 0
+    ? [...hp.rows].sort((a, b) => hpLayerRatio(a) - hpLayerRatio(b))[0] as HpLayerRow
+    : null;
+  const hasBottleneck = worstRow && hpLayerRatio(worstRow) < 0.50;
+
+  if (hp.sinActivar > 0 && inativasPct >= 25) {
     result.push(
-      '<strong>Acionar posições inativas</strong> — priorizar ativação imediata das vagas sin activar e alinhar com os TAs responsáveis por layer'
+      `<strong>Priorizar ativação das ${hp.sinActivar} posições paradas</strong> — mapear gargalos (aprovação de budget, requisitos pendentes, headcount freeze?) e definir SLA de ativação por layer.`
     );
   }
 
-  if (lows.some(l => l.includes('rotação'))) {
+  if (hp.onGoing > 0) {
     result.push(
-      '<strong>Antecipar reposições</strong> — criar pipeline preventivo para as layers com maior projeção de rotação'
+      `<strong>Converter o pipeline On Going com urgência</strong> — ${hp.onGoing} posições em andamento são oportunidade imediata; review semanal de status com TAs para destravar ofertas paradas.`
     );
   }
 
-  if (lows.some(l => l.includes('Ritmo'))) {
+  if (hasBottleneck && worstRow) {
     result.push(
-      '<strong>Revisar cadência de fechamento</strong> — definir metas mensais por layer e monitorar desvios semanalmente para atingir o HP'
+      `<strong>Foco em ${escapeHtml(worstRow.agrupLayer)}</strong> — criar sprint dedicado de recrutamento para essa camada, que concentra o maior volume não ativado (${worstRow.sinActivar} posições).`
+    );
+  }
+
+  if (rotationHigh) {
+    result.push(
+      `<strong>Plano de retenção paralelo</strong> — com ${hp.totalRotations} rotações projetadas, ações de retenção podem reduzir reposições e liberar capacidade de TA para posições de crescimento.`
+    );
+  }
+
+  if (progressLow) {
+    const monthsElapsed = new Date().getMonth() + 1;
+    result.push(
+      `<strong>Revisitar meta de pace mensal</strong> — com ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% em ~${monthsElapsed} meses, calcular o ritmo necessário para fechar ${hp.year} e avaliar se o headcount de TA está dimensionado para isso.`
     );
   }
 
   if (result.length === 0) {
-    result.push('<strong>Manter ritmo atual</strong> — acompanhar evolução mensal e ajustar foco conforme necessário');
+    result.push('<strong>Manter ritmo atual</strong> — acompanhar evolução mensal e ajustar foco conforme necessário.');
   }
   return result;
+}
+
+export function buildHpSummary(hp: HpPayload): HpSummary {
+  const notActivatedPct = hp.posicionesTotal > 0
+    ? Math.round((hp.sinActivar / hp.posicionesTotal) * 100) : 0;
+  const projectedPct = hp.posicionesTotal > 0
+    ? Math.round((hp.cerradas + hp.onGoing) / hp.posicionesTotal * 100) : 0;
+
+  const worstRow = hp.rows.length > 0
+    ? [...hp.rows].sort((a, b) => hpLayerRatio(a) - hpLayerRatio(b))[0] as HpLayerRow
+    : null;
+
+  const paragraph1 = `O ${escapeHtml(hp.title)} está em ${hp.porcentajeAvance.toFixed(2).replace('.', ',')}% de avanço com um funil claramente represado: quase ${notActivatedPct}% das posições ainda não foram ativadas. O maior risco não está no recrutamento em si, mas na falta de ativação — posições que nem entraram em processo. Se as ${hp.onGoing} posições On Going converterem, o plano chega perto de ${projectedPct}%, o que muda o cenário, mas ainda deixa um gap grande para fechar o ano.`;
+
+  const paragraph2 = worstRow && hpLayerRatio(worstRow) < 0.50
+    ? `O ponto mais crítico para olhar é o bloco de ${escapeHtml(worstRow.agrupLayer)}, que tem mais posições paradas do que fechadas. Qualquer aceleração no HP passa por destravar essa camada primeiro.`
+    : `Para fechar o ano dentro do plano, o time precisa converter o pipeline On Going e ativar as posições paradas com urgência.`;
+
+  return { paragraph1, paragraph2 };
 }

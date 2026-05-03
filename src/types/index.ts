@@ -30,6 +30,7 @@ export interface HpPayload {
   sinActivar: number;
   reemplazosProyectados: number;
   operadoresProyectados: number;
+  totalRotations: number;
   porcentajeAvance: number;
   rows: HpLayerRow[];
 }
@@ -73,6 +74,11 @@ export interface Kpis {
   desfavorabilidade: string;
 }
 
+export interface HpSummary {
+  paragraph1: string;
+  paragraph2: string;
+}
+
 export interface MergedView {
   periodLabel: string;
   kpis: Kpis;
@@ -83,6 +89,7 @@ export interface MergedView {
   lows: string[];
   actions: string[];
   hpPayload?: HpPayload;
+  hpSummary?: HpSummary;
 }
 
 export interface ExtractedPdf {

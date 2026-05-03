@@ -1,8 +1,15 @@
 import type { PdfData, HpPayload, HpLayerRow } from '../types';
 
 export function isHpReport(text: string): boolean {
-  return /Plan\s+Shipping\s+Individuales/i.test(text)
-      || (/Posiciones\s+cerradas/i.test(text) && /Sin\s+Activar/i.test(text) && /On\s+Going/i.test(text));
+  const signals = [
+    /Plan\s+Shipping\s+Individuales/i,
+    /Porcentaje\s+de\s+Avance/i,
+    /Hiring\s+plan\s+\d{4}/i,
+    /Posiciones\s+(?:cerradas|On\s+Going|Sin\s+activar)/i,
+    /HP\s*[-–]\s*Shipping/i,
+  ];
+  const matches = signals.filter(re => re.test(text)).length;
+  return matches >= 2;
 }
 
 function parseSpanishNumber(raw: string): number {
@@ -24,14 +31,13 @@ function extractAfterLabel(text: string, labelPattern: RegExp, windowSize = 200)
 function extractLayerRows(text: string): HpLayerRow[] {
   const rows: HpLayerRow[] = [];
 
-  // Known layer identifiers in the HP Shipping PDF
   const layerPatterns: Array<{ label: string; pattern: RegExp }> = [
-    { label: 'TLs',             pattern: /\bTLs?\b/i },
+    { label: 'TLs',              pattern: /\bTLs?\b/i },
     { label: 'Analistas & Sups', pattern: /Analistas\s*(?:&|y)\s*Sups?/i },
     { label: 'Manager',          pattern: /\bManagers?\b/i },
   ];
 
-  // Find the table section anchored after "Hiring plan"
+  // Anchor search to the table section
   const tableStart = text.search(/Hiring\s+plan\s+\d{4}/i);
   const tableSection = tableStart !== -1 ? text.slice(tableStart) : text;
 
@@ -39,13 +45,14 @@ function extractLayerRows(text: string): HpLayerRow[] {
     const m = pattern.exec(tableSection);
     if (!m) continue;
 
-    // Extract 5 integers that follow the layer name (cerradas, sinActivar, onGoing, reemplazos, rotaciones)
-    const slice = tableSection.slice(m.index + m[0].length, m.index + m[0].length + 400);
-    const nums = [...slice.matchAll(/\b(\d{1,5})\b/g)].map(n => parseInt(n[1], 10)).filter(n => !isNaN(n));
+    // Grab 5 consecutive integers after the layer name (cerradas, sinActivar, onGoing, reemplazos, rotaciones)
+    const slice = tableSection.slice(m.index + m[0].length, m.index + m[0].length + 500);
+    const nums = [...slice.matchAll(/\b(\d{1,5})\b/g)]
+      .map(n => parseInt(n[1], 10))
+      .filter(n => !isNaN(n));
     if (nums.length < 5) continue;
 
-    // Determine equipo: look backwards for an equipo name (e.g., "TTE BRASIL")
-    const before = tableSection.slice(Math.max(0, m.index - 200), m.index);
+    const before = tableSection.slice(Math.max(0, m.index - 300), m.index);
     const equipoMatch = before.match(/([A-Z]{2,}(?:\s+[A-Z]{2,})+)\s*$/);
     const equipo = equipoMatch ? equipoMatch[1].trim() : 'TTE BRASIL';
 
@@ -66,31 +73,25 @@ function extractLayerRows(text: string): HpLayerRow[] {
 export function parseHpReport(positionalText: string): PdfData {
   const text = positionalText;
 
-  // Extract title and year
   const titleMatch = text.match(/Plan\s+Shipping\s+Individuales\s*[-–—]?\s*(20\d{2})/i)
                   || text.match(/HP\s*[-–—]\s*Shipping[\s\S]{0,60}(20\d{2})/i);
   const year = titleMatch ? titleMatch[1] : String(new Date().getFullYear());
   const title = titleMatch ? `Plan Shipping Individuales - ${year}` : `HP Shipping ${year}`;
 
-  const cerradas = extractAfterLabel(text, /Posiciones\s+cerradas/i) ?? 0;
-  const onGoing = extractAfterLabel(text, /Posiciones\s+On\s+Going/i) ?? 0;
-  const sinActivar = extractAfterLabel(text, /Posiciones\s+Sin\s+activar/i) ?? 0;
+  const cerradas            = extractAfterLabel(text, /Posiciones\s+cerradas/i)    ?? 0;
+  const onGoing             = extractAfterLabel(text, /Posiciones\s+On\s+Going/i)  ?? 0;
+  const sinActivar          = extractAfterLabel(text, /Posiciones\s+Sin\s+activar/i) ?? 0;
   const operadoresProyectados = extractAfterLabel(text, /Operadores\s+proyectados/i) ?? 0;
-  const posicionesTotal = extractAfterLabel(text, /Total\s+de\s+posiciones/i) ?? 0;
+  const posicionesTotal     = extractAfterLabel(text, /Total\s+de\s+posiciones/i)  ?? 0;
 
-  // Porcentaje de Avance — may appear as "31,18%" or "31,18"
   const avanceMatch = text.match(/Porcentaje\s+de\s+Avance[\s\S]{0,100}?([\d]+[,.][\d]+|[\d]+)\s*%?/i);
-  let porcentajeAvance = 0;
-  if (avanceMatch) {
-    porcentajeAvance = parseSpanishNumber(avanceMatch[1]);
-  }
+  const porcentajeAvance = avanceMatch ? parseSpanishNumber(avanceMatch[1]) : 0;
 
-  // Reemplazos proyectados — the first occurrence in KPI area (not the table)
-  // It appears as a KPI card before the table
   const reemplazosMatch = text.match(/Reemplazos\s+proyectados[\s\S]{0,150}?([\d.,]+)/i);
   const reemplazosProyectados = reemplazosMatch ? parseSpanishNumber(reemplazosMatch[1]) : 0;
 
   const rows = extractLayerRows(text);
+  const totalRotations = rows.reduce((sum, r) => sum + r.rotacionesProyectadas, 0);
 
   const hpPayload: HpPayload = {
     title,
@@ -101,6 +102,7 @@ export function parseHpReport(positionalText: string): PdfData {
     sinActivar,
     reemplazosProyectados,
     operadoresProyectados,
+    totalRotations,
     porcentajeAvance,
     rows,
   };

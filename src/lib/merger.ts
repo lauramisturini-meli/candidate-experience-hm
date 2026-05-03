@@ -1,5 +1,5 @@
 import { escapeHtml } from './utils';
-import { buildHighs, buildLows, buildActions, buildHpHighs, buildHpLows, buildHpActions, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
+import { buildHighs, buildLows, buildActions, buildHpHighs, buildHpLows, buildHpActions, buildHpSummary, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
 import type { PdfData, MergedView, TabId } from '../types';
 
 function deriveTabPeriod(filters: Record<string, string>, _tabId: TabId): string {
@@ -26,7 +26,6 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
     const primary = pdfs.find(p => p.isHp && p.hpPayload) ?? pdfs[0];
     const hp = primary?.hpPayload;
     if (hp) {
-      const lows = buildHpLows(hp);
       return {
         periodLabel: hp.year,
         kpis: {
@@ -40,9 +39,10 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
         worstDimensionName: null,
         detractorHtml: '',
         highs: buildHpHighs(hp),
-        lows,
-        actions: buildHpActions(lows),
+        lows: buildHpLows(hp),
+        actions: buildHpActions(hp),
         hpPayload: hp,
+        hpSummary: buildHpSummary(hp),
       };
     }
   }

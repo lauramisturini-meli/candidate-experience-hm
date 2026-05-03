@@ -196,6 +196,13 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
               ))}
             </ul>
           </div>
+          {data.hpSummary && (
+            <div className={s.hpSummary}>
+              <div className={s.hpSummaryTitle}>Síntese Executiva</div>
+              <p className={s.hpSummaryText}>{data.hpSummary.paragraph1}</p>
+              <p className={s.hpSummaryText}>{data.hpSummary.paragraph2}</p>
+            </div>
+          )}
         </div>
       </div>
 
