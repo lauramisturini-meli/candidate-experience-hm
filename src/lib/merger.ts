@@ -3,8 +3,7 @@ import { TAB_META } from './constants';
 import { buildHighs, buildLows, buildActions, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
 import type { PdfData, MergedView, TabId } from '../types';
 
-function deriveTabPeriod(filters: Record<string, string>, tabId: TabId): string {
-  if (tabId === 'ytd') return String(new Date().getFullYear());
+function deriveTabPeriod(filters: Record<string, string>, _tabId: TabId): string {
   const fecha = filters['Fecha inicio encuesta'] || '';
   if (fecha) {
     const map: Record<string, string> = {
@@ -19,7 +18,7 @@ function deriveTabPeriod(filters: Record<string, string>, tabId: TabId): string 
     label = label.replace(/[^A-Za-zÀ-ÿ0-9\s\-–—.,()/:]+/g, ' ').replace(/\s+/g, ' ').trim();
     return label;
   }
-  return TAB_META[tabId].label;
+  return String(new Date().getFullYear());
 }
 
 export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {

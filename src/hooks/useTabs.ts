@@ -23,6 +23,6 @@ function tabsReducer(state: TabsState, action: TabsAction): TabsState {
 
 export function useTabs() {
   const [tabsData, dispatch] = useReducer(tabsReducer, initialState);
-  const [activeTab, setActiveTab] = useState<TabId>('ytd');
+  const [activeTab, setActiveTab] = useState<TabId>('external');
   return { tabsData, dispatch, activeTab, setActiveTab };
 }
