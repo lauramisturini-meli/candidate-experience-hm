@@ -1,5 +1,4 @@
 import { escapeHtml } from './utils';
-import { TAB_META } from './constants';
 import { buildHighs, buildLows, buildActions, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
 import type { PdfData, MergedView, TabId } from '../types';
 
