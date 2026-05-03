@@ -24,7 +24,7 @@ export interface PdfData {
   fileName: string;
 }
 
-export type TabId = 'external' | 'internal' | 'hm' | 'tonh' | 'pcd' | 'hpc';
+export type TabId = 'external' | 'internal' | 'hm' | 'tonh' | 'pcd' | 'hpc' | 'outsla';
 
 export interface TabMeta {
   label: string;
