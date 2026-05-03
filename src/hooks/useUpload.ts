@@ -30,7 +30,7 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
         try {
           const extracted = await extractPdfText(file);
           const parsed = isHpReport(extracted.fullText)
-            ? parseHpReport(extracted.positionalFullText)
+            ? parseHpReport(extracted.positionalFullText, extracted.fullText)
             : isHmReport(extracted.fullText)
               ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
               : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
