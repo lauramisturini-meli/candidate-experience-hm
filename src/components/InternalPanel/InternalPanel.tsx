@@ -24,8 +24,6 @@ function parsePct(val: string): number {
 
 const DASH = (v: string) => v === '—' || v === '-';
 
-type DimOverrides = Record<number, { desfav?: string }>;
-
 function DonutChart({ fav, neutral, desfav, hasData }: {
   fav: number; neutral: number; desfav: number; hasData: boolean;
 }) {
