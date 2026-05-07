@@ -202,7 +202,8 @@ function extractDimensionsInternal(rawText: string): Array<{ name: string; fav: 
     if (rowM) {
       const fav = rowM[1] + '%';
       // After fav%, look for up to 2 more consecutive percentages (neutral, desfav)
-      const afterFav = after.slice(rowM.index + rowM[0].length, rowM.index + rowM[0].length + 60);
+      const matchIndex = rowM.index ?? 0;
+      const afterFav = after.slice(matchIndex + rowM[0].length, matchIndex + rowM[0].length + 60);
       const extraPcts = [...afterFav.matchAll(/\b(\d{1,3})%\b/g)].map(x => parseInt(x[1], 10));
       const favNum = parseInt(rowM[1], 10);
       let desfav = '—';
