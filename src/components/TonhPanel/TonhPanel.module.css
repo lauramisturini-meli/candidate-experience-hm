@@ -1,0 +1,310 @@
+/* ── Shared layout ───────────────────────────────────────────────────────── */
+.sectionTag {
+  display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
+  font-size: 11px; font-weight: 800;
+  padding: 6px 16px; margin: 22px 0 0 32px;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  border-radius: 4px;
+}
+.toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 32px 0 32px; gap: 12px;
+}
+.toolbarSub { display: flex; padding: 4px 32px 0 32px; }
+.uploadHint { font-size: 11px; color: var(--ink-soft); }
+.pillList { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 70%; }
+.btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
+.uploadBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--brand-dark); color: var(--brand-yellow);
+  border: none; padding: 8px 16px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  cursor: pointer; transition: background 0.15s, transform 0.08s;
+  white-space: nowrap;
+}
+.uploadBtn:hover { background: #444; }
+.uploadBtn:active { transform: translateY(1px); }
+.uploadBtn.secondary { background: #fff; color: var(--brand-dark); border: 1px solid #ddd; }
+.uploadBtn.secondary:hover { background: #f7f7f7; border-color: #bbb; }
+.uploadBtn[disabled] { opacity: 0.5; cursor: wait; }
+
+/* ── TO NH Goal blocks ───────────────────────────────────────────────────── */
+.toGoalRow {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin: 12px 32px 0 32px;
+}
+.toGoalBlock {
+  background: var(--brand-dark); border-radius: 12px; padding: 16px 18px;
+}
+.toGoalTopRow {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+}
+.toGoalTitle   { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
+.toGoalMetaTag { font-size: 10px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
+
+.toGoalBody  { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
+.toGoalLeft  { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.toGoalBigNum    { font-size: 34px; font-weight: 900; line-height: 1; }
+.toGoalOkNum     { color: #a5d6a7; }
+.toGoalBadNum    { color: #ef9a9a; }
+.toGoalBigLabel  { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
+.toGoalInput {
+  width: 90px; background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
+  color: #fff; font-family: inherit; font-size: 12px; font-weight: 700;
+  padding: 5px 8px; outline: none; transition: border-color 0.15s; margin-top: 2px;
+}
+.toGoalInput:focus { border-color: var(--brand-yellow); }
+
+.toGoalRight   { display: flex; flex-direction: column; gap: 8px; }
+.toGoalBarWrap { display: flex; flex-direction: column; gap: 4px; }
+.toGoalBarTrack {
+  position: relative; height: 12px; background: rgba(255,255,255,0.12);
+  border-radius: 6px; overflow: visible;
+}
+.toGoalFillOk  { height: 100%; background: #a5d6a7; border-radius: 6px; transition: width 0.5s ease; min-width: 4px; }
+.toGoalFillBad { height: 100%; background: #ef9a9a; border-radius: 6px; transition: width 0.5s ease; min-width: 4px; }
+.toGoalMetaMark {
+  position: absolute; top: -4px;
+  width: 2px; height: 20px; background: rgba(255,219,0,0.7); border-radius: 1px;
+}
+.toGoalBarLabels {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: rgba(255,255,255,0.35); font-weight: 700;
+}
+.toGoalGapOk    { font-size: 11px; font-weight: 800; color: #a5d6a7; }
+.toGoalGapAlert { font-size: 11px; font-weight: 800; color: #ef9a9a; }
+
+.toGoalEmpty      { display: flex; flex-direction: column; gap: 10px; }
+.toGoalEmptyLabel { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; }
+.toGoalEmptyRow   { display: flex; align-items: center; gap: 8px; }
+.toGoalInputBig {
+  flex: 1; background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,219,0,0.5); border-radius: 8px;
+  color: #fff; font-family: inherit; font-size: 22px; font-weight: 900;
+  padding: 10px 14px; outline: none; transition: border-color 0.15s;
+  max-width: 130px; text-align: center;
+}
+.toGoalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 400; }
+.toGoalInputBig:focus { border-color: var(--brand-yellow); }
+.toGoalEmptyUnit { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.4); }
+
+/* ── Dashboard section ───────────────────────────────────────────────────── */
+.dashSection {
+  margin: 16px 32px 0 32px;
+  background: #f8f8f8;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.dashSectionTitle {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--brand-dark);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--brand-yellow);
+  display: inline-block; margin-bottom: 14px;
+}
+.dashCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.dashCard {
+  background: #fff;
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.dashCardHeader {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 14px;
+}
+.dashCardLabel {
+  font-size: 12px; font-weight: 900; color: var(--brand-dark);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.dashCardMeta { font-size: 11px; color: var(--ink-soft); }
+
+.dashKpiGrid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 14px;
+}
+.dashKpi { text-align: center; }
+.dashKpiVal {
+  font-size: 22px; font-weight: 900; line-height: 1.1;
+}
+.dashKpiValNeutral {
+  font-size: 22px; font-weight: 900; line-height: 1.1;
+  color: var(--ink);
+}
+.dashKpiLabel {
+  font-size: 9px; color: var(--ink-soft); margin-top: 3px;
+  text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700;
+}
+
+.ok  { color: #2e7d32; }
+.bad { color: var(--danger); }
+
+.badgeOk {
+  display: inline-block; margin-top: 4px;
+  font-size: 9px; font-weight: 800; padding: 2px 6px;
+  border-radius: 10px; background: #e8f5e9; color: #2e7d32;
+}
+.badgeBad {
+  display: inline-block; margin-top: 4px;
+  font-size: 9px; font-weight: 800; padding: 2px 6px;
+  border-radius: 10px; background: #ffebee; color: var(--danger);
+}
+
+/* Seniority breakdown inside dashboard card */
+.seniorityList { display: flex; flex-direction: column; gap: 5px; }
+.seniorityTitle {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--ink-soft); margin-bottom: 4px;
+}
+.seniorityRow {
+  display: grid; grid-template-columns: 120px 1fr 40px;
+  align-items: center; gap: 8px;
+}
+.seniorityLabel { font-size: 10.5px; color: var(--ink); }
+.seniorityBarWrap { height: 7px; background: var(--divider); border-radius: 4px; overflow: hidden; }
+.seniorityBar { height: 100%; border-radius: 4px; transition: width 0.4s ease; min-width: 2px; }
+.seniorityBarOk  { background: #43a047; }
+.seniorityBarBad { background: var(--danger); }
+.seniorityPct { font-size: 10px; font-weight: 800; text-align: right; }
+
+/* ── Main two-column area ────────────────────────────────────────────────── */
+.main {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  min-height: 400px;
+}
+.colLeft  { padding: 20px 32px 24px 32px; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 16px; }
+.colRight { padding: 22px 32px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+.colTitle {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--brand-dark);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--brand-yellow);
+  display: flex; align-items: center; gap: 8px;
+}
+.colCount {
+  background: var(--brand-dark); color: var(--brand-yellow);
+  font-size: 10px; font-weight: 900;
+  padding: 1px 7px; border-radius: 10px;
+}
+.emptyHint { color: var(--ink-muted); font-size: 12px; margin-top: 20px; }
+
+/* ── Case analysis ───────────────────────────────────────────────────────── */
+.analysisWrap { display: flex; flex-direction: column; gap: 18px; }
+
+/* Summary chips */
+.summaryRow { display: flex; flex-wrap: wrap; gap: 8px; }
+.summaryChip {
+  display: flex; flex-direction: column; align-items: center;
+  background: #f0f0f0; border-radius: 8px; padding: 8px 14px;
+  min-width: 80px;
+}
+.summaryChipDanger { background: #fff0f0; }
+.summaryVal { font-size: 20px; font-weight: 900; color: var(--brand-dark); line-height: 1.1; }
+.summaryChipDanger .summaryVal { color: var(--danger); }
+.summaryLbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-muted); margin-top: 2px; }
+
+/* Breakdown block */
+.breakdown { display: flex; flex-direction: column; gap: 6px; }
+.breakdownTitle {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--brand-dark);
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--brand-yellow);
+  display: inline-block; margin-bottom: 2px;
+}
+.breakdownRow2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+
+/* Breakdown row */
+.bRow {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 70px 28px 36px;
+  align-items: center; gap: 8px;
+}
+.bLabel { font-size: 11px; color: var(--ink); word-break: break-word; line-height: 1.3; }
+.bBarWrap { height: 8px; background: var(--divider); border-radius: 4px; overflow: hidden; }
+.bBar { height: 100%; border-radius: 4px; transition: width 0.4s ease; min-width: 2px; }
+.bCount { font-size: 11px; font-weight: 800; color: var(--ink); text-align: right; }
+.bPct   { font-size: 10px; color: var(--ink-muted); text-align: right; }
+
+/* Bar colors */
+.barMotivo { background: #c62828; }
+.barArea   { background: #1565c0; }
+.barRol    { background: #6a1b9a; }
+.barTempo  { background: #e65100; }
+
+/* Yellow/Red Flags section */
+.flagBadge {
+  margin-left: 8px;
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px;
+  background: #fff3e0; color: #e65100;
+  letter-spacing: 0.4px;
+}
+.flagAvgHint {
+  font-size: 11px; color: var(--ink-soft); margin-bottom: 6px;
+}
+.flagList { display: flex; flex-direction: column; gap: 6px; }
+.flagRow {
+  padding: 8px 12px; border-radius: 6px;
+  background: #fff; border-left: 3px solid #e65100;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.flagMeta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.flagName { font-size: 11.5px; font-weight: 800; color: var(--brand-dark); }
+.flagText { font-size: 11px; color: var(--ink); line-height: 1.5; }
+
+/* Key learnings */
+.learningList {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.learningList li {
+  font-size: 11.5px; color: var(--ink); line-height: 1.6;
+  padding: 9px 13px 9px 16px; position: relative;
+  background: #fff; border-radius: 6px;
+  border-left: 3px solid var(--brand-yellow);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+/* ── Insight column ──────────────────────────────────────────────────────── */
+.insightTitle {
+  font-size: 13px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 10px;
+  padding-bottom: 6px; border-bottom: 2px solid;
+  display: inline-block;
+}
+.insightTitle.highs   { color: var(--success); border-color: var(--success); }
+.insightTitle.lows    { color: var(--danger);  border-color: var(--danger); }
+.insightTitle.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
+.insightList { list-style: none; padding: 0; }
+.insightList li {
+  font-size: 11.5px; color: var(--ink); line-height: 1.55;
+  padding: 4px 0 4px 16px; position: relative;
+}
+.insightList li::before {
+  content: ""; position: absolute; left: 0; top: 11px;
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.highsList li::before   { background: var(--success); }
+.lowsList li::before    { background: var(--danger); }
+.actionsList li::before { background: var(--brand-yellow); border: 1px solid #e8c400; }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--divider); padding: 12px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface-alt);
+}
+.footerText { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }

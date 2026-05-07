@@ -2,7 +2,10 @@ import { useRef, useEffect, useState, useCallback, type Dispatch } from 'react';
 import { extractPdfText } from '../lib/pdf-extractor';
 import { isHpReport, parseHpReport } from '../lib/parser-hp';
 import { isHmReport, parseHmReport } from '../lib/parser-hm';
+import { isOutSlaReport, parseOutSlaReport } from '../lib/parser-outsla';
 import { parseQualtricsReport } from '../lib/parser-qualtrics';
+import { isPcdReport, parsePcdReport } from '../lib/parser-pcd';
+import { isTonhReport, parseTonhReport } from '../lib/parser-tonh';
 import type { TabId, TabsAction, StatusMessage } from '../types';
 
 export function useUpload(dispatch: Dispatch<TabsAction>) {
@@ -29,11 +32,17 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
         setTabStatus(tabId, { type: 'loading', msg: `Processando "${file.name}"… (${added + 1}/${files.length})` });
         try {
           const extracted = await extractPdfText(file);
-          const parsed = isHpReport(extracted.fullText)
-            ? parseHpReport(extracted.positionalFullText, extracted.fullText)
-            : isHmReport(extracted.fullText)
-              ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
-              : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
+          const parsed = isPcdReport(extracted.fullText)
+            ? parsePcdReport(extracted.pageTexts, file.name)
+            : isOutSlaReport(extracted.fullText)
+              ? parseOutSlaReport(extracted.positionalFullText, file.name)
+              : isHpReport(extracted.fullText)
+                ? parseHpReport(extracted.positionalFullText, extracted.fullText)
+                : isHmReport(extracted.fullText)
+                  ? parseHmReport(extracted.positionalFullText, extracted.positionalPages)
+                  : isTonhReport(extracted.fullText)
+                    ? parseTonhReport(extracted.fullText, extracted.pageTexts, file.name)
+                    : parseQualtricsReport(extracted.fullText, extracted.pageTexts);
           parsed.fileName = file.name;
           dispatch({ type: 'ADD_PDF', tabId, pdf: parsed });
           added++;
@@ -48,7 +57,9 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
 
       setTabStatus(tabId, {
         type: 'success',
-        msg: `✓ ${added} PDF(s) processado(s) — ${totalComments} comentários somados.`,
+        msg: totalComments > 0
+          ? `✓ ${added} PDF(s) processado(s) — ${totalComments} comentários somados.`
+          : `✓ ${added} arquivo(s) processado(s).`,
       });
       setTimeout(() => setTabStatus(tabId, null), 4500);
     };
@@ -61,6 +72,7 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
     currentTabRef.current = tabId;
     if (inputRef.current) {
       inputRef.current.value = '';
+      inputRef.current.accept = 'application/pdf,.csv,.xlsx';
       inputRef.current.click();
     }
   }, []);

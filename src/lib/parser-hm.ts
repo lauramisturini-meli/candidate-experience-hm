@@ -1,10 +1,11 @@
 import type { PdfData } from '../types';
 
 const HM_QUESTIONS = [
-  { name: 'Visibilidade sobre o avanço do processo',                     keyword: /Tuve\s+visibilidad/i,           isOverall: false },
-  { name: 'Perfis avaliados alinhados ao perfil definido',               keyword: /Los\s+perfiles\s+evaluados/i,   isOverall: false },
-  { name: 'Recomendações de valor do time de TA durante o processo',     keyword: /recomendaciones\s+de\s+valor/i, isOverall: false },
-  { name: 'TA contribuiu ativamente na identificação do melhor talento', keyword: /El\s+equipo\s+de\s+TA/i,        isOverall: true  },
+  { name: 'Visibilidade sobre o avanço do processo',                     keyword: /Tuve\s+visibilidad/i,                             isOverall: false },
+  // "Los perfiles evaluados" — avoid "fi" ligature (perﬁles → U+FB01); match unique phrase without it
+  { name: 'Perfis avaliados alinhados ao perfil definido',               keyword: /evaluados\s+durante\s+el\s+proceso\s+estuvieron/i, isOverall: false },
+  { name: 'Recomendações de valor do time de TA durante o processo',     keyword: /recomendaciones\s+de\s+valor/i,                   isOverall: false },
+  { name: 'TA contribuiu ativamente na identificação do melhor talento', keyword: /El\s+equipo\s+de\s+TA/i,                          isOverall: true  },
 ] as const;
 
 export function isHmReport(fullText: string): boolean {
@@ -14,15 +15,10 @@ export function isHmReport(fullText: string): boolean {
 }
 
 export function parseHmReport(fullText: string, _pageTexts: string[]): PdfData {
-  const normText = fullText.normalize('NFD').replace(/[̀-ͯ]/g, '');
-
-  const pctAfter = (idx: number, win = 1200): number | null => {
-    const slice = normText.slice(idx, idx + win);
-    const m = slice.match(/(\d{1,3})\s*%/);
-    if (!m) return null;
-    const v = parseInt(m[1], 10);
-    return (isNaN(v) || v > 100) ? null : v;
-  };
+  const normText = fullText.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    // dissolve common PDF ligatures so keywords like "perfiles" match "perﬁles"
+    .replace(/ﬀ/g, 'ff').replace(/ﬁ/g, 'fi').replace(/ﬂ/g, 'fl')
+    .replace(/ﬃ/g, 'ffi').replace(/ﬄ/g, 'ffl');
 
   const numAfter = (idx: number, win = 400): number | null => {
     const slice = normText.slice(idx, idx + win);
@@ -39,13 +35,41 @@ export function parseHmReport(fullText: string, _pageTexts: string[]): PdfData {
   const dimensions: Array<{ name: string; fav: string; desfav: string }> = [];
   let overallFav: number | null = null;
 
+  // Collect all keyword positions first so each question's window stops before the next
+  const qMatches: Array<{ q: (typeof HM_QUESTIONS)[number]; matchStart: number; keyEnd: number }> = [];
   for (const q of HM_QUESTIONS) {
-    const km = q.keyword.exec(normText);
-    if (!km) continue;
-    const pct = pctAfter(km.index + km[0].length, 1500);
-    if (pct == null) continue;
-    dimensions.push({ name: q.name, fav: pct + '%', desfav: (100 - pct) + '%' });
-    if (q.isOverall) overallFav = pct;
+    const re = new RegExp(q.keyword.source, 'i');
+    const km = re.exec(normText);
+    if (km) qMatches.push({ q, matchStart: km.index, keyEnd: km.index + km[0].length });
+  }
+  // Display order: non-overall first (by text position), isOverall last.
+  qMatches.sort((a, b) => {
+    if (a.q.isOverall && !b.q.isOverall) return 1;
+    if (!a.q.isOverall && b.q.isOverall) return -1;
+    return a.matchStart - b.matchStart;
+  });
+
+  // Window bounds must use TEXT position order, not display order.
+  // Q4 (donut) appears at the top of the page → earliest in text, but last in display sort.
+  // Using display-order neighbors for slicing gives Q3 an empty window (Q4's text pos < Q3's keyEnd).
+  const textSorted = [...qMatches].sort((a, b) => a.matchStart - b.matchStart);
+
+  for (let qi = 0; qi < qMatches.length; qi++) {
+    const { q, keyEnd } = qMatches[qi];
+    const textIdx   = textSorted.findIndex(m => m.keyEnd === keyEnd);
+    const nextInText = textSorted[textIdx + 1];
+    const nextStart  = nextInText ? nextInText.matchStart : keyEnd + 600;
+    const slice = normText.slice(keyEnd, Math.min(keyEnd + 600, nextStart));
+
+    // The HM PDF only emits the main fav% as text; neutro/desfav segments have no text label.
+    // Take the first valid percentage in the window as the favorability value.
+    const m = slice.match(/\b(\d{1,3})\s*%/);
+    if (!m) continue;
+    const fav = parseInt(m[1], 10);
+    if (isNaN(fav) || fav > 100) continue;
+
+    if (q.isOverall) { overallFav = fav; continue; }
+    dimensions.push({ name: q.name, fav: fav + '%', desfav: '—' });
   }
 
   if (overallFav == null && dimensions.length) {
@@ -53,8 +77,10 @@ export function parseHmReport(fullText: string, _pageTexts: string[]): PdfData {
     if (pcts.length) overallFav = Math.max(...pcts);
   }
 
-  const fav = overallFav != null ? overallFav + '%' : '—';
-  const desfav = overallFav != null ? '0%' : '—';
+  // Use the overall question's desfav for the KPI if available, otherwise '—'
+  const overallDim = dimensions.find(d => d.name === HM_QUESTIONS.find(q => q.isOverall)?.name);
+  const fav    = overallFav != null ? overallFav + '%' : '—';
+  const desfav = overallDim?.desfav ?? '—';
 
   const comments: Array<{ score: number; division: string; name: string; text: string }> = [];
   const rawNorm = fullText.normalize('NFD').replace(/[̀-ͯ]/g, '');

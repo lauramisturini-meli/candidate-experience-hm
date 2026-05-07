@@ -1,6 +1,15 @@
 import { escapeHtml } from './utils';
-import { buildHighs, buildLows, buildActions, buildHpHighs, buildHpLows, buildHpActions, buildHpSummary, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
+import { buildHighs, buildLows, buildActions, buildHpHighs, buildHpLows, buildHpActions, buildHpSummary, buildInternalInsights, HM_HIGH_THEMES, HM_LOW_THEMES, HM_ACTION_MAP } from './insights';
 import type { PdfData, MergedView, TabId } from '../types';
+
+// Internal survey question names by position (Qualtrics fixed template)
+const INTERNAL_DIM_NAMES = [
+  'Visibilidade do andamento do processo',
+  'Experiência geral no processo (NPS interno)',
+  'Feedback construtivo e específico ao final',
+  'Clareza sobre como seria o processo desde o início',
+  'Clareza do escopo, desafios e alcance do cargo',
+];
 
 function deriveTabPeriod(filters: Record<string, string>, _tabId: TabId): string {
   const fecha = filters['Fecha inicio encuesta'] || '';
@@ -94,8 +103,17 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
     neutrosSub = `Nota 3 · ~${neutrals.length} candidatos`;
   }
 
-  const dimensions = (primary?.dimensions?.length ? primary.dimensions
+  const isHm       = !!(primary?.isHm);
+  const isInternal = tabId === 'internal';
+
+  const rawDimensions = (primary?.dimensions?.length
+    ? primary.dimensions
     : pdfs.find(p => p.dimensions?.length)?.dimensions) ?? [];
+
+  // For internal: remap dimension names (parser uses external-survey names by position)
+  const dimensions = isInternal && rawDimensions.length > 0
+    ? rawDimensions.map((d, i) => ({ ...d, name: INTERNAL_DIM_NAMES[i] || d.name }))
+    : rawDimensions;
 
   const detractors = allComments.filter(c => c.score <= 2);
   const positives  = allComments.filter(c => c.score >= 4);
@@ -112,7 +130,7 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
     .sort((a, b) => parseInt(b.desfav) - parseInt(a.desfav))
     .slice(0, 3);
 
-  let detractorHtml = `<strong>${detractors.length} respostas</strong> de nota 1–2`;
+  let detractorHtml = `<strong>${detractors.length} respostas</strong>`;
   if (topNegDims.length > 0) {
     detractorHtml += '<br>Piores dimensões:<br>';
     detractorHtml += topNegDims
@@ -120,16 +138,21 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
       .join('<br>');
   }
 
-  const isHm = !!(primary?.isHm);
-  const highs = isHm
-    ? buildHighs(allComments, allComments, { themes: HM_HIGH_THEMES, minMatches: 1, skipTaMentions: true })
-    : buildHighs(positives, allComments);
-  const lows = isHm
-    ? buildLows(allComments, { themes: HM_LOW_THEMES, skipScoreFilter: true })
-    : buildLows(allComments);
-  const actions = isHm
-    ? buildActions(lows, { map: HM_ACTION_MAP })
-    : buildActions(lows);
+  let highs: string[], lows: string[], actions: string[];
+  if (isHm) {
+    highs   = buildHighs(allComments, allComments, { themes: HM_HIGH_THEMES, minMatches: 1, skipTaMentions: true });
+    lows    = buildLows(allComments, { themes: HM_LOW_THEMES, skipScoreFilter: true });
+    actions = buildActions(lows, { map: HM_ACTION_MAP });
+  } else if (isInternal) {
+    const internalInsights = buildInternalInsights(dimensions ?? [], allComments ?? []);
+    highs   = internalInsights.highs;
+    lows    = internalInsights.lows;
+    actions = internalInsights.actions;
+  } else {
+    highs   = buildHighs(positives, allComments);
+    lows    = buildLows(detractors.length >= 3 ? detractors : allComments);
+    actions = buildActions(lows);
+  }
 
   const refFilters = primary?.filters ?? pdfs[0]?.filters ?? {};
   const periodLabel = isHm

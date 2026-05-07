@@ -41,7 +41,7 @@ export function App() {
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf"
+        accept="application/pdf,image/png,image/jpeg,image/jpg"
         multiple
         style={{ display: 'none' }}
       />

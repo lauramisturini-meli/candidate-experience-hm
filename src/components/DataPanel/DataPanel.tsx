@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { buildMergedView } from '../../lib/merger';
+import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabId, TabMeta, StatusMessage } from '../../types';
@@ -17,8 +18,67 @@ interface Props {
   isShareLoading: boolean;
 }
 
+type DimOverrides = Record<number, { fav?: string; neutros?: string; desfav?: string }>;
+
+const DASH = (v: string) => v === '—' || v === '-';
+
 export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
   const data = useMemo(() => buildMergedView(pdfs, tabId), [pdfs, tabId]);
+  const [overrides, setOverrides] = useState<DimOverrides>({});
+  const [kpiNeutros,  setKpiNeutros]  = useState('');
+  const [kpiDesfav,   setKpiDesfav]   = useState('');
+  const [goalInput,   setGoalInput]   = useState('');
+
+  // Reset overrides whenever the underlying data changes
+  useEffect(() => {
+    setOverrides({});
+    setKpiNeutros('');
+    setKpiDesfav('');
+  }, [data.dimensions]);
+
+  // Auto-fill goal from PDF fav value
+  useEffect(() => {
+    const raw = data.kpis.favorabilidade;
+    if (raw && raw !== '—' && raw !== '-') setGoalInput(raw.replace('%', ''));
+  }, [data.kpis.favorabilidade]);
+
+  const setOverride = (idx: number, field: 'fav' | 'neutros' | 'desfav', val: string) =>
+    setOverrides(prev => ({ ...prev, [idx]: { ...prev[idx], [field]: val } }));
+
+  const dimVal = (idx: number, field: 'fav' | 'neutros' | 'desfav', raw: string) =>
+    overrides[idx]?.[field] ?? raw;
+
+  // Display in <input> without "%"; store with "%"
+  const pctDisplay = (v: string) => DASH(v) ? '' : v.replace('%', '');
+  const pctStore   = (raw: string) => { const n = raw.replace(/[^0-9,.]/g, ''); return n ? n + '%' : '—'; };
+
+  // When user fills in HM dimension values, recalculate insights from real data
+  const effectiveDims = useMemo(() =>
+    data.dimensions.map((d, i) => ({
+      name:   d.name,
+      fav:    overrides[i]?.fav    ?? d.fav,
+      desfav: overrides[i]?.desfav ?? d.desfav,
+    })),
+    [data.dimensions, overrides],
+  );
+
+  const hasDesfavOverride = useMemo(
+    () => Object.values(overrides).some(o => o.desfav && !DASH(o.desfav)),
+    [overrides],
+  );
+
+  const { highs, lows, actions } = useMemo(() => {
+    if (tabId === 'hm' && (hasDesfavOverride || (kpiNeutros && !DASH(kpiNeutros)) || (kpiDesfav && !DASH(kpiDesfav)))) {
+      const dim = buildHmDimensionInsights(effectiveDims, kpiNeutros, kpiDesfav);
+      // Merge dimension-based (quantitative) with comment-based (qualitative), dim insights first
+      return {
+        highs:   [...dim.highs,   ...data.highs  ].slice(0, 6),
+        lows:    [...dim.lows,    ...data.lows    ].slice(0, 6),
+        actions: [...dim.actions, ...data.actions ].slice(0, 6),
+      };
+    }
+    return { highs: data.highs, lows: data.lows, actions: data.actions };
+  }, [tabId, hasDesfavOverride, kpiNeutros, kpiDesfav, effectiveDims, data.highs, data.lows, data.actions]);
 
   return (
     <>
@@ -35,12 +95,58 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
             🔗 Copiar link
           </button>
-          <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar PDF</button>
+          <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
         </div>
       </div>
       <div className={s.toolbarSub}>
-        <div className={s.uploadHint}>Período: <strong>{data.periodLabel}</strong></div>
       </div>
+
+      {(tabId === 'external' || tabId === 'hm') && (() => {
+        const META  = tabId === 'hm' ? 95 : 90;
+        const LABEL = tabId === 'hm' ? 'Hiring Manager' : 'External Candidate';
+        const current = goalInput.trim() ? (parseFloat(goalInput.replace(',', '.')) || null) : null;
+        const fill    = current !== null ? Math.min((current / META) * 100, 100) : 0;
+        const gap     = current !== null ? Math.abs(META - current).toFixed(1).replace('.', ',') : null;
+        const ok      = current !== null && current >= META;
+        return (
+          <div className={s.goalRow}>
+            <div className={s.goalBlock}>
+              <div className={s.goalTopRow}>
+                <span className={s.goalTitle}>Meta Favorabilidade — {LABEL} 2026</span>
+                <span className={s.goalMetaTag}>Meta: {META}%</span>
+              </div>
+              {current === null ? (
+                <div className={s.goalEmpty}>
+                  <span className={s.goalEmptyLabel}>% Favorabilidade atual</span>
+                  <div className={s.goalEmptyRow}>
+                    <input className={s.goalInputBig} type="text" placeholder="ex: 93" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
+                    <span className={s.goalEmptyUnit}>%</span>
+                  </div>
+                </div>
+              ) : (
+                <div className={s.goalBody}>
+                  <div className={s.goalLeft}>
+                    <span className={`${s.goalBigNum} ${ok ? s.goalOk : s.goalAlert}`}>{current.toLocaleString('pt-BR')}%</span>
+                    <span className={s.goalBigLabel}>Favorabilidade atual</span>
+                  </div>
+                  <div className={s.goalRight}>
+                    <div className={s.goalBarWrap}>
+                      <div className={s.goalBarTrack}>
+                        <div className={ok ? s.goalFillOk : s.goalFillAlert} style={{ width: `${fill}%` }} />
+                        <div className={s.goalMark} />
+                      </div>
+                      <div className={s.goalBarLabels}><span>0%</span><span>{META}%</span></div>
+                    </div>
+                    <div className={ok ? s.goalGapOk : s.goalGapAlert}>
+                      {ok ? `✓ ${gap}% acima da meta` : `Faltam ${gap}% para a meta`}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className={s.main}>
         <div className={s.colLeft}>
@@ -125,18 +231,44 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
                   <div className={s.kpiLabel}>Favorabilidade</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.kpiNeutral}`}>
-                  <div className={s.kpiVal}>{data.kpis.neutros}</div>
+                  <div className={s.kpiVal}>
+                    {(DASH(data.kpis.neutros) || data.kpis.neutros === '0%')
+                      ? <span className={s.kpiInputRow}>
+                          <input
+                            className={`${s.kpiInput} ${s.kpiInputNeutral}`}
+                            value={kpiNeutros}
+                            placeholder="—"
+                            style={{ width: `${Math.max(1, kpiNeutros.length || 1) * 0.65}em` }}
+                            onChange={e => setKpiNeutros(e.target.value.replace(/[^0-9,.]/g, ''))}
+                          />
+                          {kpiNeutros && <span className={`${s.kpiInputUnit} ${s.kpiInputNeutral}`}>%</span>}
+                        </span>
+                      : data.kpis.neutros}
+                  </div>
                   <div className={s.kpiLabel}>Neutros</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.kpiDesfav}`}>
-                  <div className={s.kpiVal}>{data.kpis.desfavorabilidade}</div>
+                  <div className={s.kpiVal}>
+                    {DASH(data.kpis.desfavorabilidade)
+                      ? <span className={s.kpiInputRow}>
+                          <input
+                            className={`${s.kpiInput} ${s.kpiInputDesfav}`}
+                            value={kpiDesfav}
+                            placeholder="—"
+                            style={{ width: `${Math.max(1, kpiDesfav.length || 1) * 0.65}em` }}
+                            onChange={e => setKpiDesfav(e.target.value.replace(/[^0-9,.]/g, ''))}
+                          />
+                          {kpiDesfav && <span className={`${s.kpiInputUnit} ${s.kpiInputDesfav}`}>%</span>}
+                        </span>
+                      : data.kpis.desfavorabilidade}
+                  </div>
                   <div className={s.kpiLabel}>Desfavorabilidade</div>
                 </div>
               </div>
 
               {tabId !== 'hm' && (
                 <div className={s.detractorCallout}>
-                  <div className={s.dcTitle}>Detratores (notas 1–2)</div>
+                  <div className={s.dcTitle}>Detratores (notas 1 e 2)</div>
                   <div className={s.dcText} dangerouslySetInnerHTML={{ __html: data.detractorHtml }} />
                 </div>
               )}
@@ -147,20 +279,68 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
                   <tr>
                     <td className={s.dimName}>Dimensão</td>
                     <td className={s.dimFav}>Favorabilidade</td>
+                    {tabId === 'hm' && <td className={s.dimNeutro}>Neutros</td>}
                     <td className={s.dimDesf}>Desfavorabilidade</td>
                   </tr>
                 </thead>
                 <tbody>
                   {data.dimensions.map((d, i) => {
                     const isWorst = d.name === data.worstDimensionName;
+                    const fav    = dimVal(i, 'fav',    d.fav);
+                    const desfav = dimVal(i, 'desfav', d.desfav);
+
+                    // Compute neutros from fav + desfav when both are numbers; otherwise editable
+                    const favNum    = parseInt(fav);
+                    const desfavNum = parseInt(desfav);
+                    const computed  = !isNaN(favNum) && !isNaN(desfavNum)
+                      ? Math.max(0, 100 - favNum - desfavNum) + '%'
+                      : null;
+                    const neutros = computed ?? (overrides[i]?.neutros ?? '—');
+
                     return (
                       <tr key={i} className={isWorst ? s.dimHighlight : ''}>
                         <td className={s.dimName}>
                           {isWorst ? <strong>{d.name} ⚠</strong> : d.name}
                         </td>
-                        <td className={s.dimFav}>{d.fav}</td>
+                        <td className={s.dimFav}>
+                          {DASH(d.fav)
+                            ? <input
+                                className={s.dimInput}
+                                value={pctDisplay(fav)}
+                                placeholder="—"
+                                onChange={e => setOverride(i, 'fav', pctStore(e.target.value))}
+                              />
+                            : fav}
+                        </td>
+                        {tabId === 'hm' && (
+                          <td className={s.dimNeutro}>
+                            {computed
+                              ? computed
+                              : <span className={s.dimInputWrap}>
+                                  <input
+                                    className={`${s.dimInput} ${s.dimInputNeutro}`}
+                                    value={pctDisplay(neutros)}
+                                    placeholder="—"
+                                    style={{ width: `${Math.max(1, pctDisplay(neutros).length || 1) * 0.7}em` }}
+                                    onChange={e => setOverride(i, 'neutros', pctStore(e.target.value))}
+                                  />
+                                  {!DASH(neutros) && <span className={s.dimInputPct}>%</span>}
+                                </span>}
+                          </td>
+                        )}
                         <td className={s.dimDesf}>
-                          {isWorst ? <strong>{d.desfav}</strong> : d.desfav}
+                          {DASH(d.desfav)
+                            ? <span className={s.dimInputWrap}>
+                                <input
+                                  className={`${s.dimInput} ${s.dimInputDesf}`}
+                                  value={pctDisplay(desfav)}
+                                  placeholder="—"
+                                  style={{ width: `${Math.max(1, pctDisplay(desfav).length || 1) * 0.7}em` }}
+                                  onChange={e => setOverride(i, 'desfav', pctStore(e.target.value))}
+                                />
+                                {!DASH(desfav) && <span className={s.dimInputPct}>%</span>}
+                              </span>
+                            : isWorst ? <strong>{desfav}</strong> : desfav}
                         </td>
                       </tr>
                     );
@@ -175,7 +355,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
           <div>
             <div className={`${s.insightTitle} ${s.highs}`}>Highs</div>
             <ul className={`${s.insightList} ${s.highsList}`}>
-              {data.highs.map((h, i) => (
+              {highs.map((h, i) => (
                 <li key={i} dangerouslySetInnerHTML={{ __html: h }} />
               ))}
             </ul>
@@ -183,7 +363,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
           <div>
             <div className={`${s.insightTitle} ${s.lows}`}>Lows</div>
             <ul className={`${s.insightList} ${s.lowsList}`}>
-              {data.lows.map((l, i) => (
+              {lows.map((l, i) => (
                 <li key={i} dangerouslySetInnerHTML={{ __html: l }} />
               ))}
             </ul>
@@ -191,7 +371,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
           <div>
             <div className={`${s.insightTitle} ${s.actions}`}>Actions</div>
             <ul className={`${s.insightList} ${s.actionsList}`}>
-              {data.actions.map((a, i) => (
+              {actions.map((a, i) => (
                 <li key={i} dangerouslySetInnerHTML={{ __html: a }} />
               ))}
             </ul>

@@ -48,6 +48,12 @@ export interface PdfData {
   fileName: string;
   isHp?: boolean;
   hpPayload?: HpPayload;
+  isOutSla?: boolean;
+  pcdVagas?: PcdVaga[];
+  outSlaPayload?: OutSlaPayload;
+  isTonhExit?: boolean;
+  tonhCases?: TonhCase[];
+  tonhDashboard?: TonhLayerDashboard;
 }
 
 export type TabId = 'external' | 'internal' | 'hm' | 'tonh' | 'pcd' | 'hpc' | 'outsla';
@@ -79,6 +85,64 @@ export interface HpSummary {
   paragraph2: string;
 }
 
+export interface OutSlaRow {
+  idInternal: string;
+  positionCode: string;
+  qExpectation: string;
+  timeToOffer: number;
+  origin: string;
+  stage: string;
+  seniority: string;
+  site: string;
+  offTimeReason: string;
+}
+
+export interface OutSlaPayload {
+  rows: OutSlaRow[];
+}
+
+export type TonhLayerGroup = 'team-leader' | 'outros';
+
+export interface TonhCase {
+  nome: string;
+  rol: string;
+  area: string;
+  hiringManager: string;
+  panelEntrevistador: string;
+  flags: string;
+  motivoSalida: string;
+  principaisMotivos: string;
+  tiempoEnRol: string;
+  tiempoEnRolMeses: number | null;
+  comentarios: string;
+  conclusoes: string;
+  acuerdos: string;
+  fileName: string;
+}
+
+export interface TonhMonthlyPoint {
+  mes: string;
+  pct: number;
+}
+
+export interface TonhSeniorityPoint {
+  seniority: string;
+  pct: number;
+}
+
+export interface TonhLayerDashboard {
+  layerGroup: TonhLayerGroup;
+  meta: number;
+  toOverallYtdPct: number | null;
+  overallYtd: number | null;
+  hcPromedioYtd: number | null;
+  toOverall12mPct: number | null;
+  overall12m: number | null;
+  hcPromedio12m: number | null;
+  monthlyTrend: TonhMonthlyPoint[];
+  porSeniority: TonhSeniorityPoint[];
+}
+
 export interface MergedView {
   periodLabel: string;
   kpis: Kpis;
@@ -90,6 +154,23 @@ export interface MergedView {
   actions: string[];
   hpPayload?: HpPayload;
   hpSummary?: HpSummary;
+}
+
+export type PcdStatus = 'Em processo' | 'Concluída com inclusão de PCD' | 'Concluída sem inclusão de PCD';
+
+export interface PcdVaga {
+  numVaga: string;
+  senioridade: string;
+  localidade: string;
+  hm: string;
+  bp: string;
+  status: PcdStatus;
+  instancia: string;
+  sla: number;
+  pontosDificuldade?: string;
+  candidatoAprovado?: string;
+  mesFechamento?: string;
+  anoFechamento?: number;
 }
 
 export interface ExtractedPdf {

@@ -7,7 +7,7 @@ export const TAB_META: Record<TabId, TabMeta> = {
   internal: { label: 'Internal Candidate', section: 'Internal Candidate Experience', sectionColor: 'gray'  },
   hm:       { label: 'Hiring Manager',     section: 'Hiring Manager Experience',     sectionColor: 'gray'  },
   tonh:     { label: 'TO NH',              section: 'Turn Over New Hire',            sectionColor: 'gray'  },
-  pcd:      { label: 'PCD',               section: 'PCD',                           sectionColor: 'gray'  },
+  pcd:      { label: 'PCD',               section: 'Vagas Afirmativas - PCD',       sectionColor: 'gray'  },
   hpc:      { label: 'HP Completion',      section: 'Hiring Plan Completion',        sectionColor: 'gray'  },
-  outsla:   { label: 'Out SLA',            section: 'Out SLA',                       sectionColor: 'gray'  },
+  outsla:   { label: 'Out SLA',            section: 'OUT SLA - VAGAS ON GOING',      sectionColor: 'gray'  },
 };

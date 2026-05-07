@@ -24,7 +24,7 @@ export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
         <div className={s.hint}>
           {hideInstructions ? '' : 'Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.'}
         </div>
-        <button className={s.uploadBtn} onClick={onUpload}>⬆ Upload PDF(s)</button>
+        <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
       </div>
       <div className={s.panel}>
         <div className={s.icon}>⚙</div>
