@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node build-config.js",
-  "outputDirectory": ".",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "framework": null
 }

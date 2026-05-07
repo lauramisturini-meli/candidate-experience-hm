@@ -1,0 +1,7 @@
+.bar {
+  padding: 6px 32px; font-size: 10.5px;
+  border-bottom: 1px solid #eee; background: #fafafa;
+}
+.bar.error   { background: #fff3f3; color: #c62828; border-color: #ffcdd2; }
+.bar.success { background: #f1f8f3; color: #00a650; border-color: #c8e6c9; }
+.bar.loading { background: #fffde7; color: #8a6d00; border-color: #ffe082; }

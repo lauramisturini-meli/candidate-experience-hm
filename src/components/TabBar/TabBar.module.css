@@ -1,0 +1,41 @@
+.tabBar {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface);
+  padding: 0 24px;
+}
+
+.tabBtn {
+  background: none; border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0 16px;
+  height: 44px;
+  font-family: inherit;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: #666; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+  display: inline-flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.tabIcon {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  opacity: 0.7; transition: opacity 0.15s;
+  display: block;
+}
+
+.tabBtn:hover { color: var(--ink); }
+.tabBtn:hover .tabIcon { opacity: 0.9; }
+.tabBtn.active { color: var(--ink); border-bottom-color: var(--brand-yellow); }
+.tabBtn.active .tabIcon { opacity: 1; }
+
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #ccc; flex-shrink: 0;
+}
+.tabBtn.hasData .dot { background: #00a650; }
