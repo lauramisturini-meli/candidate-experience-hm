@@ -1,19 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { buildTonhInsights } from '../../lib/insights-tonh';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
-import type { PdfData, TabMeta, StatusMessage, TonhCase, TonhLayerDashboard } from '../../types';
+import type { PdfData, TabMeta, StatusMessage, TonhCase, TonhLayerDashboard, TabUiState } from '../../types';
 import s from './TonhPanel.module.css';
 
 interface Props {
   meta: TabMeta;
   pdfs: PdfData[];
+  ui?: TabUiState;
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
   onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
+  onUiChange: (ui: Partial<TabUiState>) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -348,9 +350,8 @@ function CaseAnalysis({ cases }: { cases: TonhCase[] }) {
 
 // ── TO Goal Block ─────────────────────────────────────────────────────────────
 
-function ToGoalBlock({ label, meta }: { label: string; meta: number }) {
-  const [input, setInput] = useState('');
-  const current = input.trim() ? (parseFloat(input.replace(',', '.')) || null) : null;
+function ToGoalBlock({ label, meta, value, onChange }: { label: string; meta: number; value: string; onChange: (v: string) => void }) {
+  const current = value.trim() ? (parseFloat(value.replace(',', '.')) || null) : null;
   const scale   = meta * 1.5;
   const ok      = current !== null && current <= meta;
   const fill    = current !== null ? Math.min((current / scale) * 100, 100) : 0;
@@ -372,8 +373,8 @@ function ToGoalBlock({ label, meta }: { label: string; meta: number }) {
               className={s.toGoalInputBig}
               type="text"
               placeholder="ex: 8,5"
-              value={input}
-              onChange={e => setInput(e.target.value)}
+              value={value}
+              onChange={e => onChange(e.target.value)}
             />
             <span className={s.toGoalEmptyUnit}>%</span>
           </div>
@@ -388,8 +389,8 @@ function ToGoalBlock({ label, meta }: { label: string; meta: number }) {
             <input
               className={s.toGoalInput}
               type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
+              value={value}
+              onChange={e => onChange(e.target.value)}
             />
           </div>
           <div className={s.toGoalRight}>
@@ -419,7 +420,7 @@ function ToGoalBlock({ label, meta }: { label: string; meta: number }) {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export function TonhPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
   const cases = useMemo(
     () => pdfs.flatMap(p => p.tonhCases ?? []),
     [pdfs],
@@ -466,8 +467,8 @@ export function TonhPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, 
 
       {/* ── Metas de TO NH ── */}
       <div className={s.toGoalRow}>
-        <ToGoalBlock label="TL's" meta={12} />
-        <ToGoalBlock label="Demais Layers" meta={5} />
+        <ToGoalBlock label="TL's" meta={12} value={ui?.metaTl ?? ''} onChange={v => onUiChange({ metaTl: v })} />
+        <ToGoalBlock label="Demais Layers" meta={5} value={ui?.metaDemais ?? ''} onChange={v => onUiChange({ metaDemais: v })} />
       </div>
 
       {/* ── Dashboard section ── */}

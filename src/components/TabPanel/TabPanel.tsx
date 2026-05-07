@@ -1,4 +1,4 @@
-import type { TabId, TabMeta, PdfData, StatusMessage } from '../../types';
+import type { TabId, TabMeta, PdfData, StatusMessage, TabUiState } from '../../types';
 import { DataPanel } from '../DataPanel/DataPanel';
 import { SkeletonPanel } from '../SkeletonPanel/SkeletonPanel';
 import { PcdPanel } from '../PcdPanel/PcdPanel';
@@ -11,6 +11,7 @@ interface Props {
   tabId: TabId;
   meta: TabMeta;
   pdfs: PdfData[];
+  ui?: TabUiState;
   isActive: boolean;
   status: StatusMessage | null | undefined;
   onUpload: () => void;
@@ -18,14 +19,15 @@ interface Props {
   onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
+  onUiChange: (ui: Partial<TabUiState>) => void;
 }
 
-export function TabPanel({ tabId, meta, pdfs, isActive, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function TabPanel({ tabId, meta, pdfs, ui, isActive, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
   return (
     <div className={`${s.panel} ${isActive ? s.active : ''}`}>
       {tabId === 'pcd' && pdfs.length > 0 ? (
         <PcdPanel
-          meta={meta} pdfs={pdfs} status={status}
+          meta={meta} pdfs={pdfs} status={status} ui={ui} onUiChange={onUiChange}
           onUpload={onUpload} onReset={onReset} onRemovePdf={onRemovePdf}
           onShare={onShare} isShareLoading={isShareLoading}
         />
@@ -37,19 +39,19 @@ export function TabPanel({ tabId, meta, pdfs, isActive, status, onUpload, onRese
         />
       ) : tabId === 'tonh' && pdfs.some(p => p.isTonhExit) ? (
         <TonhPanel
-          meta={meta} pdfs={pdfs} status={status}
+          meta={meta} pdfs={pdfs} status={status} ui={ui} onUiChange={onUiChange}
           onUpload={onUpload} onReset={onReset} onRemovePdf={onRemovePdf}
           onShare={onShare} isShareLoading={isShareLoading}
         />
       ) : tabId === 'internal' && pdfs.length > 0 ? (
         <InternalPanel
-          meta={meta} pdfs={pdfs} status={status}
+          meta={meta} pdfs={pdfs} status={status} ui={ui} onUiChange={onUiChange}
           onUpload={onUpload} onReset={onReset} onRemovePdf={onRemovePdf}
           onShare={onShare} isShareLoading={isShareLoading}
         />
       ) : pdfs.length > 0 ? (
         <DataPanel
-          tabId={tabId} meta={meta} pdfs={pdfs} status={status}
+          tabId={tabId} meta={meta} pdfs={pdfs} status={status} ui={ui} onUiChange={onUiChange}
           onUpload={onUpload} onReset={onReset} onRemovePdf={onRemovePdf}
           onShare={onShare} isShareLoading={isShareLoading}
         />

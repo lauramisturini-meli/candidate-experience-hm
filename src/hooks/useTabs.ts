@@ -18,6 +18,14 @@ function tabsReducer(state: TabsState, action: TabsAction): TabsState {
       return { ...state, [action.tabId]: { pdfs: [] } };
     case 'HYDRATE':
       return { ...state, ...action.state };
+    case 'SET_UI':
+      return {
+        ...state,
+        [action.tabId]: {
+          ...state[action.tabId],
+          ui: { ...state[action.tabId].ui, ...action.ui },
+        },
+      };
   }
 }
 

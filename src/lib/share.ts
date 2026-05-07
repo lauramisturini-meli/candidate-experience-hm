@@ -17,9 +17,9 @@ export function genShareId(): string {
 
 export function buildSharePayload(tabsData: TabsState): Record<string, unknown> | null {
   const payload: Record<string, unknown> = {};
-  for (const [tab, data] of Object.entries(tabsData) as [TabId, { pdfs: TabsState[TabId]['pdfs'] }][]) {
+  for (const [tab, data] of Object.entries(tabsData) as [TabId, TabsState[TabId]][]) {
     if (!data.pdfs.length) continue;
-    payload[tab] = data.pdfs.map(p => ({
+    const pdfs = data.pdfs.map(p => ({
       respostas:     p.respostas,
       fav:           p.fav,
       desfav:        p.desfav,
@@ -39,6 +39,7 @@ export function buildSharePayload(tabsData: TabsState): Record<string, unknown> 
       tonhCases:     p.tonhCases,
       tonhDashboard: p.tonhDashboard,
     }));
+    payload[tab] = data.ui ? { pdfs, ui: data.ui } : pdfs;
   }
   return Object.keys(payload).length ? payload : null;
 }

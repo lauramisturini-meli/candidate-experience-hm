@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type Dispatch } from 'react';
 import { supabase, genShareId, buildSharePayload, saveShare, loadShare } from '../lib/share';
-import type { TabsState, TabsAction, ToastKind } from '../types';
+import type { TabsState, TabsAction, ToastKind, TabUiState } from '../types';
 
 export function useShare(
   tabsData: TabsState,
@@ -17,7 +17,11 @@ export function useShare(
     loadShare(id)
       .then(payload => {
         const state = Object.fromEntries(
-          Object.entries(payload).map(([tab, pdfs]) => [tab, { pdfs }])
+          Object.entries(payload).map(([tab, val]) => {
+            if (Array.isArray(val)) return [tab, { pdfs: val }];
+            const { pdfs, ui } = val as { pdfs: unknown[]; ui?: TabUiState };
+            return [tab, { pdfs, ...(ui ? { ui } : {}) }];
+          })
         ) as Partial<TabsState>;
         dispatch({ type: 'HYDRATE', state: state as TabsState });
       })

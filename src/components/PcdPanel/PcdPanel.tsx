@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import type { TabMeta, PdfData, StatusMessage, PcdVaga } from '../../types';
+import { useMemo } from 'react';
+import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import s from './PcdPanel.module.css';
@@ -7,12 +7,14 @@ import s from './PcdPanel.module.css';
 interface Props {
   meta: TabMeta;
   pdfs: PdfData[];
+  ui?: TabUiState;
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
   onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
+  onUiChange: (ui: Partial<TabUiState>) => void;
 }
 
 const SLA_THRESHOLD = 50;
@@ -87,7 +89,7 @@ function avg(arr: number[]): number {
   return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 }
 
-export function PcdPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
   const vagas: PcdVaga[] = useMemo(
     () => pdfs.flatMap(p => p.pcdVagas ?? []),
     [pdfs],
@@ -110,7 +112,7 @@ export function PcdPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, o
   const avgSlaFechadas = avg(fechadas.map(v => v.sla));
   const maxSla         = vagas.length ? Math.max(...vagas.map(v => v.sla)) : 0;
 
-  const [pctInput, setPctInput] = useState('');
+  const pctInput = ui?.metaInput ?? '';
   const pctAtual = pctInput.trim() ? (parseFloat(pctInput.replace(',', '.')) || null) : null;
 
   const highs: string[] = useMemo(() => {
@@ -282,7 +284,7 @@ export function PcdPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, o
                     type="text"
                     placeholder="ex: 3,8"
                     value={pctInput}
-                    onChange={e => setPctInput(e.target.value)}
+                    onChange={e => onUiChange({ metaInput: e.target.value })}
                     autoFocus={false}
                   />
                   <span className={s.goalEmptyUnit}>%</span>
@@ -302,7 +304,7 @@ export function PcdPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, o
                       type="text"
                       placeholder="ex: 3,8"
                       value={pctInput}
-                      onChange={e => setPctInput(e.target.value)}
+                      onChange={e => onUiChange({ metaInput: e.target.value })}
                     />
                   </div>
                   <div className={s.goalRight}>

@@ -64,13 +64,25 @@ export interface TabMeta {
   sectionColor: 'black' | 'gray';
 }
 
-export type TabsState = Record<TabId, { pdfs: PdfData[] }>;
+export type DimOverrides = Record<number, { fav?: string; neutros?: string; desfav?: string }>;
+
+export interface TabUiState {
+  kpiDesfav?: string;
+  kpiNeutros?: string;
+  dimOverrides?: DimOverrides;
+  metaInput?: string;
+  metaTl?: string;
+  metaDemais?: string;
+}
+
+export type TabsState = Record<TabId, { pdfs: PdfData[]; ui?: TabUiState }>;
 
 export type TabsAction =
   | { type: 'ADD_PDF'; tabId: TabId; pdf: PdfData }
   | { type: 'REMOVE_PDF'; tabId: TabId; index: number }
   | { type: 'RESET_TAB'; tabId: TabId }
-  | { type: 'HYDRATE'; state: TabsState };
+  | { type: 'HYDRATE'; state: TabsState }
+  | { type: 'SET_UI'; tabId: TabId; ui: Partial<TabUiState> };
 
 export interface Kpis {
   respostas: number;

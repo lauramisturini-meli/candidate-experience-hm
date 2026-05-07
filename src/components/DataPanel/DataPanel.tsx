@@ -3,38 +3,31 @@ import { buildMergedView } from '../../lib/merger';
 import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
-import type { PdfData, TabId, TabMeta, StatusMessage } from '../../types';
+import type { PdfData, TabId, TabMeta, StatusMessage, TabUiState, DimOverrides } from '../../types';
 import s from './DataPanel.module.css';
 
 interface Props {
   tabId: TabId;
   meta: TabMeta;
   pdfs: PdfData[];
+  ui?: TabUiState;
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
   onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
+  onUiChange: (ui: Partial<TabUiState>) => void;
 }
-
-type DimOverrides = Record<number, { fav?: string; neutros?: string; desfav?: string }>;
 
 const DASH = (v: string) => v === '—' || v === '-';
 
-export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
   const data = useMemo(() => buildMergedView(pdfs, tabId), [pdfs, tabId]);
-  const [overrides, setOverrides] = useState<DimOverrides>({});
-  const [kpiNeutros,  setKpiNeutros]  = useState('');
-  const [kpiDesfav,   setKpiDesfav]   = useState('');
-  const [goalInput,   setGoalInput]   = useState('');
-
-  // Reset overrides whenever the underlying data changes
-  useEffect(() => {
-    setOverrides({});
-    setKpiNeutros('');
-    setKpiDesfav('');
-  }, [data.dimensions]);
+  const overrides: DimOverrides = ui?.dimOverrides ?? {};
+  const kpiNeutros = ui?.kpiNeutros ?? '';
+  const kpiDesfav  = ui?.kpiDesfav  ?? '';
+  const [goalInput, setGoalInput] = useState('');
 
   // Auto-fill goal from PDF fav value
   useEffect(() => {
@@ -43,7 +36,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
   }, [data.kpis.favorabilidade]);
 
   const setOverride = (idx: number, field: 'fav' | 'neutros' | 'desfav', val: string) =>
-    setOverrides(prev => ({ ...prev, [idx]: { ...prev[idx], [field]: val } }));
+    onUiChange({ dimOverrides: { ...overrides, [idx]: { ...overrides[idx], [field]: val } } });
 
   const dimVal = (idx: number, field: 'fav' | 'neutros' | 'desfav', raw: string) =>
     overrides[idx]?.[field] ?? raw;
@@ -239,7 +232,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
                             value={kpiNeutros}
                             placeholder="—"
                             style={{ width: `${Math.max(1, kpiNeutros.length || 1) * 0.65}em` }}
-                            onChange={e => setKpiNeutros(e.target.value.replace(/[^0-9,.]/g, ''))}
+                            onChange={e => onUiChange({ kpiNeutros: e.target.value.replace(/[^0-9,.]/g, '') })}
                           />
                           {kpiNeutros && <span className={`${s.kpiInputUnit} ${s.kpiInputNeutral}`}>%</span>}
                         </span>
@@ -256,7 +249,7 @@ export function DataPanel({ tabId, meta, pdfs, status, onUpload, onReset, onRemo
                             value={kpiDesfav}
                             placeholder="—"
                             style={{ width: `${Math.max(1, kpiDesfav.length || 1) * 0.65}em` }}
-                            onChange={e => setKpiDesfav(e.target.value.replace(/[^0-9,.]/g, ''))}
+                            onChange={e => onUiChange({ kpiDesfav: e.target.value.replace(/[^0-9,.]/g, '') })}
                           />
                           {kpiDesfav && <span className={`${s.kpiInputUnit} ${s.kpiInputDesfav}`}>%</span>}
                         </span>

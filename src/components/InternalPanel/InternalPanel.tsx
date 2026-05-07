@@ -2,18 +2,20 @@ import { useMemo, useState, useEffect } from 'react';
 import { buildMergedView } from '../../lib/merger';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
-import type { PdfData, TabMeta, StatusMessage } from '../../types';
+import type { PdfData, TabMeta, StatusMessage, TabUiState } from '../../types';
 import s from './InternalPanel.module.css';
 
 interface Props {
   meta: TabMeta;
   pdfs: PdfData[];
+  ui?: TabUiState;
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
   onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
+  onUiChange: (ui: Partial<TabUiState>) => void;
 }
 
 function parsePct(val: string): number {
@@ -21,6 +23,8 @@ function parsePct(val: string): number {
 }
 
 const DASH = (v: string) => v === '—' || v === '-';
+
+type DimOverrides = Record<number, { desfav?: string }>;
 
 function DonutChart({ fav, neutral, desfav, hasData }: {
   fav: number; neutral: number; desfav: number; hasData: boolean;
@@ -73,19 +77,13 @@ function DonutChart({ fav, neutral, desfav, hasData }: {
 
 type DimOverrides = Record<number, { desfav?: string }>;
 
-export function InternalPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
   const data = useMemo(() => buildMergedView(pdfs, 'internal'), [pdfs]);
 
-  const [kpiDesfav,  setKpiDesfav]  = useState('');
-  const [kpiNeutros, setKpiNeutros] = useState('');
-  const [overrides,  setOverrides]  = useState<DimOverrides>({});
-  const [goalInput,  setGoalInput]  = useState('');
-
-  useEffect(() => {
-    setKpiDesfav('');
-    setKpiNeutros('');
-    setOverrides({});
-  }, [data.dimensions]);
+  const kpiDesfav  = ui?.kpiDesfav  ?? '';
+  const kpiNeutros = ui?.kpiNeutros ?? '';
+  const overrides: DimOverrides = (ui?.dimOverrides ?? {}) as DimOverrides;
+  const [goalInput, setGoalInput] = useState('');
 
   useEffect(() => {
     const raw = data.kpis.favorabilidade;
@@ -219,7 +217,7 @@ export function InternalPanel({ meta, pdfs, status, onUpload, onReset, onRemoveP
                         value={kpiNeutros}
                         placeholder="—"
                         style={{ width: `${Math.max(1, kpiNeutros.length || 1) * 0.65}em` }}
-                        onChange={e => setKpiNeutros(e.target.value.replace(/[^0-9,.]/g, ''))}
+                        onChange={e => onUiChange({ kpiNeutros: e.target.value.replace(/[^0-9,.]/g, '') })}
                       />
                       {kpiNeutros && <span className={s.lgUnit}>%</span>}
                     </span>
@@ -238,7 +236,7 @@ export function InternalPanel({ meta, pdfs, status, onUpload, onReset, onRemoveP
                         value={kpiDesfav}
                         placeholder={DASH(data.kpis.desfavorabilidade) ? '—' : pctDisplay(data.kpis.desfavorabilidade)}
                         style={{ width: `${Math.max(1, kpiDesfav.length || 1) * 0.65}em` }}
-                        onChange={e => setKpiDesfav(e.target.value.replace(/[^0-9,.]/g, ''))}
+                        onChange={e => onUiChange({ kpiDesfav: e.target.value.replace(/[^0-9,.]/g, '') })}
                       />
                       {kpiDesfav && <span className={`${s.lgUnit} ${s.lgUnitDesfav}`}>%</span>}
                     </span>
@@ -288,10 +286,7 @@ export function InternalPanel({ meta, pdfs, status, onUpload, onReset, onRemoveP
                               value={pctDisplay(effDesfav)}
                               placeholder="—"
                               style={{ width: `${Math.max(1, pctDisplay(effDesfav).length || 1) * 0.7}em` }}
-                              onChange={e => setOverrides(prev => ({
-                                ...prev,
-                                [i]: { desfav: pctStore(e.target.value) },
-                              }))}
+                              onChange={e => onUiChange({ dimOverrides: { ...overrides, [i]: { desfav: pctStore(e.target.value) } } })}
                             />
                             {!DASH(effDesfav) && <span className={s.dimInputPct}>%</span>}
                           </span>

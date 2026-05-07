@@ -28,6 +28,7 @@ export function App() {
           tabId={id}
           meta={meta}
           pdfs={tabsData[id].pdfs}
+          ui={tabsData[id].ui}
           isActive={id === activeTab}
           status={status[id]}
           onUpload={() => triggerUpload(id)}
@@ -35,6 +36,7 @@ export function App() {
           onRemovePdf={idx => dispatch({ type: 'REMOVE_PDF', tabId: id, index: idx })}
           onShare={copyShareableLink}
           isShareLoading={isShareLoading}
+          onUiChange={ui => dispatch({ type: 'SET_UI', tabId: id, ui })}
         />
       ))}
 
