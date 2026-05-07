@@ -20,16 +20,24 @@ export function buildSharePayload(tabsData: TabsState): Record<string, unknown> 
   for (const [tab, data] of Object.entries(tabsData) as [TabId, { pdfs: TabsState[TabId]['pdfs'] }][]) {
     if (!data.pdfs.length) continue;
     payload[tab] = data.pdfs.map(p => ({
-      respostas:   p.respostas,
-      fav:         p.fav,
-      desfav:      p.desfav,
-      dimensions:  p.dimensions  || [],
-      comments:    p.comments    || [],
-      filters:     p.filters     || {},
-      overallRange:p.overallRange || 'ALL',
-      periodLabel: p.periodLabel || '',
-      isHm:        !!p.isHm,
-      fileName:    p.fileName    || '',
+      respostas:     p.respostas,
+      fav:           p.fav,
+      desfav:        p.desfav,
+      dimensions:    p.dimensions    || [],
+      comments:      p.comments      || [],
+      filters:       p.filters       || {},
+      overallRange:  p.overallRange  || 'ALL',
+      periodLabel:   p.periodLabel   || '',
+      isHm:          !!p.isHm,
+      fileName:      p.fileName      || '',
+      isHp:          !!p.isHp,
+      hpPayload:     p.hpPayload,
+      isOutSla:      !!p.isOutSla,
+      outSlaPayload: p.outSlaPayload,
+      pcdVagas:      p.pcdVagas,
+      isTonhExit:    !!p.isTonhExit,
+      tonhCases:     p.tonhCases,
+      tonhDashboard: p.tonhDashboard,
     }));
   }
   return Object.keys(payload).length ? payload : null;
