@@ -50,6 +50,7 @@ export interface PdfData {
   hpPayload?: HpPayload;
   isOutSla?: boolean;
   pcdVagas?: PcdVaga[];
+  pcdHcData?: PcdHcData;
   outSlaPayload?: OutSlaPayload;
   isTonhExit?: boolean;
   tonhCases?: TonhCase[];
@@ -169,6 +170,31 @@ export interface MergedView {
 }
 
 export type PcdStatus = 'Em processo' | 'Concluída com inclusão de PCD' | 'Concluída sem inclusão de PCD';
+
+export interface PcdHcSeniorityRow {
+  layer: string;
+  hcComDiscapacidad: number;
+  hcTotal: number;
+  pct: number;
+}
+
+export interface PcdHcBuRow {
+  bu: string;
+  hcComDiscapacidad: number;
+  hcTotal: number;
+  pct: number;
+}
+
+export interface PcdTipoRow {
+  tipo: string;
+  pct: number;
+}
+
+export interface PcdHcData {
+  porSeniority: PcdHcSeniorityRow[];
+  porBu: PcdHcBuRow[];
+  tiposDistribucion: PcdTipoRow[];
+}
 
 export interface PcdVaga {
   numVaga: string;

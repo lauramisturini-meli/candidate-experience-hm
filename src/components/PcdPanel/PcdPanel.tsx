@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState } from '../../types';
+import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState, PcdHcData } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import s from './PcdPanel.module.css';
@@ -95,6 +95,11 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
     [pdfs],
   );
 
+  const hcData: PcdHcData | undefined = useMemo(() => {
+    const last = [...pdfs].reverse().find(p => p.pcdHcData);
+    return last?.pcdHcData;
+  }, [pdfs]);
+
   const abertas   = vagas.filter(v => v.status === 'Em processo');
   const fechadas  = vagas.filter(v => v.anoFechamento != null);
   const outSla    = vagas.filter(v => v.sla >= SLA_THRESHOLD);
@@ -117,6 +122,17 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
 
   const highs: string[] = useMemo(() => {
     const items: string[] = [];
+
+    if (hcData?.porBu.length) {
+      const bu = hcData.porBu[0];
+      const buPct = bu.hcTotal > 0 ? Math.round((bu.hcComDiscapacidad / bu.hcTotal) * 1000) / 10 : 0;
+      if (buPct >= 3) items.push(`${bu.bu}: <strong>${buPct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</strong> de PCD no HC atual (${bu.hcComDiscapacidad} de ${bu.hcTotal.toLocaleString('pt-BR')} colaboradores)`);
+    }
+
+    if (hcData?.porSeniority.length) {
+      const best = [...hcData.porSeniority].sort((a, b) => b.pct - a.pct)[0];
+      if (best.pct >= 5) items.push(`Melhor representação PCD: <strong>${best.layer}</strong> com ${best.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`);
+    }
 
     if (comPcd.length > 0) {
       const names = comPcd.map(v => v.candidatoAprovado).filter(Boolean).join(', ');
@@ -142,7 +158,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
 
     if (items.length === 0) items.push('Faça upload do PDF da planilha de acompanhamento para ver os destaques.');
     return items;
-  }, [comPcd, fechadas, pctComPcd, abertas]);
+  }, [comPcd, fechadas, pctComPcd, abertas, hcData]);
 
   const lows: string[] = useMemo(() => {
     const items: string[] = [];
@@ -179,9 +195,14 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
       items.push('Nenhuma vaga afirmativa em andamento — risco de descontinuidade no pipeline PCD');
     }
 
+    if (hcData?.porSeniority.length) {
+      const worst = [...hcData.porSeniority].sort((a, b) => a.pct - b.pct)[0];
+      if (worst.pct < 3) items.push(`Menor representação PCD: <strong>${worst.layer}</strong> com apenas ${worst.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% — priorizar vagas afirmativas nessa camada`);
+    }
+
     if (items.length === 0) items.push('Faça upload do PDF da planilha de acompanhamento para ver os pontos de atenção.');
     return items;
-  }, [semPcd, outSla, maxSla, criticals, comPcd, fechadas, pctComPcd, abertas, vagas]);
+  }, [semPcd, outSla, maxSla, criticals, comPcd, fechadas, pctComPcd, abertas, vagas, hcData]);
 
   const actions: string[] = useMemo(() => {
     const items: string[] = [];
@@ -390,8 +411,37 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
                 <span className={s.slaStatLabel}>Out SLA (≥{SLA_THRESHOLD}d)</span>
               </div>
             </div>
-
           </div>
+
+          {hcData && (
+            <>
+              {hcData.porSeniority.length > 0 && (
+                <div className={s.card}>
+                  <div className={s.cardTitle}>HC Atual — % PCD por Senioridade</div>
+                  <div className={s.hcList}>
+                    {hcData.porSeniority.map(row => (
+                      <div key={row.layer} className={s.hcRow}>
+                        <div className={s.hcRowTop}>
+                          <span className={s.hcLayer}>{row.layer}</span>
+                          <span className={s.hcPct}>
+                            {row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                          </span>
+                        </div>
+                        <div className={s.hcBarWrap}>
+                          <div className={s.hcBar} style={{ width: `${Math.min(row.pct / 10 * 100, 100)}%` }} />
+                        </div>
+                        <div className={s.hcAbsRow}>
+                          <span className={s.hcAbsPcd}>{row.hcComDiscapacidad} PCD</span>
+                          <span className={s.hcAbsTotal}>{row.hcTotal.toLocaleString('pt-BR')} total</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </>
+          )}
 
         </div>
 
@@ -414,6 +464,63 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
               {actions.map((a, i) => <li key={i} dangerouslySetInnerHTML={{ __html: a }} />)}
             </ul>
           </div>
+
+          {hcData && (hcData.porBu.length > 0 || hcData.tiposDistribucion.length > 0) && (
+            <div className={s.analyticsGrid}>
+              {hcData.porBu.length > 0 && (
+                <div className={s.card}>
+                  <div className={s.cardTitle}>HC por BU</div>
+                  {hcData.porBu.map(row => {
+                    const pctCalc = row.hcTotal > 0
+                      ? Math.round((row.hcComDiscapacidad / row.hcTotal) * 1000) / 10
+                      : 0;
+                    const fillPct = Math.min(pctCalc, 100);
+                    return (
+                      <div key={row.bu} className={s.buCard}>
+                        <div className={s.buHeader}>
+                          <span className={s.buName}>{row.bu}</span>
+                          <span className={s.buPct}>
+                            {pctCalc.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                          </span>
+                        </div>
+                        <div className={s.buBar}>
+                          <div className={s.buBarFill} style={{ width: `${fillPct}%` }} />
+                        </div>
+                        <div className={s.buStats}>
+                          <div className={s.buStat}>
+                            <span className={s.buStatVal}>{row.hcComDiscapacidad}</span>
+                            <span className={s.buStatLabel}>PCD</span>
+                          </div>
+                          <div className={s.buStatDivider} />
+                          <div className={s.buStat}>
+                            <span className={s.buStatVal}>{row.hcTotal.toLocaleString('pt-BR')}</span>
+                            <span className={s.buStatLabel}>HC Total</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {hcData.tiposDistribucion.length > 0 && (
+                <div className={s.card}>
+                  <div className={s.cardTitle}>Tipos de PCD</div>
+                  <div className={s.tiposList}>
+                    {hcData.tiposDistribucion.map(row => (
+                      <div key={row.tipo} className={s.tipoRow}>
+                        <span className={s.tipoLabel}>{row.tipo}</span>
+                        <div className={s.tipoBarWrap}>
+                          <div className={s.tipoBar} style={{ width: `${row.pct}%` }} />
+                        </div>
+                        <span className={s.tipoPct}>{row.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

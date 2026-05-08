@@ -188,6 +188,39 @@
 .lowsList li::before    { background: var(--danger); }
 .actionsList li::before { background: var(--brand-yellow); border: 1px solid #e8c400; }
 
+/* ── HC por Senioridade ─────────────────────────────── */
+.hcList { display: flex; flex-direction: column; gap: 10px; }
+.hcRow  { display: flex; flex-direction: column; gap: 4px; }
+.hcRowTop { display: flex; justify-content: space-between; align-items: baseline; }
+.hcLayer { font-size: 10.5px; color: var(--ink); font-weight: 700; }
+.hcBarWrap { height: 5px; background: var(--divider); border-radius: 3px; }
+.hcBar { height: 100%; border-radius: 3px; transition: width 0.4s ease; min-width: 3px; background: #1565c0; }
+.hcPct { font-size: 11px; font-weight: 900; color: #1565c0; }
+.hcAbsRow { display: flex; justify-content: space-between; }
+.hcAbsPcd   { font-size: 9px; font-weight: 700; color: #1565c0; }
+.hcAbsTotal { font-size: 9px; color: var(--ink-muted); }
+
+/* ── HC por BU ──────────────────────────────────────── */
+.buCard       { display: flex; flex-direction: column; gap: 8px; padding: 2px 0; }
+.buHeader     { display: flex; justify-content: space-between; align-items: baseline; }
+.buName       { font-size: 11px; font-weight: 800; color: var(--brand-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+.buPct        { font-size: 18px; font-weight: 900; color: #1565c0; line-height: 1; }
+.buBar        { height: 6px; background: var(--divider); border-radius: 3px; overflow: hidden; }
+.buBarFill    { height: 100%; background: #1565c0; border-radius: 3px; transition: width 0.4s ease; }
+.buStats      { display: flex; align-items: stretch; gap: 0; }
+.buStat       { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.buStatDivider{ width: 1px; background: var(--divider); flex-shrink: 0; margin: 0 4px; }
+.buStatVal    { font-size: 18px; font-weight: 900; color: var(--brand-dark); line-height: 1; }
+.buStatLabel  { font-size: 8.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Tipos de PCD ───────────────────────────────────── */
+.tiposList { display: flex; flex-direction: column; gap: 7px; }
+.tipoRow   { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 7px; }
+.tipoLabel  { font-size: 10px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tipoBarWrap { height: 5px; background: var(--divider); border-radius: 3px; width: 60px; }
+.tipoBar    { height: 100%; background: #7b1fa2; border-radius: 3px; transition: width 0.35s; }
+.tipoPct    { font-size: 10.5px; font-weight: 900; color: #7b1fa2; min-width: 36px; text-align: right; }
+
 /* ── Footer ─────────────────────────────────────────── */
 .footer {
   border-top: 1px solid var(--divider); padding: 12px 32px;

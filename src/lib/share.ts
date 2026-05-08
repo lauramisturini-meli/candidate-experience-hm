@@ -35,6 +35,7 @@ export function buildSharePayload(tabsData: TabsState): Record<string, unknown> 
       isOutSla:      !!p.isOutSla,
       outSlaPayload: p.outSlaPayload,
       pcdVagas:      p.pcdVagas,
+      pcdHcData:     p.pcdHcData,
       isTonhExit:    !!p.isTonhExit,
       tonhCases:     p.tonhCases,
       tonhDashboard: p.tonhDashboard,
