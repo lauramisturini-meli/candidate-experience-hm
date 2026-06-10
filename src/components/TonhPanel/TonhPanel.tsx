@@ -44,8 +44,14 @@ function classifyExitMotivo(motivoSalida: string, principaisMotivos: string): Ex
   if (/\bcompliance\b|justa\s+causa|código\s+de\s+conduta|assédio|comportamento.*inadequad|brincadeira.*sexual|ameaça.*colega/i.test(t))
     return 'Compliance';
 
-  if (/(proposta|oferta|oportunidade|remoto|remote).{0,40}(salar|remuner|cargo|emprego|trabalho|remoto|remote)|(salário|remuneração).{0,30}(maior|superior|melhor|mais\s+atrat|acima)|trainee|aumento\s+salarial|100%\s*remoto/i.test(t))
+  // Extended to catch "proposta financeira", "contra proposta", "ganhar mais" (e.g. Lucas, Luiz cases)
+  if (/(proposta|oferta|oportunidade|remoto|remote).{0,40}(salar|remuner|cargo|emprego|trabalho|remoto|remote)|(salário|remuneração).{0,30}(maior|superior|melhor|mais\s+atrat|acima)|trainee|aumento\s+salarial|100%\s*remoto|proposta\s+financeira|contra[- ]?proposta|ganhar\s+(?:um\s+pouco\s+)?mais/i.test(t))
     return 'Proposta com Maior Remuneração';
+
+  // Check explicit adaptação signals before family keywords to prevent false positives
+  // (e.g. "familiar" mentioned speculatively alongside adaptation as the stated reason)
+  if (/n[aã]o\s+(?:se\s+)?adapt|dificuldade\s+de\s+adapt|adapta[çc][aã]o\s+a[oa]?\s+(?:rotina|modelo|lideran[çc]|turno)|terceiro\s+turno|\bt3\b/i.test(t))
+    return 'Adaptação a Rotina/Liderança';
 
   if (/motivo\s+pessoal|questão\s+pessoal|problema\s+pessoal|saúde|doença|cirurgia|família|familiar|esposa|marido|filho[sa]?\b|mãe\b|\bpai\b|\bpais\b|mudança\s+de\s+cidad|morar\s+(próximo|perto)/i.test(t))
     return 'Temas Familiares/Pessoais';
@@ -60,7 +66,7 @@ const LAYER_ORDER = [
 
 function normalizeLayer(rol: string): string {
   const r = rol.toLowerCase();
-  if (/team\s*leader\s+sr\b|\btl\s+sr\b/.test(r))     return 'Team Leader Sr';
+  if (/team\s*leader\s+sr\b|\btl\s+sr\b|\bsr\s+team\s*leader\b/.test(r)) return 'Team Leader Sr';
   if (/team\s*leader|\btl\b/.test(r))                  return 'Team Leader';
   if (/coordena[çc]|coordenador/i.test(r))             return 'Coordenador';
   if (/supervis/i.test(r))                             return 'Supervisor';

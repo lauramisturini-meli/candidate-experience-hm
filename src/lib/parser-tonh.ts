@@ -49,12 +49,21 @@ function parseCasePage(page: string, fileName: string): TonhCase {
       if (/^semana/.test(unit)) return Math.max(1, Math.round(num / 4.3));
       return Math.round(num);
     }
-    // Fallback: first number, with 18-month cap to filter parse errors
+    // English format: "X Years Y Months Z Days" (Workday/SAP exports)
+    const yM = tiempoRaw.match(/(\d+)\s*years?/i);
+    const mM = tiempoRaw.match(/(\d+)\s*months?/i);
+    const dM = tiempoRaw.match(/(\d+)\s*days?/i);
+    if (yM || mM || dM) {
+      const years  = yM ? parseInt(yM[1]) : 0;
+      const months = mM ? parseInt(mM[1]) : 0;
+      const days   = dM ? parseInt(dM[1]) : 0;
+      const total  = years * 12 + months + Math.round(days / 30);
+      return total > 18 ? null : Math.max(1, total);
+    }
+    // Last fallback: bare number, with 18-month cap to filter parse errors
     const m = tiempoRaw.match(/(\d+(?:[.,]\d+)?)/);
     if (!m) return null;
     const num = parseFloat(m[1].replace(',', '.'));
-    if (/\bdias?\b/i.test(tiempoRaw))    return Math.max(1, Math.round(num / 30));
-    if (/\bsemanas?\b/i.test(tiempoRaw)) return Math.max(1, Math.round(num / 4.3));
     const months = Math.round(num);
     return months > 18 ? null : months;
   })();
@@ -78,12 +87,31 @@ function parseCasePage(page: string, fileName: string): TonhCase {
   };
 }
 
+function splitCaseSections(pageText: string): string[] {
+  // Some PDF pages contain two case templates side-by-side (e.g. page with Michele + Fernando).
+  // Split on each "nombre y apellido" occurrence so each sub-section becomes its own case.
+  const parts = pageText.split(/(?=\bnombre\s+y\s+apellido\b)/i);
+  return parts.filter(s => /nombre\s+y\s+apellido/i.test(s));
+}
+
+function deduplicateByNome(cases: TonhCase[]): TonhCase[] {
+  // A shared-layout page (e.g. page 14) may repeat a case template from a previous page
+  // alongside a new case. Keep only the first occurrence of each person by name.
+  const seen = new Set<string>();
+  return cases.filter(c => {
+    const key = c.nome.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function parseTonhReport(fullText: string, pageTexts: string[], fileName: string): PdfData {
   const casePages = pageTexts.filter(p => /nombre\s+y\s+apellido/i.test(p));
 
   // Fallback: if no page-level split available, treat fullText as one case
   const tonhCases = casePages.length > 0
-    ? casePages.map(p => parseCasePage(p, fileName))
+    ? deduplicateByNome(casePages.flatMap(p => splitCaseSections(p).map(sub => parseCasePage(sub, fileName))))
     : [parseCasePage(fullText, fileName)];
 
   return {
