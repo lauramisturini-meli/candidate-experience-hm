@@ -44,6 +44,15 @@ function hasRealFlag(flags: string): boolean {
   return true;
 }
 
+function hasRealAcuerdos(acuerdos: string): boolean {
+  const a = acuerdos.trim().toLowerCase();
+  if (a.length < 30) return false;
+  // Filter out template placeholders common in these Spanish-language exit discussion PDFs
+  if (/^(n\/a|na|a\s+definir|sem\s+registro|no\s+se\s+registr|no\s+aplica|sin\s+acuerdo|s\/i|-+)$/i.test(a)) return false;
+  if (/detallar\s+(los\s+)?acuerdos|a\s+completar|completar\s+ap[oó]s|preencher\s+ap[oó]s|a\s+ser\s+preenchido/i.test(a)) return false;
+  return true;
+}
+
 const n1 = (n: number, s: string, p: string) => n === 1 ? s : p;
 const pct = (n: number, t: number) => Math.round((n / t) * 100);
 
@@ -247,7 +256,7 @@ export function buildTonhInsights(
   }
 
   // Acuerdos documentados = lições registradas para a reposição
-  const withAcuerdos = cases.filter(c => c.acuerdos.trim().length > 30);
+  const withAcuerdos = cases.filter(c => hasRealAcuerdos(c.acuerdos));
   if (withAcuerdos.length === total) {
     highs.push(`<strong>100% dos casos</strong> com acuerdos e next steps documentados — aprendizados registrados e disponíveis para calibrar o painel na reposição`);
   } else if (withAcuerdos.length >= Math.ceil(total / 2)) {
