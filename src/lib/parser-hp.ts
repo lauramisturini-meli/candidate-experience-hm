@@ -97,9 +97,9 @@ export function parseHpReport(positionalText: string, fullText?: string): PdfDat
   const year  = titleMatch ? titleMatch[1] : String(new Date().getFullYear());
   const title = `Plan Shipping Individuales - ${year}`;
 
-  const cerradas              = extractKpiValue(kpiSource, /Posiciones\s+cerradas/i)     ?? 0;
-  const onGoing               = extractKpiValue(kpiSource, /Posiciones\s+On\s+Going/i)   ?? 0;
-  const sinActivar            = extractKpiValue(kpiSource, /Posiciones\s+Sin\s+activar/i) ?? 0;
+  const cerradas              = extractKpiValue(kpiSource, /\bCerradas\b/i)             ?? 0;
+  const onGoing               = extractKpiValue(kpiSource, /\bOn\s+going\b/i)            ?? 0;
+  const sinActivar            = extractKpiValue(kpiSource, /\bAun\s+sin\s+activar\b/i)   ?? 0;
   const operadoresProyectados = extractKpiValue(kpiSource, /Operadores\s+proyectados/i)   ?? 0;
   const posicionesTotal       = extractKpiValue(kpiSource, /Total\s+de\s+posiciones/i)    ?? 0;
   const reemplazosProyectados = extractKpiValue(kpiSource, /Reemplazos\s+proyectados/i)   ?? 0;
