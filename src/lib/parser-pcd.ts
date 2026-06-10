@@ -192,37 +192,59 @@ function parseP2(lines: string[]): Array<{ bp: string; status: PcdStatus; instan
       }
     }
 
-    const instancia = lines[i + 1]?.trim() ?? '';
-    out.push({ bp, status, instancia });
-    i += 2;
+    // instância is on page 3, not page 2 — always empty here
+    out.push({ bp, status, instancia: '' });
+    i++;
   }
   return out;
 }
 
-function parseP3(lines: string[]): Array<{ sla: number; pontosDificuldade?: string; candidatoAprovado?: string; mesFechamento?: string }> {
-  const out: Array<{ sla: number; pontosDificuldade?: string; candidatoAprovado?: string; mesFechamento?: string }> = [];
+function parseP3(lines: string[]): Array<{ instancia: string; sla: number; pontosDificuldade?: string; candidatoAprovado?: string; mesFechamento?: string }> {
+  const out: Array<{ instancia: string; sla: number; pontosDificuldade?: string; candidatoAprovado?: string; mesFechamento?: string }> = [];
 
   let started = false;
   let i = 0;
 
   while (i < lines.length) {
     if (!started) {
-      if (/^\d{1,3}$/.test(lines[i]) && lines[i - 1] !== 'SLA') {
+      // Start at first instância keyword or first SLA number (not the header row)
+      if (INSTANCIA_ORDER.includes(lines[i]) || (/^\d{1,3}$/.test(lines[i]) && lines[i - 1] !== 'SLA')) {
         started = true;
       } else { i++; continue; }
     }
 
-    const slaMatch = lines[i].match(/^(\d{1,3})$/);
-    if (!slaMatch) { i++; continue; }
+    // Extract instância from current line if it matches a known stage
+    let instancia = '';
+    if (INSTANCIA_ORDER.includes(lines[i])) {
+      instancia = lines[i];
+      i++;
+      if (i >= lines.length) break;
+    }
 
-    const sla = parseInt(slaMatch[1], 10);
+    // Extract SLA: either a number or a dash placeholder (→ 0)
+    let sla = 0;
+    if (/^\d{1,3}$/.test(lines[i])) {
+      sla = parseInt(lines[i], 10);
+      i++;
+    } else if (/^-+$/.test(lines[i])) {
+      i++;  // SLA is empty — keep sla = 0
+    } else {
+      i++;
+      continue;
+    }
+
+    // Collect pontos/candidato/mes until next row begins (instância or SLA)
     const diffLines: string[] = [];
     let candidatoAprovado: string | undefined;
     let mesFechamento: string | undefined;
 
-    let j = i + 1;
-    while (j < lines.length && !/^\d{1,3}$/.test(lines[j])) {
-      const l = lines[j];
+    while (
+      i < lines.length &&
+      !/^\d{1,3}$/.test(lines[i]) &&
+      !INSTANCIA_ORDER.includes(lines[i]) &&
+      !/^-+$/.test(lines[i])
+    ) {
+      const l = lines[i];
       if (MESES.includes(l)) {
         mesFechamento = l;
       } else if (!candidatoAprovado && isNameLine(l)) {
@@ -230,11 +252,10 @@ function parseP3(lines: string[]): Array<{ sla: number; pontosDificuldade?: stri
       } else if (!candidatoAprovado) {
         diffLines.push(l);
       }
-      j++;
+      i++;
     }
 
-    out.push({ sla, pontosDificuldade: diffLines.join(' ').trim() || undefined, candidatoAprovado, mesFechamento });
-    i = j;
+    out.push({ instancia, sla, pontosDificuldade: diffLines.join(' ').trim() || undefined, candidatoAprovado, mesFechamento });
   }
   return out;
 }
@@ -464,7 +485,7 @@ export function parsePcdReport(pageTexts: string[], fileName: string): PdfData {
         hm:                r1.hm,
         bp:                r2.bp,
         status:            r2.status,
-        instancia:         r2.instancia,
+        instancia:         r3.instancia,
         sla:               r3.sla,
         pontosDificuldade: r3.pontosDificuldade,
         candidatoAprovado: r3.candidatoAprovado,
