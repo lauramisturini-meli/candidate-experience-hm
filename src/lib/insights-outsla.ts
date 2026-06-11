@@ -14,7 +14,7 @@ export function buildOutSlaInsights(rows: OutSlaRow[]): OutSlaInsights {
   const max   = Math.max(...rows.map(r => r.timeToOffer));
 
   const countStage  = (stage: string) => rows.filter(r => r.stage === stage).length;
-  const countReason = (reason: string) => rows.filter(r => r.offTimeReason === reason).length;
+  const countReason = (reason: string) => rows.filter(r => r.offTimeReason.toLowerCase().includes(reason.toLowerCase())).length;
   const pct         = (n: number) => Math.round((n / total) * 100);
 
   const hmDelays  = countReason('Demoras Hiring Manager');

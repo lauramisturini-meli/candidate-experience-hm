@@ -49,10 +49,13 @@ function BreakdownRow({ label, value, total, colorClass }: BreakdownRowProps) {
 }
 
 const STAGE_COLOR: Record<string, string> = {
-  'Entrevista HM':  s.barHM,
-  'Entrevista TA':  s.barTA,
-  'Reference Check': s.barRefCheck,
-  'Sourcing':       s.barSourcing,
+  'Entrevista HM':    s.barHM,
+  'Entrevista TA':    s.barTA,
+  'Entrevista L+L':   s.barLL,
+  'Reference Check':  s.barRefCheck,
+  'Interview Panel':  s.barInterview,
+  'Role Profiling':   s.barRoleProfil,
+  'Sourcing':         s.barSourcing,
 };
 
 const REASON_COLOR: Record<string, string> = {

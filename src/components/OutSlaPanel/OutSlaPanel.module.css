@@ -99,10 +99,13 @@
 .bPct   { font-size: 10px; color: var(--ink-muted); text-align: right; }
 
 /* Bar colors — stages */
-.barHM        { background: #e65100; }
-.barTA        { background: #1565c0; }
-.barRefCheck  { background: #00695c; }
-.barSourcing  { background: #6a1b9a; }
+.barHM          { background: #e65100; }
+.barTA          { background: #1565c0; }
+.barRefCheck    { background: #00695c; }
+.barSourcing    { background: #6a1b9a; }
+.barLL          { background: #ad1457; }
+.barInterview   { background: #37474f; }
+.barRoleProfil  { background: #f57f17; }
 
 /* Bar colors — reasons */
 .barReasonHM    { background: #bf360c; }
