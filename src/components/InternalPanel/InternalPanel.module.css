@@ -192,9 +192,9 @@
 .dimHighlight:hover { background: #fff3cd !important; }
 
 .dimName    { color: var(--ink); line-height: 1.4; }
-.dimFav     { color: #1bbc9b;        font-weight: 800; text-align: right; width: 105px; }
-.dimNeutral { color: var(--ink-soft); font-weight: 700; text-align: right; width: 80px; }
-.dimDesf    { color: var(--danger);   font-weight: 700; text-align: right; width: 125px; }
+.dimFav     { color: #1bbc9b;        font-weight: 800; text-align: center; width: 105px; }
+.dimNeutral { color: var(--ink-soft); font-weight: 700; text-align: center; width: 80px; }
+.dimDesf    { color: var(--danger);   font-weight: 700; text-align: center; width: 125px; }
 
 /* ── Insights column ─────────────────────────────────────────────────────── */
 .insightTitle {

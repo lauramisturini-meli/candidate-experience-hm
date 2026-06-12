@@ -21,6 +21,28 @@ export interface HpLayerRow {
   rotacionesProyectadas: number;
 }
 
+export interface HpSlaStats {
+  ativasFora: number;
+  ativasTotal: number;
+  ativasPct: number;
+  ativasAvgAging: number;
+  fechadasFora: number;
+  fechadasTotal: number;
+  fechadasPct: number;
+  fechadasAvgTto: number;
+}
+
+export interface HpPipelineStep {
+  step: string;
+  count: number;
+}
+
+export interface HpQuarter {
+  q: string;
+  previstas: number;
+  fechadas: number;
+}
+
 export interface HpPayload {
   title: string;
   year: string;
@@ -33,6 +55,13 @@ export interface HpPayload {
   totalRotations: number;
   porcentajeAvance: number;
   rows: HpLayerRow[];
+  // HTML-sourced rich data (optional)
+  sla?: HpSlaStats;
+  pipeline?: HpPipelineStep[];
+  quarters?: HpQuarter[];
+  highs?: string[];
+  lows?: string[];
+  actions?: string[];
 }
 
 export interface PdfData {

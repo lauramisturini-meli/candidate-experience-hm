@@ -47,11 +47,11 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
         dimensions: [],
         worstDimensionName: null,
         detractorHtml: '',
-        highs: buildHpHighs(hp),
-        lows: buildHpLows(hp),
-        actions: buildHpActions(hp),
+        highs:   hp.highs   ?? buildHpHighs(hp),
+        lows:    hp.lows    ?? buildHpLows(hp),
+        actions: hp.actions ?? buildHpActions(hp),
         hpPayload: hp,
-        hpSummary: buildHpSummary(hp),
+        hpSummary: hp.highs ? null : buildHpSummary(hp),
       };
     }
   }

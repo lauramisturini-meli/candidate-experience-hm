@@ -158,59 +158,118 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                   <div className={s.kpiVal}>{data.hpPayload.sinActivar.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>Sin Activar</div>
                 </div>
-                <div className={`${s.kpiBox} ${s.hpKpiReemplazos}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.reemplazosProyectados.toLocaleString('pt-BR')}</div>
-                  <div className={s.kpiLabel}>Reemplazos Proj.</div>
-                </div>
-                <div className={`${s.kpiBox} ${s.hpKpiOperadores}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.operadoresProyectados.toLocaleString('pt-BR')}</div>
-                  <div className={s.kpiLabel}>Operadores Proj.</div>
-                </div>
                 <div className={`${s.kpiBox} ${s.hpKpiTotal}`}>
                   <div className={s.kpiVal}>{data.hpPayload.posicionesTotal.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>Total de Posições</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.hpKpiAvance}`}>
                   <div className={s.kpiVal}>{data.hpPayload.porcentajeAvance.toFixed(2).replace('.', ',')}%</div>
-                  <div className={s.kpiLabel}>Porcentaje de Avance</div>
+                  <div className={s.kpiLabel}>Hiring Plan Completion</div>
                 </div>
               </div>
 
-              {data.hpPayload.rows.length > 0 && (() => {
-                const maxRot = Math.max(...data.hpPayload!.rows.map(r => r.rotacionesProyectadas));
-                return (
-                  <>
-                    <div className={s.dimSectionTitle}>Breakdown por Layer</div>
-                    <table className={s.dimTable}>
-                      <thead>
-                        <tr>
-                          <td className={s.dimName}>Layer</td>
-                          <td className={s.hpCol}>Fechadas</td>
-                          <td className={s.hpCol}>Sin Activar</td>
-                          <td className={s.hpCol}>On Going</td>
-                          <td className={s.hpCol}>Reemplazos</td>
-                          <td className={s.hpCol}>Rotações</td>
+              {/* ── SLA ─────────────────────────────────────────────────── */}
+              {data.hpPayload.sla && (
+                <>
+                  <div className={s.dimSectionTitle}>Análise de SLA (meta: 75 dias)</div>
+                  <div className={s.hpSlaGrid}>
+                    <div className={s.hpSlaCard}>
+                      <div className={s.hpSlaTitle}>Vagas Ativas Fora do SLA</div>
+                      <div className={s.hpSlaBig}>{data.hpPayload.sla.ativasPct}%</div>
+                      <div className={s.hpSlaSub}>{data.hpPayload.sla.ativasFora} de {data.hpPayload.sla.ativasTotal} vagas</div>
+                      <div className={s.hpSlaSub}>Aging médio: <strong>{data.hpPayload.sla.ativasAvgAging}d</strong></div>
+                    </div>
+                    <div className={s.hpSlaCard}>
+                      <div className={s.hpSlaTitle}>Vagas Fechadas Fora do SLA</div>
+                      <div className={`${s.hpSlaBig} ${data.hpPayload.sla.fechadasPct > 10 ? s.hpSlaWarn : s.hpSlaOk}`}>
+                        {data.hpPayload.sla.fechadasPct}%
+                      </div>
+                      <div className={s.hpSlaSub}>{data.hpPayload.sla.fechadasFora} de {data.hpPayload.sla.fechadasTotal} vagas</div>
+                      <div className={s.hpSlaSub}>TTO médio: <strong>{data.hpPayload.sla.fechadasAvgTto}d</strong></div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── Breakdown por Layer ──────────────────────────────────── */}
+              {data.hpPayload.rows.length > 0 && (
+                <>
+                  <div className={s.dimSectionTitle}>Breakdown por Layer</div>
+                  <table className={s.dimTable}>
+                    <thead>
+                      <tr>
+                        <td className={s.dimName}>Layer</td>
+                        <td className={s.hpCol}>Fechadas</td>
+                        <td className={s.hpCol}>Sin Activar</td>
+                        <td className={s.hpCol}>On Going</td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.hpPayload!.rows.map((row, i) => (
+                        <tr key={i}>
+                          <td className={s.dimName}>{row.agrupLayer}</td>
+                          <td className={s.hpCol}>{row.cerradas}</td>
+                          <td className={s.hpCol}>{row.sinActivar}</td>
+                          <td className={s.hpCol}>{row.onGoing}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {data.hpPayload!.rows.map((row, i) => {
-                          const isHighRot = row.rotacionesProyectadas === maxRot && maxRot > 0;
-                          return (
-                            <tr key={i} className={isHighRot ? s.dimHighlight : ''}>
-                              <td className={s.dimName}>{isHighRot ? <strong>{row.agrupLayer} ⚠</strong> : row.agrupLayer}</td>
-                              <td className={s.hpCol}>{row.cerradas}</td>
-                              <td className={s.hpCol}>{row.sinActivar}</td>
-                              <td className={s.hpCol}>{row.onGoing}</td>
-                              <td className={s.hpCol}>{row.reemplazosProyectados}</td>
-                              <td className={`${s.hpCol} ${isHighRot ? s.hpColDanger : ''}`}>{isHighRot ? <strong>{row.rotacionesProyectadas}</strong> : row.rotacionesProyectadas}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </>
-                );
-              })()}
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {/* ── Pipeline por Etapa ───────────────────────────────────── */}
+              {data.hpPayload.pipeline && data.hpPayload.pipeline.length > 0 && (
+                <>
+                  <div className={s.dimSectionTitle}>Pipeline — Vagas Ativas por Etapa</div>
+                  <div className={s.hpPipeline}>
+                    {(() => {
+                      const maxCount = Math.max(...data.hpPayload!.pipeline!.map(s => s.count));
+                      return data.hpPayload!.pipeline!.map((item, i) => (
+                        <div key={i} className={s.hpPipeRow}>
+                          <span className={s.hpPipeLabel}>{item.step}</span>
+                          <div className={s.hpPipeBarWrap}>
+                            <div className={s.hpPipeBar} style={{ width: `${(item.count / maxCount) * 100}%` }} />
+                          </div>
+                          <span className={s.hpPipeCount}>{item.count}</span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </>
+              )}
+
+              {/* ── Fechamentos por Quarter ──────────────────────────────── */}
+              {data.hpPayload.quarters && data.hpPayload.quarters.length > 0 && (
+                <>
+                  <div className={s.dimSectionTitle}>Fechamentos por Quarter</div>
+                  <table className={s.dimTable}>
+                    <thead>
+                      <tr>
+                        <td className={s.dimName}>Quarter</td>
+                        <td className={s.hpCol}>Previstas</td>
+                        <td className={s.hpCol}>Fechadas</td>
+                        <td className={s.hpCol}>% Conclusão</td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.hpPayload.quarters.map((q, i) => {
+                        const pct = q.previstas > 0 ? Math.round((q.fechadas / q.previstas) * 100) : 0;
+                        return (
+                          <tr key={i}>
+                            <td className={s.dimName}><strong>{q.q}</strong></td>
+                            <td className={s.hpCol}>{q.previstas}</td>
+                            <td className={s.hpCol}>{q.fechadas}</td>
+                            <td className={`${s.hpCol} ${pct >= 80 ? s.hpColOk : pct >= 50 ? s.hpColWarn : s.hpColDanger}`}>
+                              {pct}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
+              )}
             </>
           ) : (
             <>
