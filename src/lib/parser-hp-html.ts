@@ -64,7 +64,7 @@ const STEP_ORDER = [
 ];
 
 function buildInsights(
-  A: VagaAtiva[], CL: VagaFechada[], P: VagaPending[],
+  A: VagaAtiva[], P: VagaPending[],
   sla: HpSlaStats, porcentajeAvance: number, total: number,
 ): { highs: string[]; lows: string[]; actions: string[] } {
   const highs: string[] = [];
@@ -189,7 +189,7 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   })).filter(r => r.previstas > 0);
 
   // ── Insights ───────────────────────────────────────────────────────────────
-  const { highs, lows, actions } = buildInsights(A, CL, P, sla, porcentajeAvance, total);
+  const { highs, lows, actions } = buildInsights(A, P, sla, porcentajeAvance, total);
 
   const hpPayload: HpPayload = {
     title: `Plan Shipping Individuales - ${year}`,
