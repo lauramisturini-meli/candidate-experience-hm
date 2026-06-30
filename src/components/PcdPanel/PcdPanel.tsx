@@ -164,9 +164,8 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
     }
 
     if (comPcd.length > 0) {
-      const names = comPcd.map(v => v.candidatoAprovado).filter(Boolean).join(', ');
       const pctStr = fechadas.length > 1 ? ` — <strong>${pctComPcd}%</strong> das vagas fechadas` : '';
-      items.push(`${comPcd.length} contratação(ões) com inclusão efetiva de PCD${pctStr}${names ? `: ${names}` : ''}`);
+      items.push(`${comPcd.length} contratação(ões) com inclusão efetiva de PCD${pctStr}`);
     }
 
     if (pctComPcd >= 60 && fechadas.length >= 2) {
