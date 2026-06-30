@@ -35,16 +35,28 @@ const ROW_RE = new RegExp(
 );
 
 // Names (lider/pbp/ta) are ALL CAPS; reasons contain lowercase letters.
-// Strip leading all-caps blocks to isolate the reason.
-function extractReason(tail: string): string {
+// Try multi-space column split first (positional PDF preserves column gaps),
+// then fall back to lowercase-detection for the reason.
+function parseTail(tail: string): { ta: string; offTimeReason: string } {
   const t = tail.trim();
-  if (!t) return '';
-  // Find first word that has a lowercase letter — that's where the reason starts
+  if (!t) return { ta: '', offTimeReason: '' };
+
+  // Primary: split on 2+ spaces — each column in the positional text is separated by large gaps
+  const parts = t.split(/\s{2,}/).map(p => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    const isAllCaps = (s: string) => !/[a-záéíóúñà-ü]/.test(s);
+    const nameParts   = parts.filter(isAllCaps);
+    const reasonParts = parts.filter(p => !isAllCaps(p));
+    const ta          = nameParts.length >= 1 ? nameParts[nameParts.length - 1] : '';
+    return { ta, offTimeReason: normalizeReason(reasonParts.join(' ')) };
+  }
+
+  // Fallback: single-space text — find where reason starts
   const m = t.match(/\S*[a-záéíóúñà-ü]\S*/);
-  if (!m) return '';
-  const idx = t.indexOf(m[0]);
+  if (!m) return { ta: '', offTimeReason: '' };
+  const idx       = t.indexOf(m[0]);
   const wordStart = idx > 0 ? t.lastIndexOf(' ', idx - 1) + 1 : 0;
-  return normalizeReason(t.slice(wordStart).trim());
+  return { ta: '', offTimeReason: normalizeReason(t.slice(wordStart).trim()) };
 }
 
 function normalizeReason(raw: string): string {
@@ -72,16 +84,18 @@ export function parseOutSlaReport(positionalText: string, fileName: string): Pdf
     const m = ROW_RE.exec(line.trim());
     if (!m) continue;
 
+    const { ta, offTimeReason } = parseTail(m[9] ?? '');
     rows.push({
-      idInternal:    m[1],
-      positionCode:  m[2],
-      qExpectation:  m[3],
-      origin:        m[4],
-      timeToOffer:   parseInt(m[5], 10),
-      stage:         m[6].replace('\\+', '+'),
-      seniority:     m[7],
-      site:          m[8].trim(),
-      offTimeReason: extractReason(m[9] ?? ''),
+      idInternal:   m[1],
+      positionCode: m[2],
+      qExpectation: m[3],
+      origin:       m[4],
+      timeToOffer:  parseInt(m[5], 10),
+      stage:        m[6].replace('\\+', '+'),
+      seniority:    m[7],
+      site:         m[8].trim(),
+      offTimeReason,
+      ta,
     });
   }
 

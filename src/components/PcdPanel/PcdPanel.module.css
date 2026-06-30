@@ -221,6 +221,48 @@
 .tipoBar    { height: 100%; background: #7b1fa2; border-radius: 3px; transition: width 0.35s; }
 .tipoPct    { font-size: 10.5px; font-weight: 900; color: #7b1fa2; min-width: 36px; text-align: right; }
 
+/* ── TA filter chips ─────────────────────────────────── */
+.taFilter {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  padding: 8px 32px 0 32px;
+}
+.taFilterLabel {
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--ink-soft); margin-right: 4px;
+}
+.taChip {
+  display: inline-flex; align-items: center;
+  background: #f0f0f0; color: var(--ink);
+  border: 1px solid #ddd; border-radius: 20px;
+  padding: 3px 10px; font-size: 10.5px; font-weight: 700;
+  cursor: pointer; transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.taChip:hover { background: #e4e4e4; border-color: #bbb; }
+.taChipActive {
+  background: var(--brand-dark); color: var(--brand-yellow);
+  border-color: var(--brand-dark);
+}
+.taChipActive:hover { background: #333; }
+
+/* Individual analysis badge */
+.taIndividualBadge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--brand-dark); color: var(--brand-yellow);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+  border-radius: 20px; padding: 4px 14px;
+}
+.taIndividualBadge::before {
+  content: "▸"; font-size: 10px;
+}
+
+/* Active TA tag (team filter mode) */
+.taActiveTag {
+  font-size: 11px; color: var(--ink-soft);
+  background: #fffbe6; border: 1px solid var(--brand-yellow);
+  border-radius: 8px; padding: 7px 12px;
+}
+
 /* ── Footer ─────────────────────────────────────────── */
 .footer {
   border-top: 1px solid var(--divider); padding: 12px 32px;

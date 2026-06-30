@@ -73,6 +73,7 @@ function parseFullTable(lines: string[]): PcdVaga[] {
     let localidade  = '';
     let hm          = '';
     let bp          = '';
+    let ta          = '';
     let status: PcdStatus = 'Em processo';
     let instancia   = '';
     let sla         = 0;
@@ -94,7 +95,8 @@ function parseFullTable(lines: string[]): PcdVaga[] {
       if (!statusFound && isAllCapsName(l)) {
         if (!hm) { hm = l; continue; }
         if (!bp) { bp = l; continue; }
-        continue; // extra all-caps names ignored
+        if (!ta) { ta = l; continue; } // 3rd all-caps name = TA
+        continue;
       }
 
       if (!statusFound) {
@@ -131,7 +133,7 @@ function parseFullTable(lines: string[]): PcdVaga[] {
     }
 
     vagas.push({
-      numVaga, senioridade, localidade, hm, bp, status, instancia, sla,
+      numVaga, senioridade, localidade, hm, bp, ta: ta || undefined, status, instancia, sla,
       pontosDificuldade: diffParts.join(' ').trim() || undefined,
       candidatoAprovado, mesFechamento, anoFechamento,
     });
@@ -174,8 +176,10 @@ function parseP1(lines: string[]): Array<{ numVaga: string; senioridade: string;
   return out;
 }
 
-function parseP2(lines: string[]): Array<{ bp: string; status: PcdStatus; instancia: string }> {
-  const out: Array<{ bp: string; status: PcdStatus; instancia: string }> = [];
+const P2_HEADER_WORDS = ['Concluída', 'Em processo', 'TA', 'BP', 'HM', 'Status', 'Instância', 'SLA', 'Pontos de Dificuldade'];
+
+function parseP2(lines: string[]): Array<{ bp: string; status: PcdStatus; instancia: string; ta?: string }> {
+  const out: Array<{ bp: string; status: PcdStatus; instancia: string; ta?: string }> = [];
 
   let i = 0;
   while (i < lines.length && !STATUSES.some(s => lines[i].includes(s))) i++;
@@ -184,16 +188,24 @@ function parseP2(lines: string[]): Array<{ bp: string; status: PcdStatus; instan
     const status = STATUSES.find(s => lines[i].includes(s));
     if (!status) { i++; continue; }
 
+    let ta = '';
     let bp = '';
-    for (let b = i - 1; b >= Math.max(0, i - 4); b--) {
-      if (isAllCapsName(lines[b])
-          && !['Concluída', 'Em processo', 'TA', 'BP', 'Status', 'Instância'].includes(lines[b])) {
-        bp = lines[b]; break;
+    for (let b = i - 1; b >= Math.max(0, i - 6); b--) {
+      const l = lines[b];
+      if (P2_HEADER_WORDS.some(h => l.includes(h))) continue;
+      if (STATUSES.some(s => l.includes(s))) continue;
+      // TA: mixed-case proper name (not all-caps)
+      if (!ta && !bp && isNameLine(l) && !isAllCapsName(l)) {
+        ta = l; continue;
+      }
+      // BP: all-caps name
+      if (!bp && isAllCapsName(l)) {
+        bp = l; break;
       }
     }
 
     // instância is on page 3, not page 2 — always empty here
-    out.push({ bp, status, instancia: '' });
+    out.push({ bp, status, instancia: '', ta: ta || undefined });
     i++;
   }
   return out;
@@ -484,6 +496,7 @@ export function parsePcdReport(pageTexts: string[], fileName: string): PdfData {
         localidade:        r1.localidade,
         hm:                r1.hm,
         bp:                r2.bp,
+        ta:                r2.ta,
         status:            r2.status,
         instancia:         r3.instancia,
         sla:               r3.sla,

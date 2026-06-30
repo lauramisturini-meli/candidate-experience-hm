@@ -137,6 +137,7 @@ export interface OutSlaRow {
   seniority: string;
   site: string;
   offTimeReason: string;
+  ta?: string;
 }
 
 export interface OutSlaPayload {
@@ -231,6 +232,7 @@ export interface PcdVaga {
   localidade: string;
   hm: string;
   bp: string;
+  ta?: string;
   status: PcdStatus;
   instancia: string;
   sla: number;

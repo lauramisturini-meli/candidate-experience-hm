@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState, PcdHcData } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -89,10 +89,39 @@ function avg(arr: number[]): number {
   return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 }
 
+function toTitleCase(s: string): string {
+  return s.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+}
+
+function shortName(fullName: string): string {
+  const parts = toTitleCase(fullName).split(' ');
+  if (parts.length <= 2) return parts.join(' ');
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
 export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
-  const vagas: PcdVaga[] = useMemo(
+  const allVagas: PcdVaga[] = useMemo(
     () => pdfs.flatMap(p => p.pcdVagas ?? []),
     [pdfs],
+  );
+
+  // ── TA filter ──────────────────────────────────────────────────────────────
+  const taList = useMemo(() => {
+    const set = new Set<string>();
+    allVagas.forEach(v => { if (v.ta) set.add(v.ta); });
+    return Array.from(set).sort();
+  }, [allVagas]);
+
+  // When exactly 1 TA is in the data, auto-select (individual analysis mode)
+  const isIndividual = taList.length === 1;
+
+  const [selectedTa, setSelectedTa] = useState<string | null>(null);
+
+  const activeTa = selectedTa ?? (isIndividual ? taList[0] : null);
+
+  const vagas: PcdVaga[] = useMemo(
+    () => activeTa ? allVagas.filter(v => v.ta === activeTa) : allVagas,
+    [allVagas, activeTa],
   );
 
   const hcData: PcdHcData | undefined = useMemo(() => {
@@ -265,6 +294,35 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
           <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
         </div>
       </div>
+
+      {/* TA filter — individual badge OR team chips */}
+      {isIndividual && taList[0] ? (
+        <div className={s.taFilter}>
+          <span className={s.taIndividualBadge}>
+            Análise Individual · {toTitleCase(taList[0])}
+          </span>
+        </div>
+      ) : taList.length > 1 ? (
+        <div className={s.taFilter}>
+          <span className={s.taFilterLabel}>Filtrar por TA</span>
+          <button
+            className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
+            onClick={() => setSelectedTa(null)}
+          >
+            Todos
+          </button>
+          {taList.map(ta => (
+            <button
+              key={ta}
+              className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
+              onClick={() => setSelectedTa(activeTa === ta ? null : ta)}
+              title={toTitleCase(ta)}
+            >
+              {shortName(ta)}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className={s.main}>
         <div className={s.colLeft}>
@@ -446,6 +504,11 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
         </div>
 
         <div className={s.colRight}>
+          {activeTa && !isIndividual && (
+            <div className={s.taActiveTag}>
+              Análise: <strong>{toTitleCase(activeTa)}</strong>
+            </div>
+          )}
           <div>
             <div className={`${s.insightTitle} ${s.highs}`}>Highs</div>
             <ul className={`${s.insightList} ${s.highsList}`}>
