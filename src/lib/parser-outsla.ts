@@ -130,8 +130,9 @@ function identifyTas(preSections: string[]): string[] {
 }
 
 export function isOutSlaReport(text: string): boolean {
+  // id_internal is an internal field name, not always present in the PDF header.
+  // time_to_offer + off_time_reason together are unique to this report type.
   return (
-    /id_internal/i.test(text) &&
     /time_to_offer/i.test(text) &&
     /off_time_reason/i.test(text)
   );
