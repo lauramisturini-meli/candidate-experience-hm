@@ -181,7 +181,7 @@ function identifyTas(preSections: string[]): string[] {
   // Terminal words = last word of every pre-reason section (always a TA surname)
   const terminalWords = new Set(
     preSections
-      .map(s => s.trim().split(/\s+/).filter(Boolean).at(-1) ?? '')
+      .map(s => { const w = s.trim().split(/\s+/).filter(Boolean); return w[w.length - 1] ?? ''; })
       .filter(Boolean)
   );
 
