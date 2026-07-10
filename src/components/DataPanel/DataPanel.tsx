@@ -3,7 +3,7 @@ import { buildMergedView } from '../../lib/merger';
 import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
-import type { PdfData, TabId, TabMeta, StatusMessage, TabUiState, DimOverrides } from '../../types';
+import type { PdfData, TabId, TabMeta, StatusMessage, TabUiState, DimOverrides, HpPayload, HpRawRow } from '../../types';
 import s from './DataPanel.module.css';
 
 interface Props {
@@ -21,6 +21,58 @@ interface Props {
 }
 
 const DASH = (v: string) => v === '—' || v === '-';
+
+// Recompute HP KPIs from a filtered subset of raw rows
+function recomputeHpPayload(base: HpPayload, rows: HpRawRow[]): HpPayload {
+  const pctFn = (n: number, t: number) => t > 0 ? parseFloat(((n / t) * 100).toFixed(1)) : 0;
+  const avgFn = (nums: number[]) => nums.length ? Math.round(nums.reduce((s, n) => s + n, 0) / nums.length) : 0;
+
+  const active  = rows.filter(r => r.status === 'on going');
+  const closed  = rows.filter(r => r.status === 'done');
+  const pending = rows.filter(r => r.status === 'pending');
+  const sb      = rows.filter(r => r.status === 'stand by');
+  const total   = rows.length;
+  const cerradas = closed.length;
+  const porcentajeAvance = pctFn(cerradas, total);
+
+  const ativasFora  = active.filter(r => r.fora_sla).length;
+  const fechadasFora = closed.filter(r => r.fora_sla).length;
+
+  const sla = base.sla ? {
+    ativasFora,
+    ativasTotal:    active.length,
+    ativasPct:      pctFn(ativasFora, active.length),
+    ativasAvgAging: avgFn(active.map(r => r.aging ?? 0).filter(n => n > 0)),
+    fechadasFora,
+    fechadasTotal:  closed.length,
+    fechadasPct:    pctFn(fechadasFora, closed.length),
+    fechadasAvgTto: avgFn(closed.map(r => r.tto ?? 0).filter(n => n > 0)),
+  } : undefined;
+
+  const stepMap: Record<string, number> = {};
+  for (const r of active) if (r.step) stepMap[r.step] = (stepMap[r.step] ?? 0) + 1;
+  const pipeline = Object.entries(stepMap).sort((a, b) => b[1] - a[1]).map(([step, count]) => ({ step, count }));
+
+  const allQ = [...active, ...closed, ...pending, ...sb];
+  const qKeys = [...new Set(allQ.map(r => r.q).filter(Boolean))].sort();
+  const quarters = qKeys.map(q => ({
+    q,
+    previstas: allQ.filter(r => r.q === q).length,
+    fechadas:  closed.filter(r => r.q === q).length,
+  })).filter(r => r.previstas > 0);
+
+  return {
+    ...base,
+    posicionesTotal: total,
+    cerradas,
+    onGoing: active.length,
+    sinActivar: pending.length,
+    porcentajeAvance,
+    sla,
+    pipeline,
+    quarters,
+  };
+}
 
 const PREPS_DP = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di']);
 function toTitleCaseDP(s: string): string {
@@ -58,7 +110,27 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
     return pdfs.filter(p => p.filters?.['TA Owner']?.trim() === activeTa);
   }, [pdfs, activeTa, tabId]);
 
+  // ── HP Completion TA filter ────────────────────────────────────────────────
+  const hpTaList = useMemo(() => {
+    if (tabId !== 'hpc') return [];
+    const allRows = pdfs.flatMap(p => p.hpPayload?.hpRawRows ?? []);
+    const set = new Set<string>();
+    allRows.forEach(r => { if (r.ta) set.add(r.ta); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [pdfs, tabId]);
+
+  const isIndividualHP = hpTaList.length === 1;
+  const [selectedHpTa, setSelectedHpTa] = useState<string | null>(null);
+  const activeHpTa = selectedHpTa ?? (isIndividualHP ? hpTaList[0] : null);
+
   const data = useMemo(() => buildMergedView(filteredPdfs, tabId), [filteredPdfs, tabId]);
+
+  // Recompute hpPayload when HP TA filter is active
+  const hpPayloadForDisplay = useMemo(() => {
+    if (tabId !== 'hpc' || !activeHpTa || !hpPayloadForDisplay?.hpRawRows) return hpPayloadForDisplay;
+    const filtered = hpPayloadForDisplay.hpRawRows.filter(r => r.ta === activeHpTa);
+    return recomputeHpPayload(hpPayloadForDisplay, filtered);
+  }, [tabId, activeHpTa, hpPayloadForDisplay]);
   const overrides: DimOverrides = ui?.dimOverrides ?? {};
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
@@ -153,6 +225,32 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
             </button>
           ))}
         </div>
+      ) : tabId === 'hpc' && isIndividualHP && hpTaList[0] ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taIndividualBadge}>
+            Análise Individual · {toTitleCaseDP(hpTaList[0])}
+          </span>
+        </div>
+      ) : tabId === 'hpc' && hpTaList.length > 1 ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taFilterLabel}>Filtrar por TA</span>
+          <button
+            className={`${s.taChip} ${activeHpTa === null ? s.taChipActive : ''}`}
+            onClick={() => setSelectedHpTa(null)}
+          >
+            Todos
+          </button>
+          {hpTaList.map(ta => (
+            <button
+              key={ta}
+              className={`${s.taChip} ${activeHpTa === ta ? s.taChipActive : ''}`}
+              onClick={() => setSelectedHpTa(activeHpTa === ta ? null : ta)}
+              title={toTitleCaseDP(ta)}
+            >
+              {shortNameDP(ta)}
+            </button>
+          ))}
+        </div>
       ) : (
         <div className={s.toolbarSub} />
       )}
@@ -206,56 +304,56 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
 
       <div className={s.main}>
         <div className={s.colLeft}>
-          {data.hpPayload ? (
+          {hpPayloadForDisplay ? (
             <>
               <div className={s.hpKpiGrid}>
                 <div className={`${s.kpiBox} ${s.hpKpiFechadas}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.cerradas.toLocaleString('pt-BR')}</div>
+                  <div className={s.kpiVal}>{hpPayloadForDisplay.cerradas.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>Posições Fechadas</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.hpKpiOnGoing}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.onGoing.toLocaleString('pt-BR')}</div>
+                  <div className={s.kpiVal}>{hpPayloadForDisplay.onGoing.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>On Going</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.hpKpiInativas}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.sinActivar.toLocaleString('pt-BR')}</div>
+                  <div className={s.kpiVal}>{hpPayloadForDisplay.sinActivar.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>Sin Activar</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.hpKpiTotal}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.posicionesTotal.toLocaleString('pt-BR')}</div>
+                  <div className={s.kpiVal}>{hpPayloadForDisplay.posicionesTotal.toLocaleString('pt-BR')}</div>
                   <div className={s.kpiLabel}>Total de Posições</div>
                 </div>
                 <div className={`${s.kpiBox} ${s.hpKpiAvance}`}>
-                  <div className={s.kpiVal}>{data.hpPayload.porcentajeAvance.toFixed(2).replace('.', ',')}%</div>
+                  <div className={s.kpiVal}>{hpPayloadForDisplay.porcentajeAvance.toFixed(2).replace('.', ',')}%</div>
                   <div className={s.kpiLabel}>Hiring Plan Completion</div>
                 </div>
               </div>
 
               {/* ── SLA ─────────────────────────────────────────────────── */}
-              {data.hpPayload.sla && (
+              {hpPayloadForDisplay.sla && (
                 <>
                   <div className={s.dimSectionTitle}>Análise de SLA (meta: 75 dias)</div>
                   <div className={s.hpSlaGrid}>
                     <div className={s.hpSlaCard}>
                       <div className={s.hpSlaTitle}>Vagas Ativas Fora do SLA</div>
-                      <div className={s.hpSlaBig}>{data.hpPayload.sla.ativasPct}%</div>
-                      <div className={s.hpSlaSub}>{data.hpPayload.sla.ativasFora} de {data.hpPayload.sla.ativasTotal} vagas</div>
-                      <div className={s.hpSlaSub}>Aging médio: <strong>{data.hpPayload.sla.ativasAvgAging}d</strong></div>
+                      <div className={s.hpSlaBig}>{hpPayloadForDisplay.sla.ativasPct}%</div>
+                      <div className={s.hpSlaSub}>{hpPayloadForDisplay.sla.ativasFora} de {hpPayloadForDisplay.sla.ativasTotal} vagas</div>
+                      <div className={s.hpSlaSub}>Aging médio: <strong>{hpPayloadForDisplay.sla.ativasAvgAging}d</strong></div>
                     </div>
                     <div className={s.hpSlaCard}>
                       <div className={s.hpSlaTitle}>Vagas Fechadas Fora do SLA</div>
-                      <div className={`${s.hpSlaBig} ${data.hpPayload.sla.fechadasPct > 10 ? s.hpSlaWarn : s.hpSlaOk}`}>
-                        {data.hpPayload.sla.fechadasPct}%
+                      <div className={`${s.hpSlaBig} ${hpPayloadForDisplay.sla.fechadasPct > 10 ? s.hpSlaWarn : s.hpSlaOk}`}>
+                        {hpPayloadForDisplay.sla.fechadasPct}%
                       </div>
-                      <div className={s.hpSlaSub}>{data.hpPayload.sla.fechadasFora} de {data.hpPayload.sla.fechadasTotal} vagas</div>
-                      <div className={s.hpSlaSub}>TTO médio: <strong>{data.hpPayload.sla.fechadasAvgTto}d</strong></div>
+                      <div className={s.hpSlaSub}>{hpPayloadForDisplay.sla.fechadasFora} de {hpPayloadForDisplay.sla.fechadasTotal} vagas</div>
+                      <div className={s.hpSlaSub}>TTO médio: <strong>{hpPayloadForDisplay.sla.fechadasAvgTto}d</strong></div>
                     </div>
                   </div>
                 </>
               )}
 
               {/* ── Breakdown por Layer ──────────────────────────────────── */}
-              {data.hpPayload.rows.length > 0 && (
+              {hpPayloadForDisplay.rows.length > 0 && (
                 <>
                   <div className={s.dimSectionTitle}>Breakdown por Layer</div>
                   <table className={s.dimTable}>
@@ -268,7 +366,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                       </tr>
                     </thead>
                     <tbody>
-                      {data.hpPayload!.rows.map((row, i) => (
+                      {hpPayloadForDisplay!.rows.map((row, i) => (
                         <tr key={i}>
                           <td className={s.dimName}>{row.agrupLayer}</td>
                           <td className={s.hpCol}>{row.cerradas}</td>
@@ -282,13 +380,13 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
               )}
 
               {/* ── Pipeline por Etapa ───────────────────────────────────── */}
-              {data.hpPayload.pipeline && data.hpPayload.pipeline.length > 0 && (
+              {hpPayloadForDisplay.pipeline && hpPayloadForDisplay.pipeline.length > 0 && (
                 <>
                   <div className={s.dimSectionTitle}>Pipeline — Vagas Ativas por Etapa</div>
                   <div className={s.hpPipeline}>
                     {(() => {
-                      const maxCount = Math.max(...data.hpPayload!.pipeline!.map(s => s.count));
-                      return data.hpPayload!.pipeline!.map((item, i) => (
+                      const maxCount = Math.max(...hpPayloadForDisplay!.pipeline!.map(s => s.count));
+                      return hpPayloadForDisplay!.pipeline!.map((item, i) => (
                         <div key={i} className={s.hpPipeRow}>
                           <span className={s.hpPipeLabel}>{item.step}</span>
                           <div className={s.hpPipeBarWrap}>
@@ -303,7 +401,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
               )}
 
               {/* ── Fechamentos por Quarter ──────────────────────────────── */}
-              {data.hpPayload.quarters && data.hpPayload.quarters.length > 0 && (
+              {hpPayloadForDisplay.quarters && hpPayloadForDisplay.quarters.length > 0 && (
                 <>
                   <div className={s.dimSectionTitle}>Fechamentos por Quarter</div>
                   <table className={s.dimTable}>
@@ -316,7 +414,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                       </tr>
                     </thead>
                     <tbody>
-                      {data.hpPayload.quarters.map((q, i) => {
+                      {hpPayloadForDisplay.quarters.map((q, i) => {
                         const pct = q.previstas > 0 ? Math.round((q.fechadas / q.previstas) * 100) : 0;
                         return (
                           <tr key={i}>

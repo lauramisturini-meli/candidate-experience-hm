@@ -1,4 +1,4 @@
-import type { PdfData, HpPayload, HpLayerRow, HpSlaStats, HpPipelineStep, HpQuarter } from '../types';
+import type { PdfData, HpPayload, HpLayerRow, HpSlaStats, HpPipelineStep, HpQuarter, HpRawRow } from '../types';
 
 export function isHpHtmlReport(text: string): boolean {
   return (
@@ -191,6 +191,41 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   // ── Insights ───────────────────────────────────────────────────────────────
   const { highs, lows, actions } = buildInsights(A, P, sla, porcentajeAvance, total);
 
+  // Store raw rows so DataPanel can filter by TA and recompute KPIs
+  const hpRawRows: HpRawRow[] = [
+    ...A.map(r => ({
+      ta: (r.ta as string) || '',
+      seniority: r.seniority,
+      q: r.q,
+      fora_sla: r.fora_sla,
+      status: 'on going' as const,
+      step: r.step as string | undefined,
+      aging: r.aging,
+    })),
+    ...CL.map(r => ({
+      ta: (r.ta as string) || '',
+      seniority: r.seniority,
+      q: r.q,
+      fora_sla: r.fora_sla,
+      status: 'done' as const,
+      tto: r.tto,
+    })),
+    ...(P as Array<{ ta?: string; seniority: string; q: string }>).map(r => ({
+      ta: r.ta || '',
+      seniority: r.seniority,
+      q: r.q,
+      fora_sla: false,
+      status: 'pending' as const,
+    })),
+    ...(SB as Array<{ ta?: string; seniority: string; q: string }>).map(r => ({
+      ta: r.ta || '',
+      seniority: r.seniority,
+      q: r.q,
+      fora_sla: false,
+      status: 'stand by' as const,
+    })),
+  ];
+
   const hpPayload: HpPayload = {
     title: `Plan Shipping Individuales - ${year}`,
     year,
@@ -209,6 +244,7 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
     highs,
     lows,
     actions,
+    hpRawRows,
   };
 
   return {

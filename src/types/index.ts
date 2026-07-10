@@ -43,6 +43,17 @@ export interface HpQuarter {
   fechadas: number;
 }
 
+export interface HpRawRow {
+  ta: string;
+  seniority: string;
+  q: string;
+  fora_sla: boolean;
+  status: 'on going' | 'done' | 'pending' | 'stand by';
+  step?: string;
+  aging?: number;
+  tto?: number;
+}
+
 export interface HpPayload {
   title: string;
   year: string;
@@ -62,6 +73,7 @@ export interface HpPayload {
   highs?: string[];
   lows?: string[];
   actions?: string[];
+  hpRawRows?: HpRawRow[];
 }
 
 export interface PdfData {
