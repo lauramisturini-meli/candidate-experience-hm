@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { buildMergedView } from '../../lib/merger';
 import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
@@ -22,8 +22,43 @@ interface Props {
 
 const DASH = (v: string) => v === '—' || v === '-';
 
+const PREPS_DP = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di']);
+function toTitleCaseDP(s: string): string {
+  return s.split(' ').map(w =>
+    PREPS_DP.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
+}
+function shortNameDP(fullName: string): string {
+  const parts = toTitleCaseDP(fullName).split(' ');
+  if (parts.length <= 2) return parts.join(' ');
+  let lastIdx = parts.length - 1;
+  while (lastIdx > 0 && PREPS_DP.has(parts[lastIdx].toLowerCase())) lastIdx--;
+  return `${parts[0]} ${parts[lastIdx]}`;
+}
+
 export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
-  const data = useMemo(() => buildMergedView(pdfs, tabId), [pdfs, tabId]);
+  // ── TA Owner filter (external tab only) ───────────────────────────────────
+  const taOwners = useMemo(() => {
+    if (tabId !== 'external') return [];
+    const set = new Set<string>();
+    pdfs.forEach(p => {
+      const owner = p.filters?.['TA Owner']?.trim();
+      if (owner && !/\d+\s*selecionado|selected/i.test(owner)) set.add(owner);
+    });
+    return Array.from(set).sort();
+  }, [pdfs, tabId]);
+
+  const isIndividualTA = taOwners.length === 1;
+  const [selectedTa, setSelectedTa] = useState<string | null>(null);
+  const activeTa = selectedTa ?? (isIndividualTA ? taOwners[0] : null);
+  const toggleTa = useCallback((ta: string) => setSelectedTa(prev => prev === ta ? null : ta), []);
+
+  const filteredPdfs = useMemo(() => {
+    if (!activeTa || tabId !== 'external') return pdfs;
+    return pdfs.filter(p => p.filters?.['TA Owner']?.trim() === activeTa);
+  }, [pdfs, activeTa, tabId]);
+
+  const data = useMemo(() => buildMergedView(filteredPdfs, tabId), [filteredPdfs, tabId]);
   const overrides: DimOverrides = ui?.dimOverrides ?? {};
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
@@ -91,8 +126,36 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
           <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
         </div>
       </div>
-      <div className={s.toolbarSub}>
-      </div>
+      {/* TA filter chips — external tab only */}
+      {tabId === 'external' && isIndividualTA && taOwners[0] ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taIndividualBadge}>
+            Análise Individual · {toTitleCaseDP(taOwners[0])}
+          </span>
+        </div>
+      ) : tabId === 'external' && taOwners.length > 1 ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taFilterLabel}>Filtrar por TA</span>
+          <button
+            className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
+            onClick={() => setSelectedTa(null)}
+          >
+            Todos
+          </button>
+          {taOwners.map(ta => (
+            <button
+              key={ta}
+              className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
+              onClick={() => toggleTa(ta)}
+              title={toTitleCaseDP(ta)}
+            >
+              {shortNameDP(ta)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={s.toolbarSub} />
+      )}
 
       {(tabId === 'external' || tabId === 'hm') && (() => {
         const META  = tabId === 'hm' ? 95 : 90;

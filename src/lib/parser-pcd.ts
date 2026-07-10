@@ -95,7 +95,14 @@ function parseFullTable(lines: string[]): PcdVaga[] {
       if (!statusFound && isAllCapsName(l)) {
         if (!hm) { hm = l; continue; }
         if (!bp) { bp = l; continue; }
-        if (!ta) { ta = l; continue; } // 3rd all-caps name = TA
+        if (!ta) { ta = l; continue; } // 3rd all-caps name = TA (older format)
+        continue;
+      }
+
+      // TA in mixed case (newer PCD format): appears after BP and before status
+      if (!statusFound && bp && !ta && isNameLine(l) && !isAllCapsName(l)
+          && !STATUSES.some(s => l.includes(s))) {
+        ta = l;
         continue;
       }
 

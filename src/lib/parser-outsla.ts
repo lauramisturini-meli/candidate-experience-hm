@@ -157,22 +157,35 @@ function splitTail(tail: string): { preReason: string; offTimeReason: string } {
 
 // ── Two-pass TA extraction ────────────────────────────────────────────────────
 //
-// The TA name is always the LAST all-caps name block in the pre-reason section.
-// It repeats across multiple rows for the same TA, so we identify it by finding
-// N-word suffixes (N = 2..5) that appear as trailing suffix in ≥ 2 rows.
+// The TA name is always the LAST all-caps name block in the pre-reason section
+// (format: LIDER PBP TA). It repeats across rows, so we identify it via suffix
+// frequency analysis with three filters to eliminate contaminated candidates:
 //
-// Rules to avoid PBP name bleed-in:
-//  1. Cap at 5 words.
-//  2. Prefer HIGHEST FREQUENCY — the true TA name covers all that TA's rows;
-//     a contaminated suffix (PBP-last-word + TA-name) covers only the rows
-//     sharing that same PBP, so it has lower frequency.
-//  3. Break ties with LONGEST match (picks full name over sub-names).
+//  1. Cap at 5 words (PBP bleeds at position -6 and beyond).
+//  2. Discard suffixes whose FIRST WORD is a Portuguese preposition
+//     (DA, DE, DO, DOS, DAS …) — these are shared surname fragments like "DA SILVA"
+//     that collapse multiple TAs into one chip.
+//  3. Discard suffixes whose FIRST WORD appears as the LAST WORD of any other
+//     pre-reason section — that word is a TA last name, not a first name, so the
+//     candidate is a contaminated PBP-last-word + TA-name concatenation
+//     (e.g. "CARVALHO BRUNA DE OLIVEIRA TAVARES" where CARVALHO is CAROLINA's last name).
+//  4. Among valid candidates: highest frequency first; ties broken by longest.
 //
+const PREP_WORDS = new Set(['DA', 'DE', 'DO', 'DOS', 'DAS', 'E', 'DEL', 'DI', 'DELLA']);
+
 function identifyTas(preSections: string[]): string[] {
   if (!preSections.length) return [];
 
   const MAX_TA_WORDS = 5;
 
+  // Terminal words = last word of every pre-reason section (always a TA surname)
+  const terminalWords = new Set(
+    preSections
+      .map(s => s.trim().split(/\s+/).filter(Boolean).at(-1) ?? '')
+      .filter(Boolean)
+  );
+
+  // Build suffix frequency map
   const freqMap = new Map<string, number[]>();
   preSections.forEach((section, rowIdx) => {
     const words = section.trim().split(/\s+/).filter(Boolean);
@@ -183,30 +196,56 @@ function identifyTas(preSections: string[]): string[] {
     }
   });
 
+  // Candidates: freq ≥ 2, first word passes both filters
   const candidates = new Map<string, { freq: number; len: number; rowSet: Set<number> }>();
   for (const [suffix, indices] of freqMap) {
-    if (indices.length >= 2) {
-      candidates.set(suffix, {
-        freq:   indices.length,
-        len:    suffix.split(/\s+/).length,
-        rowSet: new Set(indices),
-      });
-    }
+    if (indices.length < 2) continue;
+    const firstWord = suffix.split(' ')[0];
+    if (PREP_WORDS.has(firstWord)) continue;        // filter 2: preposition
+    if (terminalWords.has(firstWord)) continue;     // filter 3: TA surname contamination
+    candidates.set(suffix, {
+      freq:   indices.length,
+      len:    suffix.split(/\s+/).length,
+      rowSet: new Set(indices),
+    });
   }
 
+  // Words that open any pre-reason section (lider first names + coincidental matches).
+  // A candidate whose first word never opens any section is likely a PBP last name bleed-in.
+  const starterWords = new Set(
+    preSections.map(s => s.trim().split(/\s+/).filter(Boolean)[0] ?? '').filter(Boolean)
+  );
+
+  // For each row: highest frequency wins.
+  // On freq tie, prefer longer UNLESS the longer candidate's first word is NOT a starter word
+  // while the shorter candidate's first word IS — that signals PBP-surname contamination
+  // (e.g. "BOCONCELO ALINE ALVES DA SILVA" where BOCONCELO is only a PBP last name).
   return preSections.map((section, rowIdx) => {
     const words = section.trim().split(/\s+/).filter(Boolean);
     let bestMatch = '';
     let bestFreq  = 0;
     let bestLen   = 0;
+
     for (const [suffix, { freq, len, rowSet }] of candidates) {
       if (!rowSet.has(rowIdx)) continue;
       if (words.slice(-len).join(' ') !== suffix) continue;
-      if (freq > bestFreq || (freq === bestFreq && len > bestLen)) {
-        bestMatch = suffix;
-        bestFreq  = freq;
-        bestLen   = len;
+
+      let better = false;
+      if (freq > bestFreq) {
+        better = true;
+      } else if (freq === bestFreq && len > bestLen) {
+        // Prefer longer unless it looks like PBP contamination
+        const currFirst  = suffix.split(' ')[0];
+        const bestFirst  = bestMatch ? bestMatch.split(' ')[0] : '';
+        const currStarter = starterWords.has(currFirst);
+        const bestStarter = starterWords.has(bestFirst);
+        // Reject longer candidate only when its first word is unknown as a section-opener
+        // AND the current best's first word IS a known section-opener
+        if (!currStarter && bestStarter) better = false;
+        else better = true;
       }
+
+      if (better) { bestMatch = suffix; bestFreq = freq; bestLen = len; }
     }
     return bestMatch;
   });

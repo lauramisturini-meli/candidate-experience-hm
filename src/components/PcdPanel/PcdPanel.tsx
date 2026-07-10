@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { canonicalizeTa } from '../../lib/ta-team';
 import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState, PcdHcData } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -89,14 +90,20 @@ function avg(arr: number[]): number {
   return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 }
 
+const PREPS = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di']);
+
 function toTitleCase(s: string): string {
-  return s.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+  return s.split(' ').map(w =>
+    PREPS.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
 }
 
 function shortName(fullName: string): string {
   const parts = toTitleCase(fullName).split(' ');
   if (parts.length <= 2) return parts.join(' ');
-  return `${parts[0]} ${parts[parts.length - 1]}`;
+  let lastIdx = parts.length - 1;
+  while (lastIdx > 0 && PREPS.has(parts[lastIdx].toLowerCase())) lastIdx--;
+  return `${parts[0]} ${parts[lastIdx]}`;
 }
 
 export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
@@ -105,22 +112,19 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
     [pdfs],
   );
 
-  // ── TA filter ──────────────────────────────────────────────────────────────
+  // ── TA filter (canonical names) ────────────────────────────────────────────
   const taList = useMemo(() => {
     const set = new Set<string>();
-    allVagas.forEach(v => { if (v.ta) set.add(v.ta); });
-    return Array.from(set).sort();
+    allVagas.forEach(v => { if (v.ta) set.add(canonicalizeTa(v.ta)); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [allVagas]);
 
-  // When exactly 1 TA is in the data, auto-select (individual analysis mode)
   const isIndividual = taList.length === 1;
-
   const [selectedTa, setSelectedTa] = useState<string | null>(null);
-
   const activeTa = selectedTa ?? (isIndividual ? taList[0] : null);
 
   const vagas: PcdVaga[] = useMemo(
-    () => activeTa ? allVagas.filter(v => v.ta === activeTa) : allVagas,
+    () => activeTa ? allVagas.filter(v => v.ta && canonicalizeTa(v.ta) === activeTa) : allVagas,
     [allVagas, activeTa],
   );
 
@@ -298,7 +302,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
       {isIndividual && taList[0] ? (
         <div className={s.taFilter}>
           <span className={s.taIndividualBadge}>
-            Análise Individual · {toTitleCase(taList[0])}
+            Análise Individual · {taList[0]}
           </span>
         </div>
       ) : taList.length > 1 ? (
@@ -315,7 +319,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
               key={ta}
               className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
               onClick={() => setSelectedTa(activeTa === ta ? null : ta)}
-              title={toTitleCase(ta)}
+              title={ta}
             >
               {shortName(ta)}
             </button>
@@ -505,7 +509,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
         <div className={s.colRight}>
           {activeTa && !isIndividual && (
             <div className={s.taActiveTag}>
-              Análise: <strong>{toTitleCase(activeTa)}</strong>
+              Análise: <strong>{activeTa}</strong>
             </div>
           )}
           <div>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { buildOutSlaInsights } from '../../lib/insights-outsla';
+import { canonicalizeTa } from '../../lib/ta-team';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
@@ -28,14 +29,21 @@ function sortedEntries(map: Record<string, number>): [string, number][] {
   return Object.entries(map).sort((a, b) => b[1] - a[1]);
 }
 
+const PREPS = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di']);
+
 function toTitleCase(s: string): string {
-  return s.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+  return s.split(' ').map(w =>
+    PREPS.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
 }
 
+// First name + last non-preposition word — keeps both distinct and readable
 function shortName(fullName: string): string {
   const parts = toTitleCase(fullName).split(' ');
   if (parts.length <= 2) return parts.join(' ');
-  return `${parts[0]} ${parts[parts.length - 1]}`;
+  let lastIdx = parts.length - 1;
+  while (lastIdx > 0 && PREPS.has(parts[lastIdx].toLowerCase())) lastIdx--;
+  return `${parts[0]} ${parts[lastIdx]}`;
 }
 
 interface BreakdownRowProps {
@@ -81,30 +89,26 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
     [pdfs]
   );
 
-  // ── TA filter ──────────────────────────────────────────────────────────────
+  // ── TA filter (canonical names) ────────────────────────────────────────────
   const taList = useMemo(() => {
     const set = new Set<string>();
-    allRows.forEach(r => { if (r.ta) set.add(r.ta); });
-    return Array.from(set).sort();
+    allRows.forEach(r => { if (r.ta) set.add(canonicalizeTa(r.ta)); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [allRows]);
 
-  // When exactly 1 TA is in the data, auto-select it (individual analysis mode)
   const isIndividual = taList.length === 1;
-
   const [selectedTa, setSelectedTa] = useState<string | null>(null);
-
-  // Effective TA: explicit selection OR auto-individual
   const activeTa = selectedTa ?? (isIndividual ? taList[0] : null);
 
   const rows = useMemo(
-    () => activeTa ? allRows.filter(r => r.ta === activeTa) : allRows,
+    () => activeTa ? allRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : allRows,
     [allRows, activeTa]
   );
 
   // ── Per-TA summary (always uses allRows, not filtered) ─────────────────────
   const perTaStats = useMemo(() => {
     return taList.map(ta => {
-      const taRows = allRows.filter(r => r.ta === ta);
+      const taRows = allRows.filter(r => r.ta && canonicalizeTa(r.ta) === ta);
       const n      = taRows.length;
       const avg    = n ? Math.round(taRows.reduce((acc, r) => acc + r.timeToOffer, 0) / n) : 0;
       const stageCounts = taRows.reduce<Record<string, number>>((acc, r) => {
@@ -154,7 +158,7 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
       {isIndividual && taList[0] ? (
         <div className={s.toolbarSub}>
           <span className={s.taIndividualBadge}>
-            Análise Individual · {toTitleCase(taList[0])}
+            Análise Individual · {taList[0]}
           </span>
         </div>
       ) : taList.length > 1 ? (
@@ -171,7 +175,7 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
               key={ta}
               className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
               onClick={() => setSelectedTa(activeTa === ta ? null : ta)}
-              title={toTitleCase(ta)}
+              title={ta}
             >
               {shortName(ta)}
             </button>
@@ -271,7 +275,7 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
         <div className={s.colRight}>
           {activeTa && !isIndividual && (
             <div className={s.taActiveTag}>
-              Análise: <strong>{toTitleCase(activeTa)}</strong>
+              Análise: <strong>{activeTa}</strong>
             </div>
           )}
           <div>
