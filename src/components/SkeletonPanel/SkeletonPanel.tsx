@@ -36,6 +36,16 @@ export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
           )}
         </div>
       )}
+      {tabId === 'tonh' && (
+        <div className={s.hintRow}>
+          <span className={s.hint}>
+            Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.
+          </span>
+          <span className={s.hintTA}>
+            Você pode fazer o upload de múltiplos PDFs para consolidar casos do time, ou subir individualmente por TA para análise individual.
+          </span>
+        </div>
+      )}
       <div className={s.panel}>
         <div className={s.icon}>⚙</div>
         <div className={s.title}>{meta.section}</div>
