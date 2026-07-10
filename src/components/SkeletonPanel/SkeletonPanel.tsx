@@ -9,7 +9,7 @@ interface Props {
   onUpload: () => void;
 }
 
-const HIDE_INSTRUCTIONS: TabId[] = ['tonh', 'pcd', 'hpc', 'outsla'];
+const HIDE_INSTRUCTIONS: TabId[] = [];
 const HIDE_KPI_GRID: TabId[] = ['tonh', 'pcd', 'hpc', 'outsla'];
 
 export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
@@ -24,28 +24,35 @@ export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
         <div />
         <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
       </div>
-      {!hideInstructions && (
-        <div className={s.hintRow}>
-          <span className={s.hint}>
-            Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.
-          </span>
-          {tabId === 'external' && (
-            <span className={s.hintTA}>
-              Para análise individual por TA, exporte o PDF do Qualtrics com o filtro <strong>TA Owner</strong> aplicado — o badge aparece automaticamente.
-            </span>
-          )}
-        </div>
-      )}
-      {tabId === 'tonh' && (
-        <div className={s.hintRow}>
-          <span className={s.hint}>
-            Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.
-          </span>
+      <div className={s.hintRow}>
+        <span className={s.hint}>
+          {tabId === 'tonh'
+            ? <>Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.</>
+            : tabId === 'pcd'
+            ? 'Faça upload do relatório de vagas PCD para análise dos indicadores de inclusão do time.'
+            : tabId === 'hpc'
+            ? <>Faça upload do <strong>Relatório Semanal de Hiring Plan</strong> para análise dos indicadores de conclusão — SLA, pipeline e quarters são calculados automaticamente.</>
+            : tabId === 'outsla'
+            ? 'Faça upload do relatório de Out SLA para análise dos indicadores de tempo de oferta do time.'
+            : 'Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.'
+          }
+        </span>
+        {tabId === 'external' && (
           <span className={s.hintTA}>
-            Você pode fazer o upload de múltiplos PDFs para consolidar casos do time, ou subir individualmente por TA para análise individual.
+            Para análise individual por TA, exporte o PDF do Qualtrics com o filtro <strong>TA Owner</strong> aplicado — o indicador de análise individual aparece automaticamente.
           </span>
-        </div>
-      )}
+        )}
+        {tabId === 'tonh' && (
+          <span className={s.hintTA}>
+            Você pode fazer o upload de múltiplos PDFs para análises por senioridade, localidade, gestor e etc, ou subir individualmente por TA para análise individual.
+          </span>
+        )}
+        {(tabId === 'pcd' || tabId === 'hpc' || tabId === 'outsla') && (
+          <span className={s.hintTA}>
+            Análises individuais por TA podem ser feitas a partir dos filtros disponíveis após o upload.
+          </span>
+        )}
+      </div>
       <div className={s.panel}>
         <div className={s.icon}>⚙</div>
         <div className={s.title}>{meta.section}</div>
