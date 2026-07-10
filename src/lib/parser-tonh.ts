@@ -1,4 +1,5 @@
 import type { PdfData, TonhCase } from '../types';
+import { canonicalizeTa } from './ta-team';
 
 export function isTonhReport(fullText: string): boolean {
   return (
@@ -30,12 +31,23 @@ function extractBlock(text: string, start: RegExp, stop: RegExp): string {
   return block.replace(/\n+/g, ' ').trim();
 }
 
+function extractTaFromPanel(panel: string): string {
+  // Match the name that appears just before the "(TA)" marker.
+  // Handles separators: comma, slash, dash, or start of string.
+  // e.g. "Marianne Fernandes (TA)", "Neucielle(TA), Daniel", "LETICIA, NAVARRO... wait..."
+  // Note: "NAVARRO SILVA MARCON, LETICIA (TA)" → last segment after comma → "LETICIA"
+  const m = panel.match(/(?:(?:^|[,\/\-])\s*)([^,\/\-\n()]+?)\s*\(TA\)/i);
+  if (!m) return '';
+  return canonicalizeTa(m[1].trim());
+}
+
 function parseCasePage(page: string, fileName: string): TonhCase {
   const nome               = capitalize(extractAfter(page, /nombre\s+y\s+apellido\s*[:→►]?\s*/i));
   const rol                = capitalize(extractAfter(page, /\brol\s*[:→►]\s*/i));
   const area               = capitalize(extractAfter(page, /\barea\s*[:→►]\s*/i));
   const hiringManager      = capitalize(extractAfter(page, /hiring\s+manager\s*[:→►]\s*/i));
   const panelEntrevistador = capitalize(extractAfter(page, /panel\s+entrevistador\s*[:→►]\s*/i));
+  const ta                 = extractTaFromPanel(panelEntrevistador);
   const flags              = capitalize(extractAfter(page, /yellow\s*[/\\]?\s*red\s*flags?\s*[:→►]\s*/i));
 
   const tiempoRaw        = extractAfter(page, /tiempo\s+en\s+el\s+rol\s*[:→►]\s*/i);
@@ -83,7 +95,7 @@ function parseCasePage(page: string, fileName: string): TonhCase {
     motivoSalida, principaisMotivos,
     tiempoEnRol: tiempoRaw, tiempoEnRolMeses,
     comentarios, conclusoes, acuerdos,
-    fileName,
+    fileName, ta,
   };
 }
 

@@ -173,6 +173,7 @@ export interface TonhCase {
   conclusoes: string;
   acuerdos: string;
   fileName: string;
+  ta?: string;
 }
 
 export interface TonhMonthlyPoint {

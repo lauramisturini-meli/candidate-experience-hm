@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { buildTonhInsights } from '../../lib/insights-tonh';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -16,6 +16,22 @@ interface Props {
   onShare: () => void;
   isShareLoading: boolean;
   onUiChange: (ui: Partial<TabUiState>) => void;
+}
+
+// ── TA name helpers ───────────────────────────────────────────────────────────
+
+const PREPS_TONH = new Set(['da', 'de', 'do', 'dos', 'das', 'e']);
+function toTitleCaseTN(s: string): string {
+  return s.split(' ').map(w =>
+    PREPS_TONH.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
+}
+function shortNameTN(fullName: string): string {
+  const parts = toTitleCaseTN(fullName).split(' ');
+  if (parts.length <= 2) return parts.join(' ');
+  let lastIdx = parts.length - 1;
+  while (lastIdx > 0 && PREPS_TONH.has(parts[lastIdx].toLowerCase())) lastIdx--;
+  return `${parts[0]} ${parts[lastIdx]}`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -432,6 +448,23 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
     [pdfs],
   );
 
+  // ── TA filter ────────────────────────────────────────────────────────────────
+  const taList = useMemo(() => {
+    const set = new Set<string>();
+    cases.forEach(c => { if (c.ta) set.add(c.ta); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [cases]);
+
+  const isIndividualTA = taList.length === 1;
+  const [selectedTa, setSelectedTa] = useState<string | null>(null);
+  const activeTa = selectedTa ?? (isIndividualTA ? taList[0] : null);
+  const toggleTa = useCallback((ta: string) => setSelectedTa(prev => prev === ta ? null : ta), []);
+
+  const filteredCases = useMemo(
+    () => activeTa ? cases.filter(c => c.ta === activeTa) : cases,
+    [cases, activeTa],
+  );
+
   const tlDashboard = useMemo(
     () => pdfs.find(p => p.tonhDashboard?.layerGroup === 'team-leader')?.tonhDashboard,
     [pdfs],
@@ -443,8 +476,8 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
   );
 
   const insights = useMemo(
-    () => buildTonhInsights(cases, tlDashboard, outrosDashboard),
-    [cases, tlDashboard, outrosDashboard],
+    () => buildTonhInsights(filteredCases, tlDashboard, outrosDashboard),
+    [filteredCases, tlDashboard, outrosDashboard],
   );
 
   const hasDashboard = tlDashboard !== undefined || outrosDashboard !== undefined;
@@ -468,8 +501,35 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
           <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
         </div>
       </div>
-      <div className={s.toolbarSub}>
-      </div>
+      {isIndividualTA && taList[0] ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taIndividualBadge}>
+            Análise Individual · {toTitleCaseTN(taList[0])}
+          </span>
+        </div>
+      ) : taList.length > 1 ? (
+        <div className={s.toolbarSub}>
+          <span className={s.taFilterLabel}>Filtrar por TA</span>
+          <button
+            className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
+            onClick={() => setSelectedTa(null)}
+          >
+            Todos
+          </button>
+          {taList.map(ta => (
+            <button
+              key={ta}
+              className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
+              onClick={() => toggleTa(ta)}
+              title={toTitleCaseTN(ta)}
+            >
+              {shortNameTN(ta)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={s.toolbarSub} />
+      )}
 
       {/* ── Metas de TO NH ── */}
       <div className={s.toGoalRow}>
@@ -491,12 +551,13 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
       {/* ── Main two-column area ── */}
       <div className={s.main}>
         <div className={s.colLeft}>
-          {cases.length > 0 ? (
+          {filteredCases.length > 0 ? (
             <>
               <div className={s.colTitle}>
-                Análise · Exit Discussions <span className={s.colCount}>{cases.length}</span>
+                Análise · Exit Discussions <span className={s.colCount}>{filteredCases.length}</span>
+                {activeTa && <span className={s.taActiveTag}>· {shortNameTN(activeTa)}</span>}
               </div>
-              <CaseAnalysis cases={cases} />
+              <CaseAnalysis cases={filteredCases} />
             </>
           ) : (
             <div className={s.emptyHint}>
