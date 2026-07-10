@@ -9,8 +9,12 @@
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 32px 0 32px; gap: 12px;
 }
+.hintRow {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 32px 0 32px;
+}
 .hint { font-size: 11px; color: var(--ink-soft); line-height: 1.6; }
-.hintTA { color: var(--ink-muted); }
+.hintTA { font-size: 11px; color: var(--ink-muted); line-height: 1.6; }
 .uploadBtn {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--brand-dark); color: var(--brand-yellow);

@@ -32,6 +32,9 @@
   background: #f5f5f5; border-radius: 10px; padding: 1px 8px;
 }
 .uploadHint { font-size: 11px; color: var(--ink-soft); }
+.hintRow { display: flex; flex-direction: column; gap: 2px; padding: 6px 32px 0 32px; }
+.hintText { font-size: 11px; color: var(--ink-soft); line-height: 1.6; }
+.hintTextSub { font-size: 11px; color: var(--ink-muted); line-height: 1.6; }
 .pillList { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 70%; }
 .btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
 .uploadBtn {

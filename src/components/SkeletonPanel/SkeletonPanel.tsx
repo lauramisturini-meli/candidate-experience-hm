@@ -21,18 +21,21 @@ export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
       <StatusBar status={status} />
       <div className={s.sectionTag}>{meta.section}</div>
       <div className={s.toolbar}>
-        <div className={s.hint}>
-          {hideInstructions ? '' : (
-            <>
-              Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.
-              {tabId === 'external' && (
-                <span className={s.hintTA}> Para análise individual por TA, exporte o PDF do Qualtrics com o filtro <strong>TA Owner</strong> aplicado — o badge aparece automaticamente.</span>
-              )}
-            </>
-          )}
-        </div>
+        <div />
         <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
       </div>
+      {!hideInstructions && (
+        <div className={s.hintRow}>
+          <span className={s.hint}>
+            Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.
+          </span>
+          {tabId === 'external' && (
+            <span className={s.hintTA}>
+              Para análise individual por TA, exporte o PDF do Qualtrics com o filtro <strong>TA Owner</strong> aplicado — o badge aparece automaticamente.
+            </span>
+          )}
+        </div>
+      )}
       <div className={s.panel}>
         <div className={s.icon}>⚙</div>
         <div className={s.title}>{meta.section}</div>

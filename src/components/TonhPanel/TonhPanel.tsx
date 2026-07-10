@@ -531,6 +531,17 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
         <div className={s.toolbarSub} />
       )}
 
+      <div className={s.hintRow}>
+        <span className={s.hintText}>
+          Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.
+        </span>
+        {cases.length === 0 && (
+          <span className={s.hintTextSub}>
+            Você pode fazer o upload de múltiplos PDFs para consolidar casos do time, ou subir individualmente por TA para análise individual.
+          </span>
+        )}
+      </div>
+
       {/* ── Metas de TO NH ── */}
       <div className={s.toGoalRow}>
         <ToGoalBlock label="TL's" meta={12} value={ui?.metaTl ?? ''} onChange={v => onUiChange({ metaTl: v })} />
