@@ -1,4 +1,5 @@
 import type { PdfData, HpPayload, HpLayerRow, HpSlaStats, HpPipelineStep, HpQuarter, HpRawRow } from '../types';
+import { canonicalizeTa, TEAM_TAS } from './ta-team';
 
 export function isHpHtmlReport(text: string): boolean {
   return (
@@ -192,9 +193,17 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   const { highs, lows, actions } = buildInsights(A, P, sla, porcentajeAvance, total);
 
   // Store raw rows so DataPanel can filter by TA and recompute KPIs
+  // Canonicalize ta name: maps ALL_CAPS HP names to canonical team member names.
+  // Returns empty string when the name has no match in TEAM_TAS (e.g. BPs, external TAs).
+  const teamTa = (raw: string): string => {
+    if (!raw) return '';
+    const canonical = canonicalizeTa(raw);
+    return TEAM_TAS.includes(canonical) ? canonical : '';
+  };
+
   const hpRawRows: HpRawRow[] = [
     ...A.map(r => ({
-      ta: (r.ta as string) || '',
+      ta: teamTa((r.ta as string) || ''),
       seniority: r.seniority,
       q: r.q,
       fora_sla: r.fora_sla,
@@ -203,7 +212,7 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
       aging: r.aging,
     })),
     ...CL.map(r => ({
-      ta: (r.ta as string) || '',
+      ta: teamTa((r.ta as string) || ''),
       seniority: r.seniority,
       q: r.q,
       fora_sla: r.fora_sla,
@@ -211,14 +220,14 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
       tto: r.tto,
     })),
     ...(P as Array<{ ta?: string; seniority: string; q: string }>).map(r => ({
-      ta: r.ta || '',
+      ta: teamTa(r.ta || ''),
       seniority: r.seniority,
       q: r.q,
       fora_sla: false,
       status: 'pending' as const,
     })),
     ...(SB as Array<{ ta?: string; seniority: string; q: string }>).map(r => ({
-      ta: r.ta || '',
+      ta: teamTa(r.ta || ''),
       seniority: r.seniority,
       q: r.q,
       fora_sla: false,
