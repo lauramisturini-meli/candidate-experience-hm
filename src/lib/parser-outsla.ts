@@ -1,11 +1,12 @@
 import type { PdfData, OutSlaRow, OutSlaPayload } from '../types';
 
-// Longest variants first to prevent premature partial matching
+// ── Seniority list — longest first ───────────────────────────────────────────
 const SENIORITY_ALT = [
   'Analista Semi Senior',
   'Analista Senior',
   'Sr Team Leader - Shipping',
   'Team Leader - Shipping',
+  'Specialist',
   'Analista',
   'Asistente',
   'Supervisor',
@@ -14,7 +15,7 @@ const SENIORITY_ALT = [
   'Coordenador',
 ].join('|');
 
-// "Entrevista L+L" uses escaped + for regex literal; longer variants first
+// ── Stage list — longest first ────────────────────────────────────────────────
 const STAGE_ALT = [
   'Entrevista L\\+L',
   'Interview Panel',
@@ -22,35 +23,118 @@ const STAGE_ALT = [
   'Entrevista HM',
   'Entrevista TA',
   'Reference Check',
+  'Worksample',
   'Sourcing',
 ].join('|');
 
-// PDF column order: id | posCode | Q | origin | on going | timeToOffer | stage | seniority | site(...EBA) | lider | pbp | ta | reason
-const ROW_RE = new RegExp(
+// Site code: accepts _EBA, _MLB, and similar 2-4 letter suffixes
+const SITE_PAT = `(.+?\\([A-Z0-9_]+_[A-Z]{2,4}\\))`;
+
+// ── Two regex variants for the two known column orders ────────────────────────
+//   Old format (11-06 and earlier): ...days | STAGE | SENIORITY | site...
+//   New format (10-07 and later):   ...days | SENIORITY | STAGE  | site...
+const ROW_RE_OLD = new RegExp(
   `(\\d{5,6})\\s+(\\d{7,10})\\s+(Q\\d)\\s+` +
   `(New Position|Replacement)\\s+on going\\s+(\\d{1,4})\\s+` +
-  `(${STAGE_ALT})\\s+` +
-  `(${SENIORITY_ALT})\\s+` +
-  `(.+?\\([A-Z0-9_]+_EBA\\))\\s*(.*)`
+  `(${STAGE_ALT})\\s+(${SENIORITY_ALT})\\s+` +
+  `${SITE_PAT}\\s*(.*)`
+);
+const ROW_RE_NEW = new RegExp(
+  `(\\d{5,6})\\s+(\\d{7,10})\\s+(Q\\d)\\s+` +
+  `(New Position|Replacement)\\s+on going\\s+(\\d{1,4})\\s+` +
+  `(${SENIORITY_ALT})\\s+(${STAGE_ALT})\\s+` +
+  `${SITE_PAT}\\s*(.*)`
 );
 
+interface RowMatch {
+  idInternal: string;
+  positionCode: string;
+  qExpectation: string;
+  origin: string;
+  timeToOffer: number;
+  stage: string;
+  seniority: string;
+  site: string;
+  tail: string;
+}
+
+function matchRow(line: string): RowMatch | null {
+  // Try new format first (seniority before stage — 10-07 onwards)
+  const mNew = ROW_RE_NEW.exec(line);
+  if (mNew) {
+    return {
+      idInternal:   mNew[1],
+      positionCode: mNew[2],
+      qExpectation: mNew[3],
+      origin:       mNew[4],
+      timeToOffer:  parseInt(mNew[5], 10),
+      seniority:    mNew[6],
+      stage:        mNew[7].replace('\\+', '+'),
+      site:         mNew[8].trim(),
+      tail:         mNew[9] ?? '',
+    };
+  }
+  // Fall back to old format (stage before seniority — 11-06 and earlier)
+  const mOld = ROW_RE_OLD.exec(line);
+  if (mOld) {
+    return {
+      idInternal:   mOld[1],
+      positionCode: mOld[2],
+      qExpectation: mOld[3],
+      origin:       mOld[4],
+      timeToOffer:  parseInt(mOld[5], 10),
+      stage:        mOld[6].replace('\\+', '+'),
+      seniority:    mOld[7],
+      site:         mOld[8].trim(),
+      tail:         mOld[9] ?? '',
+    };
+  }
+  return null;
+}
+
+// ── Reason normalisation ──────────────────────────────────────────────────────
 function normalizeReason(raw: string): string {
   if (!raw) return '';
   if (/perfil.{0,15}nicho/i.test(raw))            return 'Perfil de Nicho';
   if (/demoras?.{0,10}hiring/i.test(raw))          return 'Demoras Hiring Manager';
   if (/cambio.{0,10}perfil/i.test(raw))            return 'Cambio de perfil';
   if (/background.{0,10}check/i.test(raw))         return 'Background check rejected';
+  if (/offer.{0,10}reject/i.test(raw))             return 'Offer rejected';
   if (/busqueda\s+(?:interna|externa)/i.test(raw)) return 'Busqueda Interna/Externa';
   return raw;
 }
 
-// Split tail into: names block (ALL CAPS) and optional reason (has lowercase).
-// Returns both so the caller can use preReason for TA detection.
+// ── Tail splitting ────────────────────────────────────────────────────────────
+//
+// New format tail (10-07): <LIDER> <PBP> <TA> [PCD] <Extra? Hiring Plan> <type> [reason]
+// Old format tail (11-06): <LIDER> <PBP> <TA> [reason]
+//
+// "Hiring Plan" is a reliable separator: everything before it = names (+optional PCD tag),
+// everything after the search-type phrase = reason.
+//
+const POSITION_TYPE_RE = /\b(?:Extra )?Hiring Plan\b/;
+const SEARCH_TYPE_RE   = /\bBusqueda (?:Interna\/)?Externa\b|\bOportunidades Meli\b/;
+
 function splitTail(tail: string): { preReason: string; offTimeReason: string } {
   const t = tail.trim();
   if (!t) return { preReason: '', offTimeReason: '' };
 
-  // Primary: 2+ spaces means PDF had column spacing preserved
+  // New format: "Hiring Plan" acts as separator
+  const ptMatch = POSITION_TYPE_RE.exec(t);
+  if (ptMatch) {
+    // Strip optional trailing PCD tag from the names block
+    let preReason = t.slice(0, ptMatch.index).trim().replace(/\s+PCD\s*$/, '').trim();
+
+    const afterPt  = t.slice(ptMatch.index + ptMatch[0].length);
+    const stMatch  = SEARCH_TYPE_RE.exec(afterPt);
+    const afterType = stMatch
+      ? afterPt.slice(stMatch.index + stMatch[0].length).trim()
+      : afterPt.trim();
+
+    return { preReason, offTimeReason: normalizeReason(afterType) };
+  }
+
+  // Old format: try 2+ space column split (positional PDF may preserve gaps)
   const parts = t.split(/\s{2,}/).map(p => p.trim()).filter(Boolean);
   if (parts.length >= 2) {
     const isAllCaps = (s: string) => !/[a-záéíóúñà-ü]/.test(s);
@@ -60,7 +144,7 @@ function splitTail(tail: string): { preReason: string; offTimeReason: string } {
     };
   }
 
-  // Fallback: single-space — find where reason starts (first word with lowercase)
+  // Old format fallback: find reason by first lowercase-containing word
   const m = t.match(/\S*[a-záéíóúñà-ü]\S*/);
   if (!m) return { preReason: t, offTimeReason: '' };
   const idx       = t.indexOf(m[0]);
@@ -71,22 +155,24 @@ function splitTail(tail: string): { preReason: string; offTimeReason: string } {
   };
 }
 
-// Two-pass TA extraction: the TA name is always the LAST all-caps name block
-// before the reason. It repeats across multiple rows for the same TA, so we
-// identify it by finding N-word suffixes (N = 2..5) that appear in ≥ 2 rows.
+// ── Two-pass TA extraction ────────────────────────────────────────────────────
 //
-// Key rules that prevent PBP name bleed-in:
-//  1. Cap at 5 words — longer candidates blend the PBP's last words with the TA name.
-//  2. Prefer HIGHEST FREQUENCY first — the true TA name appears in all the TA's rows,
-//     while a contaminated suffix (PBP-last-word + TA-name) only appears in the subset
-//     of rows sharing that same PBP, so it has lower frequency.
-//  3. Break frequency ties with LONGEST match — picks the full name over sub-names.
+// The TA name is always the LAST all-caps name block in the pre-reason section.
+// It repeats across multiple rows for the same TA, so we identify it by finding
+// N-word suffixes (N = 2..5) that appear as trailing suffix in ≥ 2 rows.
+//
+// Rules to avoid PBP name bleed-in:
+//  1. Cap at 5 words.
+//  2. Prefer HIGHEST FREQUENCY — the true TA name covers all that TA's rows;
+//     a contaminated suffix (PBP-last-word + TA-name) covers only the rows
+//     sharing that same PBP, so it has lower frequency.
+//  3. Break ties with LONGEST match (picks full name over sub-names).
+//
 function identifyTas(preSections: string[]): string[] {
   if (!preSections.length) return [];
 
   const MAX_TA_WORDS = 5;
 
-  // Build frequency map: suffix → indices of rows where it is a trailing suffix
   const freqMap = new Map<string, number[]>();
   preSections.forEach((section, rowIdx) => {
     const words = section.trim().split(/\s+/).filter(Boolean);
@@ -97,7 +183,6 @@ function identifyTas(preSections: string[]): string[] {
     }
   });
 
-  // Candidates: suffixes that appear in ≥ 2 rows
   const candidates = new Map<string, { freq: number; len: number; rowSet: Set<number> }>();
   for (const [suffix, indices] of freqMap) {
     if (indices.length >= 2) {
@@ -109,13 +194,11 @@ function identifyTas(preSections: string[]): string[] {
     }
   }
 
-  // For each row: highest frequency wins; ties broken by longest match
   return preSections.map((section, rowIdx) => {
     const words = section.trim().split(/\s+/).filter(Boolean);
     let bestMatch = '';
     let bestFreq  = 0;
     let bestLen   = 0;
-
     for (const [suffix, { freq, len, rowSet }] of candidates) {
       if (!rowSet.has(rowIdx)) continue;
       if (words.slice(-len).join(' ') !== suffix) continue;
@@ -129,53 +212,46 @@ function identifyTas(preSections: string[]): string[] {
   });
 }
 
+// ── Detection ─────────────────────────────────────────────────────────────────
 export function isOutSlaReport(text: string): boolean {
-  // id_internal is an internal field name, not always present in the PDF header.
   // time_to_offer + off_time_reason together are unique to this report type.
-  return (
-    /time_to_offer/i.test(text) &&
-    /off_time_reason/i.test(text)
-  );
+  return /time_to_offer/i.test(text) && /off_time_reason/i.test(text);
 }
 
+// ── Main parser ───────────────────────────────────────────────────────────────
 export function parseOutSlaReport(positionalText: string, fileName: string): PdfData {
-  // ── Pass 1: parse all rows, collecting pre-reason sections ─────────────────
-  const rowData: Array<{
-    partial: Omit<OutSlaRow, 'ta'>;
-    preReason: string;
-  }> = [];
+  // Pass 1: parse all rows and collect pre-reason sections
+  const rowData: Array<{ partial: Omit<OutSlaRow, 'ta'>; preReason: string }> = [];
 
   for (const line of positionalText.split('\n')) {
-    const m = ROW_RE.exec(line.trim());
-    if (!m) continue;
+    const r = matchRow(line.trim());
+    if (!r) continue;
 
-    const { preReason, offTimeReason } = splitTail(m[9] ?? '');
+    const { preReason, offTimeReason } = splitTail(r.tail);
 
     rowData.push({
       partial: {
-        idInternal:    m[1],
-        positionCode:  m[2],
-        qExpectation:  m[3],
-        origin:        m[4],
-        timeToOffer:   parseInt(m[5], 10),
-        stage:         m[6].replace('\\+', '+'),
-        seniority:     m[7],
-        site:          m[8].trim(),
+        idInternal:    r.idInternal,
+        positionCode:  r.positionCode,
+        qExpectation:  r.qExpectation,
+        origin:        r.origin,
+        timeToOffer:   r.timeToOffer,
+        stage:         r.stage,
+        seniority:     r.seniority,
+        site:          r.site,
         offTimeReason,
       },
       preReason,
     });
   }
 
-  // ── Pass 2: identify TA names via suffix frequency ─────────────────────────
+  // Pass 2: identify TA names via suffix frequency
   const tas = identifyTas(rowData.map(r => r.preReason));
 
   const rows: OutSlaRow[] = rowData.map((r, i) => ({
     ...r.partial,
     ta: tas[i] || undefined,
   }));
-
-  const payload: OutSlaPayload = { rows };
 
   return {
     respostas: rows.length,
@@ -189,6 +265,6 @@ export function parseOutSlaReport(positionalText: string, fileName: string): Pdf
     isHm: false,
     fileName,
     isOutSla: true,
-    outSlaPayload: payload,
+    outSlaPayload: { rows },
   };
 }
