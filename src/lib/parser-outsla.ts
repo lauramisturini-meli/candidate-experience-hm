@@ -1,4 +1,4 @@
-import type { PdfData, OutSlaRow, OutSlaPayload } from '../types';
+import type { PdfData, OutSlaRow } from '../types';
 
 // ── Seniority list — longest first ───────────────────────────────────────────
 const SENIORITY_ALT = [
