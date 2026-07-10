@@ -276,7 +276,8 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
       items.push('Abrir novas vagas afirmativas PCD para manter continuidade do pipeline');
     }
 
-    return items;
+    // Deduplicate: the per-vaga loop may add the same action for multiple vagas
+    return [...new Set(items)];
   }, [criticals, abertas, semPcd, comPcd, fechadas, pctComPcd, outSla, vagas]);
 
   return (
