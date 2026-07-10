@@ -126,11 +126,12 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
   const data = useMemo(() => buildMergedView(filteredPdfs, tabId), [filteredPdfs, tabId]);
 
   // Recompute hpPayload when HP TA filter is active
-  const hpPayloadForDisplay = useMemo(() => {
-    if (tabId !== 'hpc' || !activeHpTa || !hpPayloadForDisplay?.hpRawRows) return hpPayloadForDisplay;
-    const filtered = hpPayloadForDisplay.hpRawRows.filter(r => r.ta === activeHpTa);
-    return recomputeHpPayload(hpPayloadForDisplay, filtered);
-  }, [tabId, activeHpTa, hpPayloadForDisplay]);
+  const hpPayloadForDisplay = useMemo((): HpPayload | undefined => {
+    const base = data.hpPayload;
+    if (tabId !== 'hpc' || !activeHpTa || !base?.hpRawRows) return base;
+    const filtered = base.hpRawRows.filter((r: HpRawRow) => r.ta === activeHpTa);
+    return recomputeHpPayload(base, filtered);
+  }, [tabId, activeHpTa, data.hpPayload]);
   const overrides: DimOverrides = ui?.dimOverrides ?? {};
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
