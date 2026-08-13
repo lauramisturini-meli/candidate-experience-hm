@@ -369,10 +369,10 @@ export function buildInternalInsights(
 
 const TA_NAMES = [
   'Beatriz', 'Bia', 'Maria Beatriz', 'Carolina', 'Carol', 'Carolina Zanotti',
-  'Cardoso', 'Laura', 'Laura Luize', 'Thais', 'Thaís', 'Thais Andrade', 'Thais Carvalho',
-  'Aline', 'Aline Nagel', 'Marianne', 'Katia', 'Kátia', 'Kitty', 'Bruna', 'Bruna Santos',
+  'Cardoso', 'Laura', 'Laura Luize', 'Thais', 'Thaís', 'Thais Carvalho',
+  'Aline', 'Marianne', 'Katia', 'Kátia', 'Kitty', 'Bruna',
   'Letícia Navarro', 'Leticia Navarro', 'Letícia', 'Leticia',
-  'Juliana', 'Marianne Ramos', 'Marianne Fernandes',
+  'Marianne Fernandes',
 ];
 
 const LOW_THEMES: Theme[] = [

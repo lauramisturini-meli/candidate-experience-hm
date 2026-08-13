@@ -4,7 +4,6 @@
 export const TEAM_TAS: string[] = [
   'Beatriz Amorim da Silva',
   'Bruna de Oliveira Tavares',
-  'Bruna Mercedes dos Santos',
   'Cardoso Bitencourt Xavier Junior',
   'Carolina de Oliveira Zanotti David',
   'Edneia Pereira da Silva',
@@ -17,7 +16,6 @@ export const TEAM_TAS: string[] = [
   'Maria Beatriz Marques Guariglia',
   'Marianne Fernandes',
   'Nadia Aline Miranda',
-  'Neucielle Thamyla Goncalves de Faria',
   'Samantha Oliveira',
   'Thais Helena Carvalho dos Santos',
   'Thamires Sousa',

@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { buildTonhInsights } from '../../lib/insights-tonh';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -451,8 +452,10 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
   // ── TA filter ────────────────────────────────────────────────────────────────
   const taList = useMemo(() => {
     const set = new Set<string>();
-    cases.forEach(c => { if (c.ta) set.add(c.ta); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    cases.forEach(c => { if (c.ta) set.add(canonicalizeTa(c.ta)); });
+    return Array.from(set)
+      .filter(name => TEAM_TAS.includes(name))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [cases]);
 
   const isIndividualTA = taList.length === 1;
@@ -461,7 +464,7 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
   const toggleTa = useCallback((ta: string) => setSelectedTa(prev => prev === ta ? null : ta), []);
 
   const filteredCases = useMemo(
-    () => activeTa ? cases.filter(c => c.ta === activeTa) : cases,
+    () => activeTa ? cases.filter(c => canonicalizeTa(c.ta ?? '') === activeTa) : cases,
     [cases, activeTa],
   );
 

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { buildMergedView } from '../../lib/merger';
+import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -95,9 +96,9 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
     const set = new Set<string>();
     pdfs.forEach(p => {
       const owner = p.filters?.['TA Owner']?.trim();
-      if (owner && !/\d+\s*selecionado|selected/i.test(owner)) set.add(owner);
+      if (owner && !/\d+\s*selecionado|selected/i.test(owner)) set.add(canonicalizeTa(owner));
     });
-    return Array.from(set).sort();
+    return Array.from(set).filter(name => TEAM_TAS.includes(name)).sort();
   }, [pdfs, tabId]);
 
   const isIndividualTA = taOwners.length === 1;
@@ -107,7 +108,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
 
   const filteredPdfs = useMemo(() => {
     if (!activeTa || tabId !== 'external') return pdfs;
-    return pdfs.filter(p => p.filters?.['TA Owner']?.trim() === activeTa);
+    return pdfs.filter(p => canonicalizeTa(p.filters?.['TA Owner']?.trim() ?? '') === activeTa);
   }, [pdfs, activeTa, tabId]);
 
   // ── HP Completion TA filter ────────────────────────────────────────────────
@@ -115,8 +116,10 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
     if (tabId !== 'hpc') return [];
     const allRows = pdfs.flatMap(p => p.hpPayload?.hpRawRows ?? []);
     const set = new Set<string>();
-    allRows.forEach(r => { if (r.ta) set.add(r.ta); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    allRows.forEach(r => { if (r.ta) set.add(canonicalizeTa(r.ta)); });
+    return Array.from(set)
+      .filter(name => TEAM_TAS.includes(name))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [pdfs, tabId]);
 
   const isIndividualHP = hpTaList.length === 1;
@@ -129,7 +132,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
   const hpPayloadForDisplay = useMemo((): HpPayload | undefined => {
     const base = data.hpPayload;
     if (tabId !== 'hpc' || !activeHpTa || !base?.hpRawRows) return base;
-    const filtered = base.hpRawRows.filter((r: HpRawRow) => r.ta === activeHpTa);
+    const filtered = base.hpRawRows.filter((r: HpRawRow) => canonicalizeTa(r.ta ?? '') === activeHpTa);
     return recomputeHpPayload(base, filtered);
   }, [tabId, activeHpTa, data.hpPayload]);
   const overrides: DimOverrides = ui?.dimOverrides ?? {};

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { canonicalizeTa } from '../../lib/ta-team';
+import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState, PcdHcData } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -116,7 +116,9 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
   const taList = useMemo(() => {
     const set = new Set<string>();
     allVagas.forEach(v => { if (v.ta) set.add(canonicalizeTa(v.ta)); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return Array.from(set)
+      .filter(name => TEAM_TAS.includes(name))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [allVagas]);
 
   const isIndividual = taList.length === 1;

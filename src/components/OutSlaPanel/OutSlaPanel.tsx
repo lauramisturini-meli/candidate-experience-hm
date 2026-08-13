@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { buildOutSlaInsights } from '../../lib/insights-outsla';
-import { canonicalizeTa } from '../../lib/ta-team';
+import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
@@ -93,7 +93,9 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
   const taList = useMemo(() => {
     const set = new Set<string>();
     allRows.forEach(r => { if (r.ta) set.add(canonicalizeTa(r.ta)); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return Array.from(set)
+      .filter(name => TEAM_TAS.includes(name))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [allRows]);
 
   const isIndividual = taList.length === 1;
