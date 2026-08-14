@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 156">
+  <!-- Yellow oval -->
+  <ellipse cx="110" cy="78" rx="106" ry="72" fill="#FFE600"/>
+  <!-- Blue border -->
+  <ellipse cx="110" cy="78" rx="106" ry="72" fill="none" stroke="#1930AB" stroke-width="10"/>
+
+  <!-- Handshake (white, stylized) -->
+  <!-- Left arm -->
+  <path fill="white" d="
+    M 30 95 C 28 80 38 65 55 62
+    L 70 60 C 74 54 80 51 88 53
+    L 96 55 C 100 51 106 49 112 51
+    L 116 52
+    C 112 60 104 63 96 61
+    L 88 59 C 86 63 84 68 80 72
+    L 68 80 C 62 85 54 88 46 86 Z
+  "/>
+  <!-- Right arm -->
+  <path fill="white" d="
+    M 190 61 C 192 76 182 91 165 94
+    L 150 96 C 146 102 140 105 132 103
+    L 124 101 C 120 105 114 107 108 105
+    L 104 104
+    C 108 96 116 93 124 95
+    L 132 97 C 134 93 136 88 140 84
+    L 152 76 C 158 71 166 68 174 70 Z
+  "/>
+</svg>
