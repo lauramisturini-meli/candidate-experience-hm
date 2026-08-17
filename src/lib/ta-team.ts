@@ -21,6 +21,9 @@ export const TEAM_TAS: string[] = [
   'Thamires Sousa',
 ];
 
+// Extra TAs recognized only in the TONH tab (not part of the main TA team).
+export const TONH_EXTRA_TAS: string[] = ['Samara', 'Neucielle'];
+
 const PREPS = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di', 'del']);
 
 function sig(name: string): string[] {

@@ -192,8 +192,8 @@ export const INTERNAL_LOW_THEMES: Theme[] = [
     key: 'Falta-Feedback',
     // "Não recebi um feedback construtivo" / "feedback do motivo da não continuidade"
     pattern: /(n[ãa]o\s*recebi|sem|falta[ou]?|n[ãa]o\s*tive).{0,50}(feedback|devolutiva|retorno\s*construtivo)|(feedback|devolutiva).{0,50}(n[ãa]o\s*foi\s*de\s*acordo|n[ãa]o\s*construtivo|motivo.{0,20}n[ãa]o\s*continu|claro|espec[íi]fico)/i,
-    bullet: 'Falta de feedback construtivo',
-    desc:   'candidatos finalizaram o processo sem devolutiva clara de critérios ou orientação de melhoria',
+    bullet: 'Falta de feedback construtivo ao final',
+    desc:   'candidatos finalizaram o processo sem devolutiva clara — responsabilidade do gestor da vaga; TA pode apoiar com briefing e template prévio',
   },
   {
     key: 'Inconsistencia',
@@ -241,7 +241,7 @@ export const INTERNAL_LOW_THEMES: Theme[] = [
 
 export const INTERNAL_ACTION_MAP: ActionEntry[] = [
   { key: 'Atraso',        action: '<strong>SLA de retorno ativo para internos</strong> — máximo 5 dias úteis após entrevista final; TA contata proativamente sem esperar cobrança do candidato' },
-  { key: 'Falta',         action: '<strong>Padronizar devolutiva pós-processo</strong> — template com pontos fortes, gaps e orientação de desenvolvimento, independente do resultado' },
+  { key: 'Falta',         action: '<strong>Briefing do TA com gestores antes da reunião de encerramento</strong> — a devolutiva final é responsabilidade do gestor; TA apoia com template (pontos fortes, gaps, orientação) e alinha tom antes do feedback ao candidato' },
   { key: 'Inconsistencia',action: '<strong>Alinhar feedback escrito com o verbal</strong> — TA registra os pontos discutidos na entrevista e os espelha na devolutiva formal, evitando divergências' },
   { key: 'Visibilidade',  action: '<strong>Comunicar status a cada etapa</strong> — update proativo com prazo estimado da próxima etapa; não depender apenas do bot para notificar' },
   { key: 'Demora',        action: '<strong>Meta de 30 dias entre abertura e oferta</strong> — alerta automático ao TA quando SLA for ultrapassado e plano de desbloqueio com o gestor' },
@@ -271,10 +271,10 @@ const INTERNAL_DIM_META = [
   {
     name:       'Feedback construtivo e específico ao final',
     highBullet: 'Feedback ao final do processo bem avaliado',
-    highDesc:   'devolutiva pós-processo reconhecida como útil e construtiva',
-    lowBullet:  'Falta de feedback construtivo',
-    lowDesc:    'candidatos finalizaram o processo sem devolutiva clara de critérios ou orientação de melhoria',
-    action:     '<strong>Padronizar devolutiva pós-processo interno</strong> — template com pontos fortes, gaps e orientação de desenvolvimento, independente do resultado',
+    highDesc:   'devolutiva pós-processo reconhecida como útil e construtiva — ponto de destaque dos gestores da vaga',
+    lowBullet:  'Feedback ao final do processo abaixo do esperado',
+    lowDesc:    'candidatos relatam devolutiva insuficiente ao término — responsabilidade do gestor da vaga; TA pode apoiar com briefing e template prévio à reunião de encerramento',
+    action:     '<strong>Briefing do TA com gestores antes da reunião de encerramento</strong> — compartilhar template de devolutiva (pontos fortes, gaps, orientação) e alinhar tom antes do feedback ao candidato',
   },
   {
     name:       'Clareza sobre como seria o processo desde o início',
@@ -315,7 +315,7 @@ export function buildInternalInsights(
       highs.push(`<strong>${meta.highBullet}</strong> — ${meta.highDesc} <em style="color:#888;">(${suffix})</em>`);
     }
     // Bug fix: trigger low on fav threshold alone; desfav is optional signal
-    if (fav < 68 || (!isNaN(desfav) && desfav >= 22)) {
+    if (fav <= 68 || (!isNaN(desfav) && desfav >= 22)) {
       const suffix = dim.desfav !== '—' ? `${dim.fav} fav · ${dim.desfav} desfav` : `${dim.fav} favorabilidade`;
       lows.push(`<strong>${meta.lowBullet}</strong> — ${meta.lowDesc} <em style="color:#888;">(${suffix})</em>`);
       actions.push(meta.action);
@@ -372,7 +372,7 @@ const TA_NAMES = [
   'Cardoso', 'Laura', 'Laura Luize', 'Thais', 'Thaís', 'Thais Carvalho',
   'Aline', 'Marianne', 'Katia', 'Kátia', 'Kitty', 'Bruna',
   'Letícia Navarro', 'Leticia Navarro', 'Letícia', 'Leticia',
-  'Marianne Fernandes',
+  'Marianne Fernandes', 'Nádia', 'Nadia',
 ];
 
 const LOW_THEMES: Theme[] = [
@@ -500,7 +500,8 @@ export function buildHighs(positives: Comment[], allComments: Comment[], opts?: 
           .replace(/^Bruna Santos$/, 'Bruna')
           .replace(/^Aline Nagel$/, 'Aline')
           .replace(/^(Marianne Ramos|Marianne Fernandes)$/, 'Marianne')
-          .replace(/^(Letícia Navarro|Leticia Navarro|Leticia)$/, 'Letícia');
+          .replace(/^(Letícia Navarro|Leticia Navarro|Leticia)$/, 'Letícia')
+          .replace(/^Nádia$/, 'Nadia');
         mentioned.add(norm);
       }
     }

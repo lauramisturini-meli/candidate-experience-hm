@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
+import { canonicalizeTa, TEAM_TAS, TONH_EXTRA_TAS } from '../../lib/ta-team';
 import { buildTonhInsights } from '../../lib/insights-tonh';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
@@ -454,7 +454,11 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
     const set = new Set<string>();
     cases.forEach(c => { if (c.ta) set.add(canonicalizeTa(c.ta)); });
     return Array.from(set)
-      .filter(name => TEAM_TAS.includes(name))
+      .filter(name => {
+        if (TEAM_TAS.includes(name)) return true;
+        const first = name.split(' ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        return TONH_EXTRA_TAS.some(e => e.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') === first);
+      })
       .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [cases]);
 

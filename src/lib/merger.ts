@@ -47,9 +47,9 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
         dimensions: [],
         worstDimensionName: null,
         detractorHtml: '',
-        highs:   hp.highs   ?? buildHpHighs(hp),
-        lows:    hp.lows    ?? buildHpLows(hp),
-        actions: hp.actions ?? buildHpActions(hp),
+        highs:   (hp.highs?.length   ? hp.highs   : buildHpHighs(hp)),
+        lows:    (hp.lows?.length    ? hp.lows    : buildHpLows(hp)),
+        actions: (hp.actions?.length ? hp.actions : buildHpActions(hp)),
         hpPayload: hp,
         hpSummary: hp.highs ? undefined : buildHpSummary(hp),
       };
