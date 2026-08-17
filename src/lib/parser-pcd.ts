@@ -515,17 +515,15 @@ export function parsePcdReport(pageTexts: string[], fileName: string): PdfData {
     }
   }
 
-  // HC data: present on pages 2-5 in new format (pages may overlap with old format — detect by content)
-  const hcSeniorityText = [p2, p3].join('\n');
-  const hcBuText        = p4;
-  const tiposText       = p5;
+  // HC data: detect each section by content — pages vary between PDF versions.
+  const hcCandidates  = [p2, p3, p4, p5].filter(Boolean);
+  const hcSeniorityText = hcCandidates.find(p => /Distribución por Seniority/i.test(p)) ?? '';
+  const hcBuText        = hcCandidates.find(p => /Distribución por BU/i.test(p)) ?? '';
+  const tiposText       = hcCandidates.find(p => /Distribucion Tipos|ALL Meli/i.test(p)) ?? '';
 
-  const seniorityRows = /HC Actual|Distribución por Seniority/i.test(hcSeniorityText)
-    ? parseHcSeniority(hcSeniorityText) : [];
-  const buRows = /HC Actual|Distribución por BU/i.test(hcBuText)
-    ? parseHcBu(hcBuText) : [];
-  const tiposRows = /Distribucion Tipos|ALL Meli/i.test(tiposText)
-    ? parseTiposPcd(tiposText) : [];
+  const seniorityRows = hcSeniorityText ? parseHcSeniority(hcSeniorityText) : [];
+  const buRows        = hcBuText        ? parseHcBu(hcBuText)               : [];
+  const tiposRows     = tiposText       ? parseTiposPcd(tiposText)           : [];
 
   const pcdHcData: PcdHcData | undefined =
     (seniorityRows.length > 0 || buRows.length > 0 || tiposRows.length > 0)
