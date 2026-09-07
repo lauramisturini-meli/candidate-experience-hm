@@ -15,13 +15,16 @@
   --danger-deep: #c62828;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
 body {
   font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   background: #f0f1f4;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 28px;
   min-height: 100vh;
   color: var(--ink);
 }

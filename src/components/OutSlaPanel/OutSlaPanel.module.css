@@ -1,7 +1,7 @@
 /* ── Shared layout (mirrors DataPanel) ──────────────────────────────────── */
 .sectionTag {
   display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800;
+  font-size: 13px; font-weight: 800;
   padding: 6px 16px; margin: 22px 0 0 32px;
   letter-spacing: 0.8px; text-transform: uppercase;
   border-radius: 4px;
@@ -11,18 +11,18 @@
   padding: 12px 32px 0 32px; gap: 12px;
 }
 .toolbarSub { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 32px 0 32px; }
-.uploadHint { font-size: 11px; color: var(--ink-soft); }
+.uploadHint { font-size: 13px; color: var(--ink-soft); }
 
 /* ── TA filter chips ─────────────────────────────────────────────────────── */
 .taFilterLabel {
-  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+  font-size: 11.5px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.7px; color: var(--ink-soft); margin-right: 4px;
 }
 .taChip {
   display: inline-flex; align-items: center;
   background: #f0f0f0; color: var(--ink);
   border: 1px solid #ddd; border-radius: 20px;
-  padding: 3px 10px; font-size: 10.5px; font-weight: 700;
+  padding: 3px 10px; font-size: 12.5px; font-weight: 700;
   cursor: pointer; transition: background 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
@@ -42,7 +42,7 @@
 }
 
 .taTable thead th {
-  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.6px; color: var(--ink-soft);
   padding: 0 10px 4px 10px; white-space: nowrap;
 }
@@ -69,22 +69,22 @@
   background: #fffbe6; border-color: var(--brand-yellow);
 }
 
-.taTableName  { font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-.taTableStat  { font-size: 11px; font-weight: 800; color: var(--ink); text-align: right; white-space: nowrap; }
+.taTableName  { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.taTableStat  { font-size: 13px; font-weight: 800; color: var(--ink); text-align: right; white-space: nowrap; }
 .taStatAlert  { color: var(--danger); }
-.taTableStage { font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+.taTableStage { font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
 
 /* ── Individual analysis badge ───────────────────────────────────────────── */
 .taIndividualBadge {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.4px;
   border-radius: 20px; padding: 4px 14px;
 }
 
 /* ── Active TA tag (right column) ────────────────────────────────────────── */
 .taActiveTag {
-  font-size: 11px; color: var(--ink-soft);
+  font-size: 13px; color: var(--ink-soft);
   background: #fffbe6; border: 1px solid var(--brand-yellow);
   border-radius: 8px; padding: 7px 12px;
 }
@@ -93,7 +93,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--brand-dark); color: var(--brand-yellow);
   border: none; padding: 8px 16px; border-radius: 20px;
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12.5px; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.6px;
   cursor: pointer; transition: background 0.15s, transform 0.08s;
   white-space: nowrap;
@@ -108,17 +108,17 @@
 .topHeader .sectionTag { margin: 0; }
 .filterBar { display: flex; align-items: center; gap: 16px; margin: 14px 32px 0; padding: 9px 12px; border: 1px solid var(--divider); border-radius: 10px; background: var(--surface-alt); }
 .filterHeading { display: flex; flex: 0 0 auto; flex-direction: column; gap: 1px; min-width: 90px; }
-.filterEyebrow { color: var(--ink-muted); font-size: 8px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
-.filterTitle { color: var(--brand-dark); font-size: 10.5px; font-weight: 800; }
+.filterEyebrow { color: var(--ink-muted); font-size: 10px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+.filterTitle { color: var(--brand-dark); font-size: 12.5px; font-weight: 800; }
 .filterOptions { display: flex; flex-wrap: wrap; gap: 5px; }
-.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 750; }
+.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 750; }
 .filterBar .taChip:hover { background: #f2f2f2; border-color: #aaa; }
-.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 10px; }
+.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
 @media (max-width: 720px) { .topHeader { align-items: flex-start; flex-direction: column; gap: 10px; padding-left: 16px; padding-right: 16px; } .filterBar { align-items: flex-start; flex-direction: column; gap: 8px; margin-left: 16px; margin-right: 16px; } .btnGroup { flex-wrap: wrap; } }
 
 /* ── KPI scope note ──────────────────────────────────────────────────────── */
 .kpiScope {
-  font-size: 10.5px; color: var(--ink-soft);
+  font-size: 12.5px; color: var(--ink-soft);
   padding: 10px 32px 0 32px;
 }
 
@@ -134,7 +134,7 @@
 }
 .kpiBox:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .kpiVal   { font-size: 32px; font-weight: 900; line-height: 1.05; color: var(--ink); }
-.kpiLabel { font-size: 10px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.kpiLabel { font-size: 12px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
 .kpiTotal  { border-left: 3px solid var(--danger); }
 .kpiAvg    { border-left: 3px solid #e65100; }
 .kpiOpen   { border-left: 3px solid var(--brand-yellow); }
@@ -152,7 +152,7 @@
 .breakdownSection { display: flex; flex-direction: column; gap: 8px; }
 
 .breakdownTitle {
-  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  font-size: 12px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.8px; color: var(--brand-dark);
   padding-bottom: 7px;
   border-bottom: 2px solid var(--brand-yellow);
@@ -172,7 +172,7 @@
   gap: 8px;
 }
 .bLabel {
-  font-size: 11px; color: var(--ink);
+  font-size: 13px; color: var(--ink);
   word-break: break-word;
 }
 .bBarWrap {
@@ -184,9 +184,9 @@
   transition: width 0.4s ease;
   min-width: 2px;
 }
-.bCount { font-size: 11px; font-weight: 800; color: var(--ink); text-align: right; }
-.bPct   { font-size: 10px; color: var(--ink-muted); text-align: right; }
-.bNote  { font-size: 10px; color: var(--ink-muted); font-style: italic; margin-top: 2px; }
+.bCount { font-size: 13px; font-weight: 800; color: var(--ink); text-align: right; }
+.bPct   { font-size: 12px; color: var(--ink-muted); text-align: right; }
+.bNote  { font-size: 12px; color: var(--ink-muted); font-style: italic; margin-top: 2px; }
 
 /* Bar colors — stages */
 .barHM          { background: #e65100; }
@@ -211,7 +211,7 @@
 
 /* ── Insight column (mirrors DataPanel) ─────────────────────────────────── */
 .insightTitle {
-  font-size: 13px; font-weight: 900; text-transform: uppercase;
+  font-size: 15px; font-weight: 900; text-transform: uppercase;
   letter-spacing: 0.8px; margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 2px solid;
   display: inline-block;
@@ -221,7 +221,7 @@
 .insightTitle.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
 .insightList { list-style: none; padding: 0; }
 .insightList li {
-  font-size: 11.5px; color: var(--ink); line-height: 1.55;
+  font-size: 13.5px; color: var(--ink); line-height: 1.55;
   padding: 4px 0 4px 16px; position: relative;
 }
 .insightList li::before {
@@ -238,5 +238,5 @@
   display: flex; justify-content: space-between; align-items: center;
   background: var(--surface-alt);
 }
-.footerText { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }
+.footerText { font-size: 12px; color: var(--ink-muted); letter-spacing: 0.3px; }
 

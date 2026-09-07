@@ -1,5 +1,5 @@
 .bar {
-  padding: 6px 32px; font-size: 10.5px;
+  padding: 6px 32px; font-size: 12.5px;
   border-bottom: 1px solid #eee; background: #fafafa;
 }
 .bar.error   { background: #fff3f3; color: #c62828; border-color: #ffcdd2; }

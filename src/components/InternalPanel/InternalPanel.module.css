@@ -1,7 +1,7 @@
 /* ── Shared layout ──────────────────────────────────────────────────────── */
 .sectionTag {
   display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800;
+  font-size: 13px; font-weight: 800;
   padding: 6px 16px; margin: 22px 0 0 32px;
   letter-spacing: 0.8px; text-transform: uppercase;
   border-radius: 4px;
@@ -11,13 +11,13 @@
   padding: 12px 32px 0 32px; gap: 12px;
 }
 .toolbarSub { display: flex; padding: 4px 32px 0 32px; }
-.uploadHint { font-size: 11px; color: var(--ink-soft); }
+.uploadHint { font-size: 13px; color: var(--ink-soft); }
 .btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
 .uploadBtn {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--brand-dark); color: var(--brand-yellow);
   border: none; padding: 8px 16px; border-radius: 20px;
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12.5px; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.6px;
   cursor: pointer; transition: background 0.15s, transform 0.08s;
   white-space: nowrap;
@@ -36,15 +36,15 @@
 .goalRow    { padding: 12px 32px 0 32px; }
 .goalBlock  { background: var(--brand-dark); border-radius: 12px; padding: 16px 18px; }
 .goalTopRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.goalTitle  { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
-.goalMetaTag { font-size: 10px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
+.goalTitle  { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
+.goalMetaTag { font-size: 12px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
 .goalBody   { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
 .goalLeft   { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .goalBigNum { font-size: 34px; font-weight: 900; line-height: 1; }
 .goalOk     { color: #a5d6a7; }
 .goalAlert  { color: #ef9a9a; }
-.goalBigLabel { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
-.goalInput  { width: 90px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-family: inherit; font-size: 12px; font-weight: 700; padding: 5px 8px; outline: none; transition: border-color 0.15s; margin-top: 2px; }
+.goalBigLabel { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
+.goalInput  { width: 90px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; padding: 5px 8px; outline: none; transition: border-color 0.15s; margin-top: 2px; }
 .goalInput:focus { border-color: var(--brand-yellow); }
 .goalRight  { display: flex; flex-direction: column; gap: 8px; }
 .goalBarWrap { display: flex; flex-direction: column; gap: 4px; }
@@ -52,14 +52,14 @@
 .goalFillOk    { height: 100%; background: #a5d6a7; border-radius: 6px; transition: width 0.5s ease; min-width: 4px; }
 .goalFillAlert { height: 100%; background: #ef9a9a; border-radius: 6px; transition: width 0.5s ease; min-width: 4px; }
 .goalMark   { position: absolute; right: 0; top: -4px; width: 2px; height: 20px; background: rgba(255,219,0,0.7); border-radius: 1px; }
-.goalBarLabels { display: flex; justify-content: space-between; font-size: 9px; color: rgba(255,255,255,0.35); font-weight: 700; }
-.goalGapOk    { font-size: 11px; font-weight: 800; color: #a5d6a7; }
-.goalGapAlert { font-size: 11px; font-weight: 800; color: #ef9a9a; }
+.goalBarLabels { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 700; }
+.goalGapOk    { font-size: 13px; font-weight: 800; color: #a5d6a7; }
+.goalGapAlert { font-size: 13px; font-weight: 800; color: #ef9a9a; }
 .goalEmpty      { display: flex; flex-direction: column; gap: 10px; }
-.goalEmptyLabel { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; }
+.goalEmptyLabel { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600; }
 .goalEmptyRow   { display: flex; align-items: center; gap: 8px; }
-.goalInputBig   { flex: 1; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,219,0,0.5); border-radius: 8px; color: #fff; font-family: inherit; font-size: 22px; font-weight: 900; padding: 10px 14px; outline: none; transition: border-color 0.15s; max-width: 130px; text-align: center; }
-.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 400; }
+.goalInputBig   { flex: 1; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,219,0,0.5); border-radius: 8px; color: #fff; font-family: inherit; font-size: 24px; font-weight: 900; padding: 10px 14px; outline: none; transition: border-color 0.15s; max-width: 130px; text-align: center; }
+.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 18px; font-weight: 400; }
 .goalInputBig:focus { border-color: var(--brand-yellow); }
 .goalEmptyUnit { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.4); }
 
@@ -93,7 +93,7 @@
 }
 .kpiVal   { font-size: 52px; font-weight: 900; line-height: 1; color: #1bbc9b; }
 .kpiLabel {
-  font-size: 10px; color: var(--ink-soft); font-weight: 700;
+  font-size: 12px; color: var(--ink-soft); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.8px;
 }
 
@@ -112,13 +112,13 @@
   gap: 6px;
 }
 .donutTitle {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--ink);
   line-height: 1.3;
 }
 .donutSubtitle {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ink-soft);
   margin-bottom: 4px;
 }
@@ -133,7 +133,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11.5px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 .lgFav     { color: #1bbc9b; }
@@ -162,12 +162,12 @@
   border-radius: 0 6px 6px 0;
   padding: 10px 14px;
 }
-.dcTitle { font-size: 10px; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; }
-.dcText  { font-size: 11px; color: var(--ink); line-height: 1.55; }
+.dcTitle { font-size: 12px; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; }
+.dcText  { font-size: 13px; color: var(--ink); line-height: 1.55; }
 
 /* ── Dimension table ─────────────────────────────────────────────────────── */
 .dimSectionTitle {
-  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  font-size: 12px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.8px; color: var(--brand-dark);
   padding-bottom: 7px;
   border-bottom: 2px solid var(--brand-yellow);
@@ -176,11 +176,11 @@
 .dimTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 14px;
 }
 .dimTable thead tr { border-bottom: 2px solid var(--brand-yellow); }
 .dimTable thead td {
-  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  font-size: 12px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.6px; color: var(--ink-soft);
   padding: 6px 8px 8px 0;
 }
@@ -201,7 +201,7 @@
 
 /* ── Insights column ─────────────────────────────────────────────────────── */
 .insightTitle {
-  font-size: 13px; font-weight: 900; text-transform: uppercase;
+  font-size: 15px; font-weight: 900; text-transform: uppercase;
   letter-spacing: 0.8px; margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 2px solid;
   display: inline-block;
@@ -211,7 +211,7 @@
 .insightTitle.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
 .insightList { list-style: none; padding: 0; }
 .insightList li {
-  font-size: 11.5px; color: var(--ink); line-height: 1.55;
+  font-size: 13.5px; color: var(--ink); line-height: 1.55;
   padding: 4px 0 4px 16px; position: relative;
 }
 .insightList li::before {
@@ -229,7 +229,7 @@
   box-sizing: content-box;
   background: transparent; border: none; outline: none;
   padding: 0; margin: 0;
-  font-size: 11.5px; font-weight: 700; font-family: inherit;
+  font-size: 13.5px; font-weight: 700; font-family: inherit;
   color: #78909c;
   border-bottom: 1.5px dashed #78909c;
   text-align: center;
@@ -237,7 +237,7 @@
 .lgInput:not(:placeholder-shown) { border-bottom: none; }
 .lgInput::placeholder { opacity: 0.5; }
 .lgInputDesfav { color: var(--danger); border-bottom-color: var(--danger); }
-.lgUnit        { font-size: 11.5px; font-weight: 700; color: #78909c; }
+.lgUnit        { font-size: 13.5px; font-weight: 700; color: #78909c; }
 .lgUnitDesfav  { color: var(--danger); }
 
 /* ── Editable dim table cells ────────────────────────────────────────────── */
@@ -247,14 +247,14 @@
   box-sizing: content-box;
   background: transparent; border: none; outline: none;
   padding: 0; margin: 0;
-  font-size: 12px; font-weight: 700; font-family: inherit;
+  font-size: 14px; font-weight: 700; font-family: inherit;
   color: var(--danger);
   border-bottom: 1.5px dashed var(--danger);
   text-align: center;
 }
 .dimInput:not(:placeholder-shown) { border-bottom: none; }
 .dimInput::placeholder { color: var(--ink-muted); font-weight: 400; }
-.dimInputPct { font-size: 12px; font-weight: 700; color: var(--danger); }
+.dimInputPct { font-size: 14px; font-weight: 700; color: var(--danger); }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .footer {
@@ -262,5 +262,5 @@
   display: flex; justify-content: space-between; align-items: center;
   background: var(--surface-alt);
 }
-.footerText { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }
+.footerText { font-size: 12px; color: var(--ink-muted); letter-spacing: 0.3px; }
 

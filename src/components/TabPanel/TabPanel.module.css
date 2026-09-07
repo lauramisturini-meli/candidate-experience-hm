@@ -1,3 +1,8 @@
 .panel { display: none; }
-.panel.active { display: block; }
+.panel.active {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
 

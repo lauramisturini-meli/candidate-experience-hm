@@ -1,6 +1,6 @@
 .sectionTag {
   display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800;
+  font-size: 13px; font-weight: 800;
   padding: 6px 16px; margin: 22px 0 0 32px;
   letter-spacing: 0.8px; text-transform: uppercase;
   border-radius: 4px;
@@ -14,18 +14,18 @@
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
   padding: 8px 32px 0 32px; min-height: 28px;
 }
-.uploadHint { font-size: 11px; color: var(--ink-soft); }
+.uploadHint { font-size: 13px; color: var(--ink-soft); }
 
 /* ── TA filter chips (external tab) ────────────────────────────────────────── */
 .taFilterLabel {
-  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+  font-size: 11.5px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.7px; color: var(--ink-soft); margin-right: 4px;
 }
 .taChip {
   display: inline-flex; align-items: center;
   background: #f0f0f0; color: var(--ink);
   border: 1px solid #ddd; border-radius: 20px;
-  padding: 3px 10px; font-size: 10.5px; font-weight: 700;
+  padding: 3px 10px; font-size: 12.5px; font-weight: 700;
   cursor: pointer; transition: background 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
@@ -38,16 +38,16 @@
 .taIndividualBadge {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.4px;
   border-radius: 20px; padding: 4px 14px;
 }
-.taIndividualBadge::before { content: "▸"; font-size: 10px; }
+.taIndividualBadge::before { content: "▸"; font-size: 12px; }
 .btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
 .uploadBtn {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--brand-dark); color: var(--brand-yellow);
   border: none; padding: 8px 16px; border-radius: 20px;
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12.5px; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.6px;
   cursor: pointer; transition: background 0.15s, transform 0.08s;
   white-space: nowrap;
@@ -64,12 +64,12 @@
 .topHeader .sectionTag { margin: 0; }
 .filterBar { display: flex; align-items: center; gap: 16px; margin: 14px 32px 0; padding: 9px 12px; border: 1px solid var(--divider); border-radius: 10px; background: var(--surface-alt); }
 .filterHeading { display: flex; flex: 0 0 auto; flex-direction: column; gap: 1px; min-width: 90px; }
-.filterEyebrow { color: var(--ink-muted); font-size: 8px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
-.filterTitle { color: var(--brand-dark); font-size: 10.5px; font-weight: 800; }
+.filterEyebrow { color: var(--ink-muted); font-size: 10px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+.filterTitle { color: var(--brand-dark); font-size: 12.5px; font-weight: 800; }
 .filterOptions { display: flex; flex-wrap: wrap; gap: 5px; }
-.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 750; }
+.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 750; }
 .filterBar .taChip:hover { background: #f2f2f2; border-color: #aaa; }
-.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 10px; }
+.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
 @media (max-width: 720px) { .topHeader { align-items: flex-start; flex-direction: column; gap: 10px; padding-left: 16px; padding-right: 16px; } .filterBar { align-items: flex-start; flex-direction: column; gap: 8px; margin-left: 16px; margin-right: 16px; } .btnGroup { flex-wrap: wrap; } }
 /* ── Favorabilidade Goal block ───────────────────────────────────────────── */
 .goalRow { padding: 12px 32px 0 32px; }
@@ -79,18 +79,18 @@
 .goalTopRow {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
 }
-.goalTitle   { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
-.goalMetaTag { font-size: 10px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
+.goalTitle   { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
+.goalMetaTag { font-size: 12px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
 .goalBody    { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
 .goalLeft    { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .goalBigNum  { font-size: 34px; font-weight: 900; line-height: 1; }
 .goalOk      { color: #a5d6a7; }
 .goalAlert   { color: #ef9a9a; }
-.goalBigLabel { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
+.goalBigLabel { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
 .goalInput {
   width: 90px; background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
-  color: #fff; font-family: inherit; font-size: 12px; font-weight: 700;
+  color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
   padding: 5px 8px; outline: none; transition: border-color 0.15s; margin-top: 2px;
 }
 .goalInput:focus { border-color: var(--brand-yellow); }
@@ -108,21 +108,21 @@
 }
 .goalBarLabels {
   display: flex; justify-content: space-between;
-  font-size: 9px; color: rgba(255,255,255,0.35); font-weight: 700;
+  font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 700;
 }
-.goalGapOk    { font-size: 11px; font-weight: 800; color: #a5d6a7; }
-.goalGapAlert { font-size: 11px; font-weight: 800; color: #ef9a9a; }
+.goalGapOk    { font-size: 13px; font-weight: 800; color: #a5d6a7; }
+.goalGapAlert { font-size: 13px; font-weight: 800; color: #ef9a9a; }
 .goalEmpty      { display: flex; flex-direction: column; gap: 10px; }
-.goalEmptyLabel { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; }
+.goalEmptyLabel { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600; }
 .goalEmptyRow   { display: flex; align-items: center; gap: 8px; }
 .goalInputBig {
   flex: 1; background: rgba(255,255,255,0.12);
   border: 2px solid rgba(255,219,0,0.5); border-radius: 8px;
-  color: #fff; font-family: inherit; font-size: 22px; font-weight: 900;
+  color: #fff; font-family: inherit; font-size: 24px; font-weight: 900;
   padding: 10px 14px; outline: none; transition: border-color 0.15s;
   max-width: 130px; text-align: center;
 }
-.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 400; }
+.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 18px; font-weight: 400; }
 .goalInputBig:focus { border-color: var(--brand-yellow); }
 .goalEmptyUnit { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.4); }
 
@@ -133,7 +133,7 @@
 .colLeft { padding: 20px 32px 24px 32px; border-right: 1px solid #ddd; }
 .colRight { padding: 22px 32px 24px 28px; display: flex; flex-direction: column; gap: 20px; }
 .headline {
-  font-size: 13px; font-weight: 800;
+  font-size: 15px; font-weight: 800;
   color: #333333; text-transform: uppercase;
   letter-spacing: 0.5px; margin-bottom: 16px;
 }
@@ -142,7 +142,7 @@
   display: flex; justify-content: space-between; align-items: center;
   background: var(--surface-alt);
 }
-.footerText { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }
+.footerText { font-size: 12px; color: var(--ink-muted); letter-spacing: 0.3px; }
 
 /* KPI grid */
 .kpiGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
@@ -150,10 +150,10 @@
   display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
   margin: -10px 0 22px; padding: 9px 12px;
   border: 1px solid var(--divider); border-radius: 8px; background: var(--surface-alt);
-  color: var(--ink); font-size: 10.5px;
+  color: var(--ink); font-size: 12.5px;
 }
 .analysisCoverageLabel {
-  color: var(--ink-muted); font-size: 8.5px; font-weight: 900;
+  color: var(--ink-muted); font-size: 10.5px; font-weight: 900;
   letter-spacing: .65px; text-transform: uppercase;
 }
 .kpiBox {
@@ -163,7 +163,7 @@
 }
 .kpiBox:hover { border-color: #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .kpiVal { font-size: 32px; font-weight: 900; line-height: 1.05; display: flex; justify-content: center; align-items: baseline; }
-.kpiLabel { font-size: 10px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.kpiLabel { font-size: 12px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
 .kpiTotal { border-left: 3px solid var(--brand-yellow); }
 .kpiTotal .kpiVal { color: var(--brand-dark); }
 .kpiFav   { border-left: 3px solid var(--success); }
@@ -178,18 +178,18 @@
   background: #fff6f6; border: 1px solid #ffcdd2;
   border-radius: 10px; padding: 14px 16px; margin-bottom: 22px;
 }
-.dcTitle { font-size: 10.5px; font-weight: 800; color: var(--danger-deep); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
-.dcText { font-size: 11.5px; color: var(--ink); line-height: 1.55; }
+.dcTitle { font-size: 12.5px; font-weight: 800; color: var(--danger-deep); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+.dcText { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
 
 /* Dimensions table */
 .dimSectionTitle {
-  font-size: 11px; font-weight: 800; color: var(--brand-dark);
+  font-size: 13px; font-weight: 800; color: var(--brand-dark);
   text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
   padding-bottom: 8px; border-bottom: 2px solid var(--brand-yellow);
   display: inline-block;
 }
 .dimTable { width: 100%; border-collapse: collapse; }
-.dimTable td { padding: 8px 10px; font-size: 11.5px; border-bottom: 1px solid var(--divider); }
+.dimTable td { padding: 8px 10px; font-size: 13.5px; border-bottom: 1px solid var(--divider); }
 .dimTable td:first-child { padding-left: 0; }
 .dimTable td:last-child  { padding-right: 0; }
 .dimTable tr:last-child td { border-bottom: none; }
@@ -198,12 +198,12 @@
 .dimNeutro{ color: var(--warning); font-weight: 800; width: 20%; }
 .dimDesf  { color: var(--danger);  font-weight: 800; width: 24%; }
 .dimFav, .dimNeutro, .dimDesf { text-align: center; vertical-align: middle; }
-.dimTable thead td { font-size: 9.5px; font-weight: 800; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.6px; padding-bottom: 8px; border-bottom: 1px solid var(--divider); }
+.dimTable thead td { font-size: 11.5px; font-weight: 800; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.6px; padding-bottom: 8px; border-bottom: 1px solid var(--divider); }
 .dimHighlight { background: var(--brand-yellow-soft); }
 
 .dimInput {
   text-align: center;
-  font-size: 11.5px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--success);
   background: transparent;
@@ -238,13 +238,13 @@
 .kpiInputUnit { font-size: 32px; font-weight: 900; line-height: 1.05; margin-left: -0.05em; }
 
 .dimInputWrap { display: inline-flex; align-items: baseline; justify-content: center; }
-.dimInputPct  { font-size: 11.5px; font-weight: 800; margin-left: -0.05em; }
+.dimInputPct  { font-size: 13.5px; font-weight: 800; margin-left: -0.05em; }
 .kpiInputNeutral { color: var(--warning); }
 .kpiInputDesfav  { color: var(--danger);  }
 
 /* Insight column */
 .insightTitle {
-  font-size: 13px; font-weight: 900; text-transform: uppercase;
+  font-size: 15px; font-weight: 900; text-transform: uppercase;
   letter-spacing: 0.8px; margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 2px solid;
   display: inline-block;
@@ -253,7 +253,7 @@
 .insightTitle.lows    { color: var(--danger); border-color: var(--danger); }
 .insightTitle.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
 .insightList { list-style: none; padding: 0; }
-.insightList li { font-size: 11.5px; color: var(--ink); line-height: 1.55; padding: 4px 0 4px 16px; position: relative; }
+.insightList li { font-size: 13.5px; color: var(--ink); line-height: 1.55; padding: 4px 0 4px 16px; position: relative; }
 .insightList li::before { content: ""; position: absolute; left: 0; top: 11px; width: 7px; height: 7px; border-radius: 50%; }
 .highsList li::before   { background: var(--success); }
 .lowsList li::before    { background: var(--danger); }
@@ -290,7 +290,7 @@
 .hpKpiAvance .kpiLabel { color: rgba(255,255,255,0.7); }
 
 /* HP breakdown table */
-.hpCol { color: var(--ink); font-weight: 700; text-align: center; width: 13%; font-size: 11.5px; }
+.hpCol { color: var(--ink); font-weight: 700; text-align: center; width: 13%; font-size: 13.5px; }
 .hpColDanger { color: var(--danger); }
 .hpColWarn   { color: #e65100; }
 .hpColOk     { color: var(--success); }
@@ -308,19 +308,19 @@
   border-radius: 10px;
   padding: 14px 16px;
 }
-.hpSlaTitle { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-soft); margin-bottom: 6px; }
+.hpSlaTitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-soft); margin-bottom: 6px; }
 .hpSlaBig   { font-size: 28px; font-weight: 900; color: var(--ink); line-height: 1; margin-bottom: 4px; }
 .hpSlaWarn  { color: var(--danger); }
 .hpSlaOk    { color: var(--success); }
-.hpSlaSub   { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+.hpSlaSub   { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
 
 /* HP pipeline */
 .hpPipeline { display: flex; flex-direction: column; gap: 7px; margin-bottom: 22px; }
 .hpPipeRow  { display: grid; grid-template-columns: 130px 1fr 32px; align-items: center; gap: 8px; }
-.hpPipeLabel { font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hpPipeLabel { font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hpPipeBarWrap { height: 6px; background: var(--divider); border-radius: 3px; }
 .hpPipeBar  { height: 100%; background: var(--brand-dark); border-radius: 3px; transition: width 0.3s; }
-.hpPipeCount { font-size: 11px; font-weight: 800; color: var(--brand-dark); text-align: right; }
+.hpPipeCount { font-size: 13px; font-weight: 800; color: var(--brand-dark); text-align: right; }
 
 /* HP executive summary */
 .hpSummary {
@@ -331,11 +331,11 @@
   padding: 14px 16px;
 }
 .hpSummaryTitle {
-  font-size: 10.5px; font-weight: 800; color: var(--brand-dark);
+  font-size: 12.5px; font-weight: 800; color: var(--brand-dark);
   text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px;
 }
 .hpSummaryText {
-  font-size: 11.5px; color: var(--ink); line-height: 1.65;
+  font-size: 13.5px; color: var(--ink); line-height: 1.65;
   margin: 0 0 8px 0;
 }
 .hpSummaryText:last-child { margin-bottom: 0; }

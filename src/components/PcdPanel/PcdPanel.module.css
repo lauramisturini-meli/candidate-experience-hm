@@ -1,6 +1,6 @@
 .sectionTag {
   display: inline-block; background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800;
+  font-size: 13px; font-weight: 800;
   padding: 6px 16px; margin: 22px 0 0 32px;
   letter-spacing: 0.8px; text-transform: uppercase; border-radius: 4px;
 }
@@ -15,7 +15,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--brand-dark); color: var(--brand-yellow);
   border: none; padding: 8px 16px; border-radius: 20px;
-  font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+  font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
   cursor: pointer; transition: background 0.15s, transform 0.08s; white-space: nowrap;
 }
 .uploadBtn:hover { background: #444; }
@@ -28,12 +28,12 @@
 .topHeader .sectionTag { margin: 0; }
 .filterBar { display: flex; align-items: center; gap: 16px; margin: 14px 32px 0; padding: 9px 12px; border: 1px solid var(--divider); border-radius: 10px; background: var(--surface-alt); }
 .filterHeading { display: flex; flex: 0 0 auto; flex-direction: column; gap: 1px; min-width: 90px; }
-.filterEyebrow { color: var(--ink-muted); font-size: 8px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
-.filterTitle { color: var(--brand-dark); font-size: 10.5px; font-weight: 800; }
+.filterEyebrow { color: var(--ink-muted); font-size: 10px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+.filterTitle { color: var(--brand-dark); font-size: 12.5px; font-weight: 800; }
 .filterOptions { display: flex; flex-wrap: wrap; gap: 5px; }
-.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 750; }
+.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 750; }
 .filterBar .taChip:hover { background: #f2f2f2; border-color: #aaa; }
-.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 10px; }
+.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
 @media (max-width: 720px) { .topHeader { align-items: flex-start; flex-direction: column; gap: 10px; padding-left: 16px; padding-right: 16px; } .filterBar { align-items: flex-start; flex-direction: column; gap: 8px; margin-left: 16px; margin-right: 16px; } .btnGroup { flex-wrap: wrap; } }
 
 /* ── Two-column layout ─────────────────────────────── */
@@ -50,7 +50,7 @@
 }
 .kpiBox:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .kpiVal   { font-size: 26px; font-weight: 900; line-height: 1.1; }
-.kpiLabel { font-size: 9px; color: var(--ink-soft); margin-top: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+.kpiLabel { font-size: 11px; color: var(--ink-soft); margin-top: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
 .kpiTotal   { border-top: 3px solid var(--brand-yellow); }
 .kpiTotal .kpiVal   { color: var(--brand-dark); }
 .kpiAbertas { border-top: 3px solid #1565c0; }
@@ -67,22 +67,22 @@
 .goalTopRow {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
 }
-.goalTitle   { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
-.goalMetaTag { font-size: 10px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
+.goalTitle   { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
+.goalMetaTag { font-size: 12px; font-weight: 900; color: var(--brand-yellow); background: rgba(255,219,0,0.12); padding: 2px 8px; border-radius: 10px; }
 
 .goalBody { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
 
 .goalLeft { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .goalBigNum  { font-size: 38px; font-weight: 900; color: var(--brand-yellow); line-height: 1; }
-.goalBigLabel { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.6px; }
+.goalBigLabel { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.6px; }
 .goalInput {
   margin-top: 4px;
   width: 100px; background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
-  color: #fff; font-family: inherit; font-size: 12px; font-weight: 700;
+  color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
   padding: 5px 8px; outline: none; transition: border-color 0.15s;
 }
-.goalInput::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; font-size: 10.5px; }
+.goalInput::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; font-size: 12.5px; }
 .goalInput:focus { border-color: var(--brand-yellow); }
 
 .goalRight { display: flex; flex-direction: column; gap: 8px; }
@@ -98,28 +98,28 @@
 }
 .goalBarLabels {
   display: flex; justify-content: space-between;
-  font-size: 9px; color: rgba(255,255,255,0.35); font-weight: 700;
+  font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 700;
 }
-.goalGapAlert { font-size: 11px; font-weight: 800; color: #ffab76; }
-.goalGapOk    { font-size: 11px; font-weight: 800; color: #a5d6a7; }
+.goalGapAlert { font-size: 13px; font-weight: 800; color: #ffab76; }
+.goalGapOk    { font-size: 13px; font-weight: 800; color: #a5d6a7; }
 
 /* Empty state — big input */
 .goalEmpty { display: flex; flex-direction: column; gap: 10px; }
-.goalEmptyLabel { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; }
+.goalEmptyLabel { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600; }
 .goalEmptyRow { display: flex; align-items: center; gap: 8px; }
 .goalInputBig {
   flex: 1; background: rgba(255,255,255,0.12);
   border: 2px solid rgba(255,219,0,0.5); border-radius: 8px;
-  color: #fff; font-family: inherit; font-size: 22px; font-weight: 900;
+  color: #fff; font-family: inherit; font-size: 24px; font-weight: 900;
   padding: 10px 14px; outline: none; transition: border-color 0.15s;
   max-width: 160px; text-align: center;
 }
-.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 400; }
+.goalInputBig::placeholder { color: rgba(255,255,255,0.2); font-size: 18px; font-weight: 400; }
 .goalInputBig:focus { border-color: var(--brand-yellow); background: rgba(255,255,255,0.18); }
 .goalEmptyUnit { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.4); }
 
 /* ── Empty hint ─────────────────────────────────────── */
-.emptyHint { font-size: 11px; color: var(--ink-muted); font-style: italic; padding: 4px 0; }
+.emptyHint { font-size: 13px; color: var(--ink-muted); font-style: italic; padding: 4px 0; }
 
 /* ── Analytics grid (2 cards) ───────────────────────── */
 .analyticsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -129,7 +129,7 @@
   border-radius: 10px; padding: 14px 16px;
 }
 .cardTitle {
-  font-size: 9.5px; font-weight: 800; color: var(--brand-dark);
+  font-size: 11.5px; font-weight: 800; color: var(--brand-dark);
   text-transform: uppercase; letter-spacing: 0.8px;
   margin-bottom: 12px; padding-bottom: 7px;
   border-bottom: 2px solid var(--brand-yellow); display: inline-block;
@@ -138,21 +138,21 @@
 /* Funnel */
 .funnelList { display: flex; flex-direction: column; gap: 9px; }
 .funnelRow  { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; }
-.funnelLabel { font-size: 10.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.funnelLabel { font-size: 12.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .funnelBarWrap { height: 5px; background: var(--divider); border-radius: 3px; width: 55px; }
 .funnelBar  { height: 100%; background: #1565c0; border-radius: 3px; transition: width 0.35s; }
-.funnelCount { font-size: 11px; font-weight: 900; color: #1565c0; min-width: 14px; text-align: right; }
+.funnelCount { font-size: 13px; font-weight: 900; color: #1565c0; min-width: 14px; text-align: right; }
 
 /* Inclusão */
 .inclRow  { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
 .inclNum  { font-size: 34px; font-weight: 900; color: var(--success); line-height: 1; }
-.inclSub  { font-size: 10.5px; color: var(--ink-soft); line-height: 1.3; }
+.inclSub  { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
 .inclBar  { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 8px; }
 .inclBarCom { background: var(--success); transition: width 0.35s; }
 .inclBarSem { background: #ffe082; transition: width 0.35s; }
 .inclLegend { display: flex; gap: 14px; }
-.inclLegCom { font-size: 9.5px; color: var(--success); font-weight: 700; }
-.inclLegSem { font-size: 9.5px; color: #c08000; font-weight: 700; }
+.inclLegCom { font-size: 11.5px; color: var(--success); font-weight: 700; }
+.inclLegSem { font-size: 11.5px; color: #c08000; font-weight: 700; }
 
 /* ── SLA panorama ───────────────────────────────────── */
 .slaStrip {
@@ -163,14 +163,14 @@
 .slaStat { flex: 1; padding: 10px 8px; text-align: center; }
 .slaStatDivider { width: 1px; background: var(--divider); flex-shrink: 0; }
 .slaStatAlert { background: #fff5f5; }
-.slaStatVal   { display: block; font-size: 20px; font-weight: 900; color: var(--brand-dark); line-height: 1.1; }
+.slaStatVal   { display: block; font-size: 22px; font-weight: 900; color: var(--brand-dark); line-height: 1.1; }
 .slaStatAlert .slaStatVal { color: var(--danger); }
-.slaStatLabel { display: block; font-size: 8.5px; color: var(--ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+.slaStatLabel { display: block; font-size: 10.5px; color: var(--ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
 
 /* Criticals */
 .criticals { border-top: 1px solid var(--divider); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .criticalsTitle {
-  font-size: 9px; font-weight: 800; color: var(--danger);
+  font-size: 11px; font-weight: 800; color: var(--danger);
   text-transform: uppercase; letter-spacing: 0.6px;
 }
 .criticalCard {
@@ -178,14 +178,14 @@
   border-left: 4px solid var(--danger); border-radius: 8px; padding: 10px 12px;
 }
 .criticalHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
-.vagaNum      { font-size: 11px; font-weight: 900; color: var(--ink); }
-.criticalDays { font-size: 12px; font-weight: 900; color: var(--danger); }
-.criticalMeta { font-size: 10.5px; color: var(--ink-soft); }
-.criticalText { font-size: 11.5px; color: var(--ink); line-height: 1.65; margin: 0; }
+.vagaNum      { font-size: 13px; font-weight: 900; color: var(--ink); }
+.criticalDays { font-size: 14px; font-weight: 900; color: var(--danger); }
+.criticalMeta { font-size: 12.5px; color: var(--ink-soft); }
+.criticalText { font-size: 13.5px; color: var(--ink); line-height: 1.65; margin: 0; }
 
 /* ── Insight column ─────────────────────────────────── */
 .insightTitle {
-  font-size: 13px; font-weight: 900; text-transform: uppercase;
+  font-size: 15px; font-weight: 900; text-transform: uppercase;
   letter-spacing: 0.8px; margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 2px solid; display: inline-block;
 }
@@ -193,7 +193,7 @@
 .insightTitle.lows    { color: var(--danger);  border-color: var(--danger); }
 .insightTitle.actions { color: var(--brand-dark); border-color: var(--brand-yellow); }
 .insightList { list-style: none; padding: 0; }
-.insightList li { font-size: 11.5px; color: var(--ink); line-height: 1.55; padding: 4px 0 4px 16px; position: relative; }
+.insightList li { font-size: 13.5px; color: var(--ink); line-height: 1.55; padding: 4px 0 4px 16px; position: relative; }
 .insightList li::before { content: ""; position: absolute; left: 0; top: 11px; width: 7px; height: 7px; border-radius: 50%; }
 .highsList li::before   { background: var(--success); }
 .lowsList li::before    { background: var(--danger); }
@@ -203,34 +203,34 @@
 .hcList { display: flex; flex-direction: column; gap: 10px; }
 .hcRow  { display: flex; flex-direction: column; gap: 4px; }
 .hcRowTop { display: flex; justify-content: space-between; align-items: baseline; }
-.hcLayer { font-size: 10.5px; color: var(--ink); font-weight: 700; }
+.hcLayer { font-size: 12.5px; color: var(--ink); font-weight: 700; }
 .hcBarWrap { height: 5px; background: var(--divider); border-radius: 3px; }
 .hcBar { height: 100%; border-radius: 3px; transition: width 0.4s ease; min-width: 3px; background: #1565c0; }
-.hcPct { font-size: 11px; font-weight: 900; color: #1565c0; }
+.hcPct { font-size: 13px; font-weight: 900; color: #1565c0; }
 .hcAbsRow { display: flex; justify-content: space-between; }
-.hcAbsPcd   { font-size: 9px; font-weight: 700; color: #1565c0; }
-.hcAbsTotal { font-size: 9px; color: var(--ink-muted); }
+.hcAbsPcd   { font-size: 11px; font-weight: 700; color: #1565c0; }
+.hcAbsTotal { font-size: 11px; color: var(--ink-muted); }
 
 /* ── HC por BU ──────────────────────────────────────── */
 .buCard       { display: flex; flex-direction: column; gap: 8px; padding: 2px 0; }
 .buHeader     { display: flex; justify-content: space-between; align-items: baseline; }
-.buName       { font-size: 11px; font-weight: 800; color: var(--brand-dark); text-transform: uppercase; letter-spacing: 0.5px; }
-.buPct        { font-size: 18px; font-weight: 900; color: #1565c0; line-height: 1; }
+.buName       { font-size: 13px; font-weight: 800; color: var(--brand-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+.buPct        { font-size: 20px; font-weight: 900; color: #1565c0; line-height: 1; }
 .buBar        { height: 6px; background: var(--divider); border-radius: 3px; overflow: hidden; }
 .buBarFill    { height: 100%; background: #1565c0; border-radius: 3px; transition: width 0.4s ease; }
 .buStats      { display: flex; align-items: stretch; gap: 0; }
 .buStat       { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .buStatDivider{ width: 1px; background: var(--divider); flex-shrink: 0; margin: 0 4px; }
-.buStatVal    { font-size: 18px; font-weight: 900; color: var(--brand-dark); line-height: 1; }
-.buStatLabel  { font-size: 8.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.buStatVal    { font-size: 20px; font-weight: 900; color: var(--brand-dark); line-height: 1; }
+.buStatLabel  { font-size: 10.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* ── Tipos de PCD ───────────────────────────────────── */
 .tiposList { display: flex; flex-direction: column; gap: 7px; }
 .tipoRow   { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 7px; }
-.tipoLabel  { font-size: 10px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tipoLabel  { font-size: 12px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tipoBarWrap { height: 5px; background: var(--divider); border-radius: 3px; width: 60px; }
 .tipoBar    { height: 100%; background: #7b1fa2; border-radius: 3px; transition: width 0.35s; }
-.tipoPct    { font-size: 10.5px; font-weight: 900; color: #7b1fa2; min-width: 36px; text-align: right; }
+.tipoPct    { font-size: 12.5px; font-weight: 900; color: #7b1fa2; min-width: 36px; text-align: right; }
 
 /* ── TA filter chips ─────────────────────────────────── */
 .taFilter {
@@ -238,14 +238,14 @@
   padding: 8px 32px 0 32px;
 }
 .taFilterLabel {
-  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+  font-size: 11.5px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.7px; color: var(--ink-soft); margin-right: 4px;
 }
 .taChip {
   display: inline-flex; align-items: center;
   background: #f0f0f0; color: var(--ink);
   border: 1px solid #ddd; border-radius: 20px;
-  padding: 3px 10px; font-size: 10.5px; font-weight: 700;
+  padding: 3px 10px; font-size: 12.5px; font-weight: 700;
   cursor: pointer; transition: background 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
@@ -260,16 +260,16 @@
 .taIndividualBadge {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--brand-dark); color: var(--brand-yellow);
-  font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.4px;
   border-radius: 20px; padding: 4px 14px;
 }
 .taIndividualBadge::before {
-  content: "▸"; font-size: 10px;
+  content: "▸"; font-size: 12px;
 }
 
 /* Active TA tag (team filter mode) */
 .taActiveTag {
-  font-size: 11px; color: var(--ink-soft);
+  font-size: 13px; color: var(--ink-soft);
   background: #fffbe6; border: 1px solid var(--brand-yellow);
   border-radius: 8px; padding: 7px 12px;
 }
@@ -280,5 +280,5 @@
   display: flex; justify-content: space-between; align-items: center;
   background: var(--surface-alt);
 }
-.footerText { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.3px; }
+.footerText { font-size: 12px; color: var(--ink-muted); letter-spacing: 0.3px; }
 
