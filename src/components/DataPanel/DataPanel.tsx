@@ -3,7 +3,6 @@ import { buildMergedView } from '../../lib/merger';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { buildHmDimensionInsights } from '../../lib/insights';
 import { StatusBar } from '../StatusBar/StatusBar';
-import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabId, TabMeta, StatusMessage, TabUiState, DimOverrides, HpPayload, HpRawRow } from '../../types';
 import s from './DataPanel.module.css';
 
@@ -15,7 +14,6 @@ interface Props {
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
-  onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
   onUiChange: (ui: Partial<TabUiState>) => void;
@@ -106,7 +104,7 @@ function shortNameDP(fullName: string): string {
   return `${parts[0]} ${parts[lastIdx]}`;
 }
 
-export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
+export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
   // ── TA Owner filter (external tab only) ───────────────────────────────────
   const taOwners = useMemo(() => {
     if (tabId !== 'external') return [];
@@ -155,6 +153,12 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
   const overrides: DimOverrides = ui?.dimOverrides ?? {};
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
+  const hmFavPct = parseInt(data.kpis.favorabilidade.replace('%', ''), 10) || 0;
+  const hmAutoNeutral = tabId === 'hm' && Boolean(kpiDesfav) && !kpiNeutros;
+  const hmAutoDesfav = tabId === 'hm' && Boolean(kpiNeutros) && !kpiDesfav;
+  const remainingHmPct = (known: string) => Math.max(0, Math.min(100, 100 - hmFavPct - (parseInt(known, 10) || 0)));
+  const effectiveHmNeutros = hmAutoNeutral ? `${remainingHmPct(kpiDesfav)}%` : kpiNeutros;
+  const effectiveHmDesfav = hmAutoDesfav ? `${remainingHmPct(kpiNeutros)}%` : kpiDesfav;
   const [goalInput, setGoalInput] = useState('');
 
   // Auto-fill goal from PDF fav value
@@ -190,7 +194,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
 
   const { highs, lows, actions } = useMemo(() => {
     if (tabId === 'hm' && (hasDesfavOverride || (kpiNeutros && !DASH(kpiNeutros)) || (kpiDesfav && !DASH(kpiDesfav)))) {
-      const dim = buildHmDimensionInsights(effectiveDims, kpiNeutros, kpiDesfav);
+      const dim = buildHmDimensionInsights(effectiveDims, effectiveHmNeutros, effectiveHmDesfav);
       // Merge dimension-based (quantitative) with comment-based (qualitative), dim insights first
       return {
         highs:   [...dim.highs,   ...data.highs  ].slice(0, 6),
@@ -199,18 +203,13 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
       };
     }
     return { highs: data.highs, lows: data.lows, actions: data.actions };
-  }, [tabId, hasDesfavOverride, kpiNeutros, kpiDesfav, effectiveDims, data.highs, data.lows, data.actions]);
+  }, [tabId, hasDesfavOverride, kpiNeutros, kpiDesfav, effectiveHmNeutros, effectiveHmDesfav, effectiveDims, data.highs, data.lows, data.actions]);
 
   return (
     <>
       <StatusBar status={status} />
-      <div className={s.sectionTag}>{meta.section}</div>
-      <div className={s.toolbar}>
-        <div className={s.pillList}>
-          {pdfs.map((pdf, i) => (
-            <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
-          ))}
-        </div>
+      <div className={s.topHeader}>
+        <div className={s.sectionTag}>{meta.section}</div>
         <div className={s.btnGroup}>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onReset}>↺ Resetar</button>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
@@ -221,14 +220,14 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
       </div>
       {/* TA filter chips — external tab only */}
       {tabId === 'external' && isIndividualTA && taOwners[0] ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taIndividualBadge}>
-            Análise Individual · {toTitleCaseDP(taOwners[0])}
-          </span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>TA responsável</span></div>
+          <span className={s.taIndividualBadge}>Análise individual · {toTitleCaseDP(taOwners[0])}</span>
         </div>
       ) : tabId === 'external' && taOwners.length > 1 ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taFilterLabel}>Filtrar por TA</span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>Filtrar por TA</span></div>
+          <div className={s.filterOptions}>
           <button
             className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
             onClick={() => setSelectedTa(null)}
@@ -245,16 +244,17 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
               {shortNameDP(ta)}
             </button>
           ))}
+          </div>
         </div>
       ) : tabId === 'hpc' && isIndividualHP && hpTaList[0] ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taIndividualBadge}>
-            Análise Individual · {toTitleCaseDP(hpTaList[0])}
-          </span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>TA responsável</span></div>
+          <span className={s.taIndividualBadge}>Análise individual · {toTitleCaseDP(hpTaList[0])}</span>
         </div>
       ) : tabId === 'hpc' && hpTaList.length > 1 ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taFilterLabel}>Filtrar por TA</span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>Filtrar por TA</span></div>
+          <div className={s.filterOptions}>
           <button
             className={`${s.taChip} ${activeHpTa === null ? s.taChipActive : ''}`}
             onClick={() => setSelectedHpTa(null)}
@@ -271,10 +271,9 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
               {shortNameDP(ta)}
             </button>
           ))}
+          </div>
         </div>
-      ) : (
-        <div className={s.toolbarSub} />
-      )}
+      ) : null}
 
       {(tabId === 'external' || tabId === 'hm') && (() => {
         const META  = tabId === 'hm' ? 95 : 90;
@@ -468,7 +467,9 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                 </div>
                 <div className={`${s.kpiBox} ${s.kpiNeutral}`}>
                   <div className={s.kpiVal}>
-                    {(DASH(data.kpis.neutros) || data.kpis.neutros === '0%')
+                    {hmAutoNeutral
+                      ? `${remainingHmPct(kpiDesfav)}%`
+                      : (DASH(data.kpis.neutros) || data.kpis.neutros === '0%')
                       ? <span className={s.kpiInputRow}>
                           <input
                             className={`${s.kpiInput} ${s.kpiInputNeutral}`}
@@ -485,7 +486,9 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                 </div>
                 <div className={`${s.kpiBox} ${s.kpiDesfav}`}>
                   <div className={s.kpiVal}>
-                    {DASH(data.kpis.desfavorabilidade)
+                    {hmAutoDesfav
+                      ? `${remainingHmPct(kpiNeutros)}%`
+                      : DASH(data.kpis.desfavorabilidade)
                       ? <span className={s.kpiInputRow}>
                           <input
                             className={`${s.kpiInput} ${s.kpiInputDesfav}`}
@@ -501,6 +504,15 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                   <div className={s.kpiLabel}>Desfavorabilidade</div>
                 </div>
               </div>
+
+              {tabId === 'external' && (
+                <div className={s.analysisCoverage}>
+                  <span className={s.analysisCoverageLabel}>Base de análise</span>
+                  <strong>{data.kpis.respostas} respostas quantitativas</strong>
+                  <span aria-hidden="true">·</span>
+                  <strong>{data.commentCount} comentário{data.commentCount === 1 ? '' : 's'} analisado{data.commentCount === 1 ? '' : 's'}</strong>
+                </div>
+              )}
 
               {tabId !== 'hm' && (
                 <div className={s.detractorCallout}>
@@ -532,6 +544,14 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                       ? Math.max(0, 100 - favNum - desfavNum) + '%'
                       : null;
                     const neutros = computed ?? (overrides[i]?.neutros ?? '—');
+
+                    const autoDesfav = tabId === 'hm'
+                      && DASH(d.desfav)
+                      && !overrides[i]?.desfav
+                      && !DASH(neutros)
+                      && !isNaN(favNum)
+                      ? Math.max(0, 100 - favNum - parseInt(neutros)) + '%'
+                      : null;
 
                     return (
                       <tr key={i} className={isWorst ? s.dimHighlight : ''}>
@@ -565,7 +585,9 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                           </td>
                         )}
                         <td className={s.dimDesf}>
-                          {DASH(d.desfav)
+                          {autoDesfav
+                            ? autoDesfav
+                            : DASH(d.desfav)
                             ? <span className={s.dimInputWrap}>
                                 <input
                                   className={`${s.dimInput} ${s.dimInputDesf}`}

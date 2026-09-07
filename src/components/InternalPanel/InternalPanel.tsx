@@ -1,7 +1,6 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { buildMergedView } from '../../lib/merger';
 import { StatusBar } from '../StatusBar/StatusBar';
-import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, TabUiState } from '../../types';
 import s from './InternalPanel.module.css';
 
@@ -12,7 +11,6 @@ interface Props {
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
-  onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
   onUiChange: (ui: Partial<TabUiState>) => void;
@@ -73,20 +71,14 @@ function DonutChart({ fav, neutral, desfav, hasData }: {
   );
 }
 
-type DimOverrides = Record<number, { desfav?: string }>;
+type DimOverrides = Record<number, { neutros?: string; desfav?: string }>;
 
-export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
+export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
   const data = useMemo(() => buildMergedView(pdfs, 'internal'), [pdfs]);
 
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const overrides: DimOverrides = (ui?.dimOverrides ?? {}) as DimOverrides;
-  const [goalInput, setGoalInput] = useState('');
-
-  useEffect(() => {
-    const raw = data.kpis.favorabilidade;
-    if (raw && raw !== '—' && raw !== '-') setGoalInput(raw.replace('%', ''));
-  }, [data.kpis.favorabilidade]);
 
   const pctStore = (raw: string) => { const n = raw.replace(/[^0-9,.]/g, ''); return n ? n + '%' : '—'; };
   const pctDisplay = (v: string) => DASH(v) ? '' : v.replace('%', '');
@@ -94,12 +86,9 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
   const hasData = data.kpis.favorabilidade !== '—';
   const favPct  = parsePct(data.kpis.favorabilidade);
 
-  // Effective desfav: manual input > PDF data
   const effDesfavNum = kpiDesfav
     ? parseInt(kpiDesfav) || 0
     : DASH(data.kpis.desfavorabilidade) ? 0 : parsePct(data.kpis.desfavorabilidade);
-
-  // Effective neutros: manual > auto-compute from fav+desfav > PDF data
   const effNeutrosNum = kpiNeutros
     ? parseInt(kpiNeutros) || 0
     : (kpiDesfav || !DASH(data.kpis.desfavorabilidade))
@@ -112,14 +101,8 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
   return (
     <>
       <StatusBar status={status} />
-      <div className={s.sectionTag}>{meta.section}</div>
-
-      <div className={s.toolbar}>
-        <div className={s.pillList}>
-          {pdfs.map((pdf, i) => (
-            <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
-          ))}
-        </div>
+      <div className={s.topHeader}>
+        <div className={s.sectionTag}>{meta.section}</div>
         <div className={s.btnGroup}>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onReset}>↺ Resetar</button>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
@@ -128,16 +111,14 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
           <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
         </div>
       </div>
-      <div className={s.toolbarSub}>
-      </div>
 
-      {/* ── Meta Favorabilidade ── */}
+      {/* ── KPI row ── */}
       {(() => {
-        const META    = 90;
-        const current = goalInput.trim() ? (parseFloat(goalInput.replace(',', '.')) || null) : null;
-        const fill    = current !== null ? Math.min((current / META) * 100, 100) : 0;
-        const gap     = current !== null ? Math.abs(META - current).toFixed(1).replace('.', ',') : null;
-        const ok      = current !== null && current >= META;
+        const META = 90;
+        const current = hasData ? favPct : null;
+        const fill = current === null ? 0 : Math.min((current / META) * 100, 100);
+        const gap = current === null ? null : Math.abs(META - current).toFixed(1).replace('.', ',');
+        const ok = current !== null && current >= META;
         return (
           <div className={s.goalRow}>
             <div className={s.goalBlock}>
@@ -147,18 +128,13 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
               </div>
               {current === null ? (
                 <div className={s.goalEmpty}>
-                  <span className={s.goalEmptyLabel}>% Favorabilidade atual</span>
-                  <div className={s.goalEmptyRow}>
-                    <input className={s.goalInputBig} type="text" placeholder="ex: 75" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
-                    <span className={s.goalEmptyUnit}>%</span>
-                  </div>
+                  <span className={s.goalEmptyLabel}>Favorabilidade não informada no PDF</span>
                 </div>
               ) : (
                 <div className={s.goalBody}>
                   <div className={s.goalLeft}>
                     <span className={`${s.goalBigNum} ${ok ? s.goalOk : s.goalAlert}`}>{current.toLocaleString('pt-BR')}%</span>
                     <span className={s.goalBigLabel}>Favorabilidade atual</span>
-                    <input className={s.goalInput} type="text" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
                   </div>
                   <div className={s.goalRight}>
                     <div className={s.goalBarWrap}>
@@ -179,7 +155,6 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
         );
       })()}
 
-      {/* ── KPI row ── */}
       <div className={s.kpiRow}>
         <div className={`${s.kpiBox} ${s.kpiTotal}`}>
           <div className={s.kpiVal}>{data.kpis.respostas}</div>
@@ -265,26 +240,48 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onRem
                 const isWorst    = d.name === data.worstDimensionName;
                 const effDesfav  = overrides[i]?.desfav ?? d.desfav;
                 const favN       = parsePct(d.fav);
+                const manualNeutro = overrides[i]?.neutros ?? '—';
+                const autoDesfav = DASH(d.desfav)
+                  && !overrides[i]?.desfav
+                  && !DASH(manualNeutro)
+                  && !DASH(d.fav)
+                  ? `${Math.max(0, 100 - favN - parsePct(manualNeutro))}%`
+                  : null;
                 const desfavN    = parsePct(effDesfav);
                 const neutro     = !DASH(d.fav) && !DASH(effDesfav)
                   ? `${Math.max(0, 100 - favN - desfavN)}%`
-                  : '—';
+                  : manualNeutro;
                 return (
                   <tr key={i} className={isWorst ? s.dimHighlight : ''}>
                     <td className={s.dimName}>
                       {isWorst ? <strong>{d.name} ⚠</strong> : d.name}
                     </td>
                     <td className={s.dimFav}>{d.fav}</td>
-                    <td className={s.dimNeutral}>{neutro}</td>
+                    <td className={s.dimNeutral}>
+                      {DASH(effDesfav) || autoDesfav
+                        ? <span className={s.dimInputWrap}>
+                            <input
+                              className={s.dimInput}
+                              value={pctDisplay(manualNeutro)}
+                              placeholder="—"
+                              style={{ width: `${Math.max(1, pctDisplay(manualNeutro).length || 1) * 0.7}em` }}
+                              onChange={e => onUiChange({ dimOverrides: { ...overrides, [i]: { ...overrides[i], neutros: pctStore(e.target.value) } } })}
+                            />
+                            {!DASH(manualNeutro) && <span className={s.dimInputPct}>%</span>}
+                          </span>
+                        : neutro}
+                    </td>
                     <td className={s.dimDesf}>
-                      {DASH(d.desfav)
+                      {autoDesfav
+                        ? autoDesfav
+                        : DASH(d.desfav)
                         ? <span className={s.dimInputWrap}>
                             <input
                               className={s.dimInput}
                               value={pctDisplay(effDesfav)}
                               placeholder="—"
                               style={{ width: `${Math.max(1, pctDisplay(effDesfav).length || 1) * 0.7}em` }}
-                              onChange={e => onUiChange({ dimOverrides: { ...overrides, [i]: { desfav: pctStore(e.target.value) } } })}
+                              onChange={e => onUiChange({ dimOverrides: { ...overrides, [i]: { ...overrides[i], desfav: pctStore(e.target.value) } } })}
                             />
                             {!DASH(effDesfav) && <span className={s.dimInputPct}>%</span>}
                           </span>

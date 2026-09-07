@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import type { TabMeta, PdfData, StatusMessage, PcdVaga, TabUiState, PcdHcData } from '../../types';
 import { StatusBar } from '../StatusBar/StatusBar';
-import { PdfPill } from '../PdfPill/PdfPill';
 import s from './PcdPanel.module.css';
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
-  onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
   onUiChange: (ui: Partial<TabUiState>) => void;
@@ -106,7 +104,7 @@ function shortName(fullName: string): string {
   return `${parts[0]} ${parts[lastIdx]}`;
 }
 
-export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
+export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
   const allVagas: PcdVaga[] = useMemo(
     () => pdfs.flatMap(p => p.pcdVagas ?? []),
     [pdfs],
@@ -190,7 +188,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
       items.push(`${dentroSlaFechadas.length} de ${fechadas.length} vaga(s) fechada(s) dentro do SLA de ${SLA_THRESHOLD} dias`);
     }
 
-    if (items.length === 0) items.push('Faça upload do PDF da planilha de acompanhamento para ver os destaques.');
+    if (items.length === 0) items.push('Faça upload do relatório geral de Positions do WFH para ver os destaques.');
     return items;
   }, [comPcd, fechadas, pctComPcd, abertas, hcData]);
 
@@ -234,7 +232,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
       if (worst.pct < 3) items.push(`Menor representação PCD: <strong>${worst.layer}</strong> com apenas ${worst.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% — priorizar vagas afirmativas nessa camada`);
     }
 
-    if (items.length === 0) items.push('Faça upload do PDF da planilha de acompanhamento para ver os pontos de atenção.');
+    if (items.length === 0) items.push('Faça upload do relatório geral de Positions do WFH para ver os pontos de atenção.');
     return items;
   }, [semPcd, outSla, maxSla, criticals, comPcd, fechadas, pctComPcd, abertas, vagas, hcData]);
 
@@ -285,13 +283,8 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
   return (
     <>
       <StatusBar status={status} />
-      <div className={s.sectionTag}>{meta.section}</div>
-      <div className={s.toolbar}>
-        <div className={s.pillList}>
-          {pdfs.map((pdf, i) => (
-            <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
-          ))}
-        </div>
+      <div className={s.topHeader}>
+        <div className={s.sectionTag}>{meta.section}</div>
         <div className={s.btnGroup}>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onReset}>↺ Resetar</button>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
@@ -303,14 +296,14 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
 
       {/* TA filter — individual badge OR team chips */}
       {isIndividual && taList[0] ? (
-        <div className={s.taFilter}>
-          <span className={s.taIndividualBadge}>
-            Análise Individual · {taList[0]}
-          </span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>TA responsável</span></div>
+          <span className={s.taIndividualBadge}>Análise individual · {taList[0]}</span>
         </div>
       ) : taList.length > 1 ? (
-        <div className={s.taFilter}>
-          <span className={s.taFilterLabel}>Filtrar por TA</span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>Filtrar por TA</span></div>
+          <div className={s.filterOptions}>
           <button
             className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
             onClick={() => setSelectedTa(null)}
@@ -327,6 +320,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
               {shortName(ta)}
             </button>
           ))}
+          </div>
         </div>
       ) : null}
 
@@ -415,7 +409,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePd
 
           {vagas.length === 0 && (
             <div className={s.emptyHint}>
-              Faça upload do PDF da planilha de acompanhamento de vagas para ver as análises.
+              Faça upload do CSV ou XLSX geral de Positions do WFH para ver as análises.
             </div>
           )}
 

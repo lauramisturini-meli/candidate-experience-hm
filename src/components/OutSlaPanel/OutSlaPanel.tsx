@@ -3,7 +3,6 @@ import { buildOutSlaInsights } from '../../lib/insights-outsla';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { SLA_THRESHOLD_DAYS, isClosedStage, isOutOfSla } from '../../lib/outsla-sla';
 import { StatusBar } from '../StatusBar/StatusBar';
-import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
 import s from './OutSlaPanel.module.css';
 
@@ -13,7 +12,6 @@ interface Props {
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
-  onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
 }
@@ -94,7 +92,7 @@ function statusLabel(status: string): string {
   return STATUS_LABEL[status] ?? toTitleCase(status);
 }
 
-export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
+export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, isShareLoading }: Props) {
   const rawRows = useMemo(
     () => pdfs.flatMap(p => p.outSlaPayload?.rows ?? []),
     [pdfs]
@@ -175,19 +173,8 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
   return (
     <>
       <StatusBar status={status} />
-      <div className={s.sectionTag}>{meta.section}</div>
-
-      <div className={s.toolbar}>
-        <div className={s.pillList}>
-          {isIndividual && taList[0] && (
-            <span className={s.taIndividualBadge}>
-              Análise Individual · {taList[0]}
-            </span>
-          )}
-          {pdfs.map((pdf, i) => (
-            <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
-          ))}
-        </div>
+      <div className={s.topHeader}>
+        <div className={s.sectionTag}>{meta.section}</div>
         <div className={s.btnGroup}>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onReset}>↺ Resetar</button>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
@@ -198,9 +185,15 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
       </div>
 
       {/* TA filter chips (team uploads with multiple TAs) */}
-      {!isIndividual && taList.length > 1 ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taFilterLabel}>Filtrar por TA</span>
+      {isIndividual && taList[0] ? (
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>TA responsável</span></div>
+          <span className={s.taIndividualBadge}>Análise individual · {taList[0]}</span>
+        </div>
+      ) : taList.length > 1 ? (
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}><span className={s.filterEyebrow}>Visualização</span><span className={s.filterTitle}>Filtrar por TA</span></div>
+          <div className={s.filterOptions}>
           <button
             className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
             onClick={() => setSelectedTa(null)}
@@ -217,6 +210,7 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
               {shortName(ta)}
             </button>
           ))}
+          </div>
         </div>
       ) : null}
 

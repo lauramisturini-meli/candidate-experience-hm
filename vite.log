@@ -1,0 +1,77 @@
+
+> ta-transportes-kpis@2.0.0 dev
+> vite --host 127.0.0.1
+
+
+  VITE v6.4.3  ready in 805 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+  ➜  press h + enter to show help
+18:10:18 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:10:18 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:11:57 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:11:57 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:12:56 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:12:57 [vite] (client) hmr update /src/components/SkeletonPanel/SkeletonPanel.tsx
+18:20:18 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+18:20:19 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+18:20:20 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+18:20:21 [vite] (client) hmr update /src/components/PcdPanel/PcdPanel.tsx
+18:20:22 [vite] (client) hmr update /src/components/OutSlaPanel/OutSlaPanel.tsx
+18:20:22 [vite] (client) hmr update /src/components/TabPanel/TabPanel.tsx
+18:20:23 [vite] (client) hmr update /src/App.tsx
+18:20:24 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+18:20:24 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+18:20:25 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+18:20:26 [vite] (client) hmr update /src/components/PcdPanel/PcdPanel.tsx
+18:20:26 [vite] (client) hmr update /src/components/OutSlaPanel/OutSlaPanel.tsx
+18:22:15 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+18:22:15 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+18:27:47 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+18:27:48 [vite] (client) hmr update /src/components/PcdPanel/PcdPanel.tsx
+18:27:48 [vite] (client) hmr update /src/components/OutSlaPanel/OutSlaPanel.tsx
+18:27:49 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+18:31:33 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+18:31:49 [vite] (client) hmr update /src/components/PcdPanel/PcdPanel.tsx
+18:32:05 [vite] (client) hmr update /src/components/OutSlaPanel/OutSlaPanel.tsx
+18:32:20 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+19:00:56 [vite] (client) hmr update /src/App.tsx, /src/components/OutSlaPanel/OutSlaPanel.tsx, /src/components/PcdPanel/PcdPanel.tsx, /src/components/TonhPanel/TonhPanel.tsx, /src/components/DataPanel/DataPanel.tsx, /src/components/InternalPanel/InternalPanel.tsx
+19:23:53 [vite] (client) hmr update /src/App.tsx, /src/components/OutSlaPanel/OutSlaPanel.tsx, /src/components/PcdPanel/PcdPanel.tsx, /src/components/TonhPanel/TonhPanel.tsx, /src/components/DataPanel/DataPanel.tsx, /src/components/InternalPanel/InternalPanel.tsx
+19:31:54 [vite] (client) hmr update /src/App.tsx
+19:44:21 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+19:56:18 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+19:56:30 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+19:56:43 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+19:56:50 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+19:57:01 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:11:38 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:11:39 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:13:08 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:13:10 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:13:58 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:14:00 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:15:26 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:16:22 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+20:17:23 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+21:53:26 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+22:01:15 [vite] (client) hmr update /src/components/TonhPanel/TonhPanel.tsx
+21:15:37 [vite] (client) hmr update /src/App.tsx
+21:15:58 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx, /src/components/DataPanel/DataPanel.tsx
+21:16:06 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:16:15 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:17:44 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:34:04 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:35:43 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:36:06 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:37:03 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:38:36 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:41:38 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:41:47 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:42:31 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:43:38 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:43:55 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:46:59 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:47:07 [vite] (client) hmr update /src/components/DataPanel/DataPanel.tsx
+21:50:06 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:50:25 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx
+21:50:37 [vite] (client) hmr update /src/components/InternalPanel/InternalPanel.tsx

@@ -7,7 +7,7 @@
   border-radius: 4px;
 }
 .toolbar {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-end; align-items: center;
   padding: 12px 32px 0 32px; gap: 12px;
 }
 .toolbarSub { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 32px 0 32px; }
@@ -88,7 +88,6 @@
   background: #fffbe6; border: 1px solid var(--brand-yellow);
   border-radius: 8px; padding: 7px 12px;
 }
-.pillList { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 70%; }
 .btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
 .uploadBtn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -104,6 +103,18 @@
 .uploadBtn.secondary { background: #fff; color: var(--brand-dark); border: 1px solid #ddd; }
 .uploadBtn.secondary:hover { background: #f7f7f7; border-color: #bbb; }
 .uploadBtn[disabled] { opacity: 0.5; cursor: wait; }
+
+.topHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 32px 0; }
+.topHeader .sectionTag { margin: 0; }
+.filterBar { display: flex; align-items: center; gap: 16px; margin: 14px 32px 0; padding: 9px 12px; border: 1px solid var(--divider); border-radius: 10px; background: var(--surface-alt); }
+.filterHeading { display: flex; flex: 0 0 auto; flex-direction: column; gap: 1px; min-width: 90px; }
+.filterEyebrow { color: var(--ink-muted); font-size: 8px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+.filterTitle { color: var(--brand-dark); font-size: 10.5px; font-weight: 800; }
+.filterOptions { display: flex; flex-wrap: wrap; gap: 5px; }
+.filterBar .taChip { min-height: 28px; background: #fff; border-color: #d9d9d9; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 750; }
+.filterBar .taChip:hover { background: #f2f2f2; border-color: #aaa; }
+.filterBar .taIndividualBadge { min-height: 28px; border-radius: 6px; padding: 4px 10px; font-size: 10px; }
+@media (max-width: 720px) { .topHeader { align-items: flex-start; flex-direction: column; gap: 10px; padding-left: 16px; padding-right: 16px; } .filterBar { align-items: flex-start; flex-direction: column; gap: 8px; margin-left: 16px; margin-right: 16px; } .btnGroup { flex-wrap: wrap; } }
 
 /* ── KPI scope note ──────────────────────────────────────────────────────── */
 .kpiScope {

@@ -33,7 +33,6 @@ export function App() {
           status={status[id]}
           onUpload={() => triggerUpload(id)}
           onReset={() => dispatch({ type: 'RESET_TAB', tabId: id })}
-          onRemovePdf={idx => dispatch({ type: 'REMOVE_PDF', tabId: id, index: idx })}
           onShare={copyShareableLink}
           isShareLoading={isShareLoading}
           onUiChange={ui => dispatch({ type: 'SET_UI', tabId: id, ui })}

@@ -4,15 +4,38 @@ import { canonicalizeTa, TEAM_TAS } from './ta-team';
 export function isHpHtmlReport(text: string): boolean {
   return (
     /Relat[oó]rio Semanal.*Hiring Plan/i.test(text) &&
-    /const A=\[/.test(text)
+    /(?:const|let|var)\s+A\s*=\s*\[/.test(text)
   );
 }
 
+/**
+ * The new Grid export is a navigation shell: it embeds the individual and Ops
+ * reports in iframes, but deliberately contains no vacancy data itself.
+ */
+export function getHpDashboardSource(text: string): string | null {
+  if (!/Dashboard\s+Unificado/i.test(text)) return null;
+
+  const iframe = text.match(
+    /<iframe\b[^>]*\btitle\s*=\s*["']Vagas\s+Individuais[^"']*["'][^>]*\bsrc\s*=\s*["']([^"']+)["']/i,
+  ) ?? text.match(
+    /<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*\btitle\s*=\s*["']Vagas\s+Individuais[^"']*["']/i,
+  );
+
+  const source = iframe?.[1] ?? '';
+  return /^https:\/\/grid\.adminml\.com\/d\/[A-Za-z0-9]+\/raw$/i.test(source)
+    ? source
+    : null;
+}
+
 function extractJsonArray(text: string, name: string): unknown[] {
-  const marker = `${name}=[`;
-  const start = text.indexOf(marker);
-  if (start === -1) return [];
-  const begin = start + marker.length - 1;
+  // Grid currently emits a single declaration (`const A=[...],CL=[...],P=[...],SB=[...]`).
+  // Pick the last matching assignment so similarly named variables inside the
+  // large inlined chart libraries cannot shadow the report data.
+  const assignment = new RegExp(`(?:^|[^A-Za-z0-9_$])${name}\\s*=\\s*\\[`, 'g');
+  const matches = [...text.matchAll(assignment)];
+  const match = matches[matches.length - 1];
+  if (!match || match.index == null) return [];
+  const begin = match.index + match[0].lastIndexOf('[');
   let i = begin;
   let depth = 0;
   let inStr = false;
@@ -138,9 +161,9 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   const P  = extractJsonArray(html, 'P')  as VagaPending[];
   const SB = extractJsonArray(html, 'SB') as VagaPending[];
 
-  console.log('[HP HTML] A:', A.length, 'CL:', CL.length, 'P:', P.length, 'SB:', SB.length);
-
-  const yearM = html.match(/atualiza[çc][aã]o[:\s]+\d{2}\/\d{2}\/(\d{4})/i);
+  const yearM = html.match(
+    /(?:atualiza[çc][aã]o\s*:?|atualizado\s+em)\s*\d{2}\/\d{2}\/(\d{4})/i,
+  );
   const year  = yearM ? yearM[1] : String(new Date().getFullYear());
 
   const total            = A.length + CL.length + P.length + SB.length;

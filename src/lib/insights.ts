@@ -1,4 +1,5 @@
 import { escapeHtml } from './utils';
+import { canonicalizeTa, TEAM_TAS } from './ta-team';
 import type { Comment, Dimension, HpPayload, HpLayerRow, HpSummary } from '../types';
 
 interface Theme {
@@ -367,13 +368,19 @@ export function buildInternalInsights(
   return { highs: highs.slice(0, 6), lows: lows.slice(0, 6), actions: actions.slice(0, 6) };
 }
 
-const TA_NAMES = [
-  'Beatriz', 'Bia', 'Maria Beatriz', 'Carolina', 'Carol', 'Carolina Zanotti',
-  'Cardoso', 'Laura', 'Laura Luize', 'Thais', 'Thaís', 'Thais Carvalho',
-  'Aline', 'Marianne', 'Katia', 'Kátia', 'Kitty', 'Bruna',
-  'Letícia Navarro', 'Leticia Navarro', 'Letícia', 'Leticia',
-  'Marianne Fernandes', 'Nádia', 'Nadia',
+// Full names and first names come from the same canonical list used by every
+// tab. The aliases below exist only for historical spellings in old comments.
+const LEGACY_TA_ALIASES = [
+  'Bia', 'Carol', 'Carolina Zanotti', 'Laura Luize', 'Thaís', 'Thais Andrade',
+  'Thais Carvalho', 'Aline', 'Aline Nagel', 'Kátia', 'Letícia Navarro',
+  'Leticia Navarro', 'Letícia', 'Marianne Ramos', 'Nádia',
 ];
+
+const TA_NAMES = Array.from(new Set([
+  ...TEAM_TAS,
+  ...TEAM_TAS.map(name => name.split(' ')[0]),
+  ...LEGACY_TA_ALIASES,
+]));
 
 const LOW_THEMES: Theme[] = [
   {
@@ -489,7 +496,8 @@ export function buildHighs(positives: Comment[], allComments: Comment[], opts?: 
     for (const ta of TA_NAMES) {
       const re = new RegExp('\\b' + ta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
       if (re.test(c.text)) {
-        const norm = ta
+        const canonical = canonicalizeTa(ta);
+        const norm = (TEAM_TAS.includes(canonical) ? canonical.split(' ')[0] : ta)
           .replace(/^Bia$/, 'Beatriz')
           .replace(/^Thaís$/, 'Thais')
           .replace(/^(Thais Andrade|Thais Carvalho)$/, 'Thais')

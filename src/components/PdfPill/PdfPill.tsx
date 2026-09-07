@@ -8,6 +8,26 @@ interface Props {
 }
 
 export function PdfPill({ pdf, index, onRemove }: Props) {
+  if (pdf.isTonhExit && pdf.tonhCases) {
+    return (
+      <span className={s.pill} title={pdf.fileName}>
+        <span className={s.name}>{pdf.fileName}</span>
+        <span className={s.n}>{pdf.tonhCases.length} caso(s) TO NH</span>
+        <button className={s.remove} onClick={() => onRemove(index)} title="Remover">×</button>
+      </span>
+    );
+  }
+
+  if (pdf.pcdVagas) {
+    return (
+      <span className={s.pill} title={pdf.fileName}>
+        <span className={s.name}>{pdf.fileName}</span>
+        <span className={s.n}>{pdf.pcdVagas.length} vaga(s) PCD</span>
+        <button className={s.remove} onClick={() => onRemove(index)} title="Remover">×</button>
+      </span>
+    );
+  }
+
   if (pdf.isOutSla) {
     const total = pdf.outSlaPayload?.rows.length ?? 0;
     return (

@@ -175,6 +175,9 @@ export interface TonhCase {
   acuerdos: string;
   fileName: string;
   ta?: string;
+  dataSaida?: string;
+  anoSaida?: number;
+  origem?: 'base' | 'exit-discussion';
 }
 
 export interface TonhMonthlyPoint {
@@ -203,6 +206,7 @@ export interface TonhLayerDashboard {
 export interface MergedView {
   periodLabel: string;
   kpis: Kpis;
+  commentCount: number;
   dimensions: Dimension[];
   worstDimensionName: string | null;
   detractorHtml: string;

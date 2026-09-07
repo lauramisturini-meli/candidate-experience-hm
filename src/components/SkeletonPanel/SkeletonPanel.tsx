@@ -9,59 +9,92 @@ interface Props {
   onUpload: () => void;
 }
 
-const HIDE_KPI_GRID: TabId[] = ['tonh', 'pcd', 'hpc', 'outsla'];
+const TAB_GUIDES: Record<TabId, { file: string; analysis: string; individual?: string }> = {
+  external: {
+    file: 'PDF do Qualtrics — External Candidate Experience.',
+    analysis: 'Favorabilidade, dimensões, comentários, highs, lows e ações.',
+    individual: 'Exporte o PDF com o filtro TA Owner aplicado; múltiplos PDFs podem ser consolidados.',
+  },
+  internal: {
+    file: 'PDF do Qualtrics — Internal Candidate Experience.',
+    analysis: 'Experiência no processo interno, dimensões críticas, comentários e plano de ação.',
+    individual: 'A análise segue o escopo e os filtros existentes no PDF exportado.',
+  },
+  hm: {
+    file: 'PDF do Qualtrics - Hiring Manager Experience.',
+    analysis: 'Percepção dos gestores, alinhamento de perfil, comunicação, agilidade e comentários.',
+    individual: 'A análise segue o escopo e os filtros existentes no PDF exportado.',
+  },
+  tonh: {
+    file: 'XLSX completo da Jornada do TA, CSV da aba-base ou PDFs de Exit Discussion. Base e PDF podem ser carregados juntos e se complementam sem duplicar o caso.',
+    analysis: 'Base: somente Data de saída = 2026 e Gerou TO NH? = SIM.\nPDF: somente casos confirmados no upload como saídas de 2026.',
+    individual: 'O arquivo geral mostra o time; selecione um TA nos filtros para a visão individual.',
+  },
+  pcd: {
+    file: 'CSV ou XLSX geral de Positions baixado do WFH.',
+    analysis: 'Vagas no nome de TAs de Transportes Brasil marcadas com tag PCD, pipeline, SLA e inclusão nas vagas concluídas.',
+    individual: 'O arquivo geral mostra o time; selecione um TA nos filtros para a visão individual.',
+  },
+  hpc: {
+    file: 'HTML de Vagas Individuais — Hiring Plan. Não use o arquivo Dashboard Unificado.',
+    analysis: 'Conclusão do plano, posições abertas/fechadas, SLA, pipeline, quarters e senioridade.',
+    individual: 'O relatório geral mostra o time; selecione um TA nos filtros para a visão individual.',
+  },
+  outsla: {
+    file: 'CSV ou XLSX geral de Positions baixado do WFH; planilhas individuais continuam aceitas.',
+    analysis: 'Posições do time acima de 75 dias, abertas ou concluídas, com etapa e motivo do atraso.',
+    individual: 'O arquivo geral mostra o time; selecione um TA nos filtros para a visão individual.',
+  },
+};
 
 export function SkeletonPanel({ tabId, meta, status, onUpload }: Props) {
-  const hideKpiGrid = HIDE_KPI_GRID.includes(tabId);
+  const guide = TAB_GUIDES[tabId];
 
   return (
     <>
       <StatusBar status={status} />
       <div className={s.sectionTag}>{meta.section}</div>
-      <div className={s.toolbar}>
-        <div />
-        <button className={s.uploadBtn} onClick={onUpload}>⬆ Adicionar arquivo</button>
-      </div>
-      <div className={s.hintRow}>
-        <span className={s.hint}>
-          {tabId === 'tonh'
-            ? <>Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.</>
-            : tabId === 'pcd'
-            ? 'Faça upload do relatório de vagas PCD para análise dos indicadores de inclusão do time.'
-            : tabId === 'hpc'
-            ? <>Faça upload do <strong>Relatório Semanal de Hiring Plan</strong> para análise dos indicadores de conclusão — SLA, pipeline e quarters são calculados automaticamente.</>
-            : tabId === 'outsla'
-            ? 'Faça upload do relatório de Out SLA para análise dos indicadores de tempo de oferta do time.'
-            : 'Faça upload de um ou mais PDFs do Qualtrics para preencher esta aba. Dimensões, Highs, Lows e Actions são gerados automaticamente.'
-          }
-        </span>
-        {tabId === 'external' && (
-          <span className={s.hintTA}>
-            Para análise individual por TA, exporte o PDF do Qualtrics com o filtro <strong>TA Owner</strong> aplicado — o indicador de análise individual aparece automaticamente.
-          </span>
-        )}
-        {tabId === 'tonh' && (
-          <span className={s.hintTA}>
-            Você pode fazer o upload de múltiplos PDFs para análises por senioridade, localidade, gestor e etc, ou subir individualmente por TA para análise individual.
-          </span>
-        )}
-        {(tabId === 'pcd' || tabId === 'hpc' || tabId === 'outsla') && (
-          <span className={s.hintTA}>
-            Análises individuais por TA podem ser feitas a partir dos filtros disponíveis após o upload.
-          </span>
-        )}
-      </div>
-      <div className={s.panel}>
-        <div className={s.icon}>⚙</div>
-        <div className={s.title}>{meta.section}</div>
-        {!hideKpiGrid && (
-          <div className={s.grid}>
-            <div className={s.kpi}><div className={s.val}>—</div><div className={s.label}>Respostas</div></div>
-            <div className={s.kpi}><div className={s.val}>—</div><div className={s.label}>Favorabilidade</div></div>
-            <div className={s.kpi}><div className={s.val}>—</div><div className={s.label}>Neutros</div></div>
-            <div className={s.kpi}><div className={s.val}>—</div><div className={s.label}>Desfavorabilidade</div></div>
+      <section className={s.guide} aria-labelledby={`guide-${tabId}`}>
+        <div className={s.guideHeading}>
+          <div>
+            <div className={s.guideEyebrow}>Primeiros passos</div>
+            <h2 className={s.guideTitle} id={`guide-${tabId}`}>Como usar esta aba</h2>
           </div>
-        )}
+          <p className={s.guideIntro}>Envie o arquivo indicado para gerar os indicadores e insights desta visão.</p>
+        </div>
+        <div className={`${s.guideGrid} ${guide.individual ? '' : s.guideGridTwo}`}>
+          <article className={s.guideItem}>
+            <div className={s.guideItemHeader}>
+              <span className={s.guideStep}>01</span>
+              <span className={s.guideLabel}>Arquivo para enviar</span>
+            </div>
+            <p>{guide.file}</p>
+          </article>
+          <article className={s.guideItem}>
+            <div className={s.guideItemHeader}>
+              <span className={s.guideStep}>02</span>
+              <span className={s.guideLabel}>O que será analisado</span>
+            </div>
+            <p>{guide.analysis}</p>
+          </article>
+          {guide.individual && (
+            <article className={s.guideItem}>
+              <div className={s.guideItemHeader}>
+                <span className={s.guideStep}>03</span>
+                <span className={s.guideLabel}>Visão individual</span>
+              </div>
+              <p>{guide.individual}</p>
+            </article>
+          )}
+        </div>
+      </section>
+      <div className={s.panel}>
+        <div className={s.emptyIcon} aria-hidden="true">↑</div>
+        <div className={s.emptyContent}>
+          <div className={s.emptyTitle}>Pronto para analisar {meta.section}</div>
+          <p>Adicione o arquivo indicado acima. Os indicadores e insights aparecerão aqui.</p>
+        </div>
+        <button className={s.emptyUploadBtn} onClick={onUpload}>Adicionar arquivo</button>
       </div>
       <div className={s.footer}>
         <div className={s.footerText}>{meta.section} · TA Transportes Brasil · Aguardando dados</div>

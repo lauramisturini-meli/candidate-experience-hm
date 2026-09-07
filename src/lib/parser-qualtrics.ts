@@ -366,6 +366,7 @@ export function parseQualtricsReport(fullText: string, pageTexts: string[]): Pdf
   }
   if (respostas === null) {
     const respPatterns = [
+      /(?:N[uú]mero|Quantidade)\s+de\s+Respostas[\s\S]{0,80}?(\d{1,6})/i,
       /Cantidad de\s*\n?\s*Respuestas[\s\S]*?\n\s*(\d{1,6})\s*\n/,
       /Cantidad de\s+Respuestas[\s\S]{0,200}?(\d{1,6})/,
       /Respuestas[\s\S]{0,80}?\n(\d{1,6})\b/,

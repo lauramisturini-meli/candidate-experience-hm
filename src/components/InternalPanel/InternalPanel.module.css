@@ -7,12 +7,11 @@
   border-radius: 4px;
 }
 .toolbar {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-end; align-items: center;
   padding: 12px 32px 0 32px; gap: 12px;
 }
 .toolbarSub { display: flex; padding: 4px 32px 0 32px; }
 .uploadHint { font-size: 11px; color: var(--ink-soft); }
-.pillList { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 70%; }
 .btnGroup { display: flex; gap: 6px; flex-wrap: nowrap; }
 .uploadBtn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -28,6 +27,10 @@
 .uploadBtn.secondary { background: #fff; color: var(--brand-dark); border: 1px solid #ddd; }
 .uploadBtn.secondary:hover { background: #f7f7f7; border-color: #bbb; }
 .uploadBtn[disabled] { opacity: 0.5; cursor: wait; }
+
+.topHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 32px 0; }
+.topHeader .sectionTag { margin: 0; }
+@media (max-width: 720px) { .topHeader { align-items: flex-start; flex-direction: column; gap: 10px; padding-left: 16px; padding-right: 16px; } .btnGroup { flex-wrap: wrap; } }
 
 /* ── Meta Favorabilidade block ───────────────────────────────────────────── */
 .goalRow    { padding: 12px 32px 0 32px; }

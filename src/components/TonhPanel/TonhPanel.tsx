@@ -1,8 +1,8 @@
 import { useMemo, useState, useCallback } from 'react';
-import { canonicalizeTa, TEAM_TAS, TONH_EXTRA_TAS } from '../../lib/ta-team';
+import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { buildTonhInsights } from '../../lib/insights-tonh';
+import { consolidateCurrentTeamTonhCases } from '../../lib/tonh-cases';
 import { StatusBar } from '../StatusBar/StatusBar';
-import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, TonhCase, TonhLayerDashboard, TabUiState } from '../../types';
 import s from './TonhPanel.module.css';
 
@@ -13,7 +13,6 @@ interface Props {
   status: StatusMessage | null | undefined;
   onUpload: () => void;
   onReset: () => void;
-  onRemovePdf: (idx: number) => void;
   onShare: () => void;
   isShareLoading: boolean;
   onUiChange: (ui: Partial<TabUiState>) => void;
@@ -33,6 +32,17 @@ function shortNameTN(fullName: string): string {
   let lastIdx = parts.length - 1;
   while (lastIdx > 0 && PREPS_TONH.has(parts[lastIdx].toLowerCase())) lastIdx--;
   return `${parts[0]} ${parts[lastIdx]}`;
+}
+
+type ExitDiscussionState = 'analyzed' | 'pending' | 'scheduled';
+
+function exitDiscussionState(caseItem: TonhCase): ExitDiscussionState {
+  // The tracking workbook stores the operational status in the macro conclusion.
+  // A case only becomes analytical input after its Exit Discussion is completed.
+  const status = caseItem.conclusoes.trim().toLowerCase();
+  if (/^pendente\s+exit\s+discussion/.test(status)) return 'pending';
+  if (/^agendad[oa]\b/.test(status)) return 'scheduled';
+  return 'analyzed';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -227,7 +237,15 @@ function cleanArea(area: string): string {
     .trim();
 }
 
-function CaseAnalysis({ cases }: { cases: TonhCase[] }) {
+function CaseAnalysis({
+  cases,
+  pendingCases,
+  scheduledCases,
+}: {
+  cases: TonhCase[];
+  pendingCases: TonhCase[];
+  scheduledCases: TonhCase[];
+}) {
   const total = cases.length;
   const withFlags = cases.filter(c => hasRealFlag(c.flags)).length;
   const casesWithTime = cases.filter(c => c.tiempoEnRolMeses !== null);
@@ -302,6 +320,24 @@ function CaseAnalysis({ cases }: { cases: TonhCase[] }) {
           <span className={s.summaryVal}>{total}</span>
           <span className={s.summaryLbl}>casos analisados</span>
         </div>
+        {pendingCases.length > 0 && (
+          <div
+            className={`${s.summaryChip} ${s.summaryChipPending}`}
+            title={pendingCases.map(caseItem => `${caseItem.nome} · ${shortNameTN(caseItem.ta ?? '')}`).join('\n')}
+          >
+            <span className={s.summaryVal}>{pendingCases.length}</span>
+            <span className={s.summaryLbl}>exit discussions pendentes</span>
+          </div>
+        )}
+        {scheduledCases.length > 0 && (
+          <div
+            className={`${s.summaryChip} ${s.summaryChipScheduled}`}
+            title={scheduledCases.map(caseItem => `${caseItem.nome} · ${shortNameTN(caseItem.ta ?? '')}`).join('\n')}
+          >
+            <span className={s.summaryVal}>{scheduledCases.length}</span>
+            <span className={s.summaryLbl}>exit discussions agendadas</span>
+          </div>
+        )}
         {withFlags > 0 && (
           <div className={`${s.summaryChip} ${s.summaryChipDanger}`}>
             <span className={s.summaryVal}>{withFlags}</span>
@@ -443,33 +479,43 @@ function ToGoalBlock({ label, meta, value, onChange }: { label: string; meta: nu
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading, onUiChange }: Props) {
-  const cases = useMemo(
-    () => pdfs.flatMap(p => p.tonhCases ?? []),
+export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
+  const teamCases = useMemo(
+    () => consolidateCurrentTeamTonhCases(
+      pdfs.flatMap(p => p.tonhCases ?? []).filter(item => item.anoSaida === 2026),
+    ),
     [pdfs],
   );
 
   // ── TA filter ────────────────────────────────────────────────────────────────
   const taList = useMemo(() => {
     const set = new Set<string>();
-    cases.forEach(c => { if (c.ta) set.add(canonicalizeTa(c.ta)); });
+    teamCases.forEach(c => { if (c.ta) set.add(canonicalizeTa(c.ta)); });
     return Array.from(set)
-      .filter(name => {
-        if (TEAM_TAS.includes(name)) return true;
-        const first = name.split(' ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        return TONH_EXTRA_TAS.some(e => e.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') === first);
-      })
+      .filter(name => TEAM_TAS.includes(name))
       .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  }, [cases]);
+  }, [teamCases]);
 
   const isIndividualTA = taList.length === 1;
   const [selectedTa, setSelectedTa] = useState<string | null>(null);
   const activeTa = selectedTa ?? (isIndividualTA ? taList[0] : null);
   const toggleTa = useCallback((ta: string) => setSelectedTa(prev => prev === ta ? null : ta), []);
 
-  const filteredCases = useMemo(
-    () => activeTa ? cases.filter(c => canonicalizeTa(c.ta ?? '') === activeTa) : cases,
-    [cases, activeTa],
+  const filteredTeamCases = useMemo(
+    () => activeTa ? teamCases.filter(c => canonicalizeTa(c.ta ?? '') === activeTa) : teamCases,
+    [teamCases, activeTa],
+  );
+  const analyzedCases = useMemo(
+    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'analyzed'),
+    [filteredTeamCases],
+  );
+  const pendingCases = useMemo(
+    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'pending'),
+    [filteredTeamCases],
+  );
+  const scheduledCases = useMemo(
+    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'scheduled'),
+    [filteredTeamCases],
   );
 
   const tlDashboard = useMemo(
@@ -483,8 +529,8 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
   );
 
   const insights = useMemo(
-    () => buildTonhInsights(filteredCases, tlDashboard, outrosDashboard),
-    [filteredCases, tlDashboard, outrosDashboard],
+    () => buildTonhInsights(analyzedCases, tlDashboard, outrosDashboard),
+    [analyzedCases, tlDashboard, outrosDashboard],
   );
 
   const hasDashboard = tlDashboard !== undefined || outrosDashboard !== undefined;
@@ -492,14 +538,8 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
   return (
     <>
       <StatusBar status={status} />
-      <div className={s.sectionTag}>{meta.section}</div>
-
-      <div className={s.toolbar}>
-        <div className={s.pillList}>
-          {pdfs.map((pdf, i) => (
-            <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
-          ))}
-        </div>
+      <div className={s.topHeader}>
+        <div className={s.sectionTag}>{meta.section}</div>
         <div className={s.btnGroup}>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onReset}>↺ Resetar</button>
           <button className={`${s.uploadBtn} ${s.secondary}`} onClick={onShare} disabled={isShareLoading}>
@@ -509,45 +549,39 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
         </div>
       </div>
       {isIndividualTA && taList[0] ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taIndividualBadge}>
-            Análise Individual · {toTitleCaseTN(taList[0])}
-          </span>
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}>
+            <span className={s.filterEyebrow}>Visualização</span>
+            <span className={s.filterTitle}>TA responsável</span>
+          </div>
+          <span className={s.taIndividualBadge}>Análise individual · {toTitleCaseTN(taList[0])}</span>
         </div>
       ) : taList.length > 1 ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taFilterLabel}>Filtrar por TA</span>
-          <button
-            className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
-            onClick={() => setSelectedTa(null)}
-          >
-            Todos
-          </button>
-          {taList.map(ta => (
+        <div className={s.filterBar}>
+          <div className={s.filterHeading}>
+            <span className={s.filterEyebrow}>Visualização</span>
+            <span className={s.filterTitle}>Filtrar por TA</span>
+          </div>
+          <div className={s.filterOptions}>
             <button
-              key={ta}
-              className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
-              onClick={() => toggleTa(ta)}
-              title={toTitleCaseTN(ta)}
+              className={`${s.taChip} ${activeTa === null ? s.taChipActive : ''}`}
+              onClick={() => setSelectedTa(null)}
             >
-              {shortNameTN(ta)}
+              Todos
             </button>
-          ))}
+            {taList.map(ta => (
+              <button
+                key={ta}
+                className={`${s.taChip} ${activeTa === ta ? s.taChipActive : ''}`}
+                onClick={() => toggleTa(ta)}
+                title={toTitleCaseTN(ta)}
+              >
+                {shortNameTN(ta)}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className={s.toolbarSub} />
-      )}
-
-      <div className={s.hintRow}>
-        <span className={s.hintText}>
-          Faça upload do PDF de <strong>Exit Discussion New Hires</strong> para análise dos casos de saída — motivos, flags, tempo no cargo e learnings são extraídos automaticamente.
-        </span>
-        {cases.length === 0 && (
-          <span className={s.hintTextSub}>
-            Você pode fazer o upload de múltiplos PDFs para consolidar casos do time, ou subir individualmente por TA para análise individual.
-          </span>
-        )}
-      </div>
+      ) : null}
 
       {/* ── Metas de TO NH ── */}
       <div className={s.toGoalRow}>
@@ -569,17 +603,21 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onRemoveP
       {/* ── Main two-column area ── */}
       <div className={s.main}>
         <div className={s.colLeft}>
-          {filteredCases.length > 0 ? (
+          {analyzedCases.length > 0 ? (
             <>
               <div className={s.colTitle}>
-                Análise · Exit Discussions <span className={s.colCount}>{filteredCases.length}</span>
+                Análise · Exit Discussions <span className={s.colCount}>{analyzedCases.length}</span>
                 {activeTa && <span className={s.taActiveTag}>· {shortNameTN(activeTa)}</span>}
               </div>
-              <CaseAnalysis cases={filteredCases} />
+              <CaseAnalysis
+                cases={analyzedCases}
+                pendingCases={pendingCases}
+                scheduledCases={scheduledCases}
+              />
             </>
           ) : (
             <div className={s.emptyHint}>
-              Nenhum PDF de exit discussion carregado ainda.
+              Nenhum caso de TO NH encontrado no arquivo carregado.
             </div>
           )}
         </div>

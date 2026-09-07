@@ -1,30 +1,31 @@
-// Canonical TA team list — source of truth for display names in filter chips.
-// Used to normalize PDF-extracted names (which may be ALL_CAPS, abbreviated, or
-// contain outdated last names) back to the correct person.
+// Canonical TA team list — single source of truth across every dashboard tab,
+// filter and insight. Used to normalize report-extracted names (which may be
+// ALL_CAPS, abbreviated, or contain outdated last names) back to the person.
 export const TEAM_TAS: string[] = [
   'Beatriz Amorim da Silva',
   'Bruna de Oliveira Tavares',
+  'Bruna Mercedes dos Santos',
   'Cardoso Bitencourt Xavier Junior',
   'Carolina de Oliveira Zanotti David',
   'Edneia Pereira da Silva',
   'Elaine Beltrani',
+  'Fabio Aparecido dos Santos',
   'Gabriela Nascimento',
+  'Isabella Nogueira Simas',
   'Katia Silene Ferreira Alves',
   'Kitty Borborema',
-  'Larici Santos',
   'Laura Misturini',
   'Leticia Navarro Silva Marcon',
   'Marcela Moura',
   'Maria Beatriz Marques Guariglia',
   'Marianne Fernandes',
   'Nadia Aline Miranda',
+  'Neucielle Faria',
+  'Rafaela Bortolotti Moris',
   'Samantha Oliveira',
   'Thais Helena Carvalho dos Santos',
   'Thamires Sousa',
 ];
-
-// Extra TAs recognized only in the TONH tab (not part of the main TA team).
-export const TONH_EXTRA_TAS: string[] = ['Samara', 'Neucielle'];
 
 const PREPS = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di', 'del']);
 
