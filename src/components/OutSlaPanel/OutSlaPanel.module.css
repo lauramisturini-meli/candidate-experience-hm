@@ -33,41 +33,46 @@
 }
 .taChipActive:hover { background: #333; }
 
-/* ── Per-TA summary table ────────────────────────────────────────────────── */
-.taTable { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+/* ── Per-TA summary table ─────────────────────────────────────────────────
+   Real <table> — the browser aligns header/body columns natively, instead of
+   us hand-matching grid-template-columns pixel widths across separate grids. */
+.taTable {
+  width: 100%; border-collapse: separate; border-spacing: 0 4px;
+  margin-top: 4px;
+}
 
-.taTableHeader {
-  display: grid; grid-template-columns: 1fr 36px 48px 1fr;
-  gap: 8px; padding: 0 6px;
+.taTable thead th {
   font-size: 9px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.6px; color: var(--ink-soft);
+  padding: 0 10px 4px 10px; white-space: nowrap;
 }
+.thTa    { text-align: left; }
+.thNum   { text-align: right; }
+.thStage { text-align: left; }
 
-.taTableRow {
-  display: grid; grid-template-columns: 1fr 36px 48px 1fr;
-  align-items: center; gap: 8px;
-  padding: 7px 6px; border-radius: 8px;
-  background: #f7f7f7; border: 1px solid #eee;
-  cursor: pointer; transition: background 0.12s, border-color 0.12s;
+.taTable tbody tr { cursor: pointer; }
+.taTable tbody td {
+  background: #f7f7f7; border-top: 1px solid #eee; border-bottom: 1px solid #eee;
+  padding: 8px 10px; transition: background 0.12s, border-color 0.12s;
 }
-.taTableRow:hover { background: #f0f0f0; border-color: #ccc; }
-.taTableRowActive {
+.taTable tbody td:first-child {
+  border-left: 1px solid #eee;
+  border-top-left-radius: 8px; border-bottom-left-radius: 8px;
+}
+.taTable tbody td:last-child {
+  border-right: 1px solid #eee;
+  border-top-right-radius: 8px; border-bottom-right-radius: 8px;
+}
+.taTable tbody tr:hover td { background: #f0f0f0; border-color: #ccc; }
+
+.taTable tbody tr.taTableRowActive td {
   background: #fffbe6; border-color: var(--brand-yellow);
-  outline: 1.5px solid var(--brand-yellow);
 }
 
-.taTableName {
-  font-size: 11px; font-weight: 700; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.taTableStat {
-  font-size: 11px; font-weight: 800; color: var(--ink); text-align: right;
-}
-.taStatAlert { color: var(--danger); }
-.taTableStage {
-  font-size: 10px; color: var(--ink-soft);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.taTableName  { font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.taTableStat  { font-size: 11px; font-weight: 800; color: var(--ink); text-align: right; white-space: nowrap; }
+.taStatAlert  { color: var(--danger); }
+.taTableStage { font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
 
 /* ── Individual analysis badge ───────────────────────────────────────────── */
 .taIndividualBadge {
@@ -75,9 +80,6 @@
   background: var(--brand-dark); color: var(--brand-yellow);
   font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
   border-radius: 20px; padding: 4px 14px;
-}
-.taIndividualBadge::before {
-  content: "▸"; font-size: 10px;
 }
 
 /* ── Active TA tag (right column) ────────────────────────────────────────── */
@@ -103,6 +105,12 @@
 .uploadBtn.secondary:hover { background: #f7f7f7; border-color: #bbb; }
 .uploadBtn[disabled] { opacity: 0.5; cursor: wait; }
 
+/* ── KPI scope note ──────────────────────────────────────────────────────── */
+.kpiScope {
+  font-size: 10.5px; color: var(--ink-soft);
+  padding: 10px 32px 0 32px;
+}
+
 /* ── KPI row ─────────────────────────────────────────────────────────────── */
 .kpiRow {
   display: grid; grid-template-columns: repeat(4, 1fr);
@@ -114,16 +122,12 @@
   transition: box-shadow 0.15s;
 }
 .kpiBox:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.kpiVal   { font-size: 32px; font-weight: 900; line-height: 1.05; }
+.kpiVal   { font-size: 32px; font-weight: 900; line-height: 1.05; color: var(--ink); }
 .kpiLabel { font-size: 10px; color: var(--ink-soft); margin-top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
 .kpiTotal  { border-left: 3px solid var(--danger); }
-.kpiTotal .kpiVal  { color: var(--danger); }
 .kpiAvg    { border-left: 3px solid #e65100; }
-.kpiAvg .kpiVal    { color: #e65100; }
-.kpiMax    { border-left: 3px solid #b71c1c; }
-.kpiMax .kpiVal    { color: #b71c1c; }
-.kpiReason { border-left: 3px solid var(--brand-yellow); }
-.kpiReason .kpiVal { color: var(--brand-dark); }
+.kpiOpen   { border-left: 3px solid var(--brand-yellow); }
+.kpiClosed { border-left: 3px solid var(--success); }
 
 /* ── Main two-column layout ─────────────────────────────────────────────── */
 .main {
@@ -171,6 +175,7 @@
 }
 .bCount { font-size: 11px; font-weight: 800; color: var(--ink); text-align: right; }
 .bPct   { font-size: 10px; color: var(--ink-muted); text-align: right; }
+.bNote  { font-size: 10px; color: var(--ink-muted); font-style: italic; margin-top: 2px; }
 
 /* Bar colors — stages */
 .barHM          { background: #e65100; }

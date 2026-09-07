@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { buildOutSlaInsights } from '../../lib/insights-outsla';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
+import { SLA_THRESHOLD_DAYS, isClosedStage, isOutOfSla } from '../../lib/outsla-sla';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { PdfPill } from '../PdfPill/PdfPill';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
@@ -83,56 +84,91 @@ const REASON_COLOR: Record<string, string> = {
   'Background check rejected':  s.barReasonBgc,
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  'on going': 'Em andamento',
+  'done':     'Concluída',
+  'stand by': 'Stand by',
+};
+
+function statusLabel(status: string): string {
+  return STATUS_LABEL[status] ?? toTitleCase(status);
+}
+
 export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf, onShare, isShareLoading }: Props) {
-  const allRows = useMemo(
+  const rawRows = useMemo(
     () => pdfs.flatMap(p => p.outSlaPayload?.rows ?? []),
     [pdfs]
   );
+  // Every vaga past the SLA threshold — open, stand by, or already closed.
+  const slaRows = useMemo(() => rawRows.filter(r => isOutOfSla(r.timeToOffer)), [rawRows]);
 
   // ── TA filter (canonical names) ────────────────────────────────────────────
   const taList = useMemo(() => {
     const set = new Set<string>();
-    allRows.forEach(r => { if (r.ta) set.add(canonicalizeTa(r.ta)); });
+    slaRows.forEach(r => { if (r.ta) set.add(canonicalizeTa(r.ta)); });
     return Array.from(set)
       .filter(name => TEAM_TAS.includes(name))
       .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  }, [allRows]);
+  }, [slaRows]);
 
   const isIndividual = taList.length === 1;
   const [selectedTa, setSelectedTa] = useState<string | null>(null);
   const activeTa = selectedTa ?? (isIndividual ? taList[0] : null);
 
   const rows = useMemo(
-    () => activeTa ? allRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : allRows,
-    [allRows, activeTa]
+    () => activeTa ? slaRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : slaRows,
+    [slaRows, activeTa]
   );
+  const openRows   = useMemo(() => rows.filter(r => !isClosedStage(r.stage)), [rows]);
+  const closedRows = useMemo(() => rows.filter(r =>  isClosedStage(r.stage)), [rows]);
 
-  // ── Per-TA summary (always uses allRows, not filtered) ─────────────────────
+  // ── Per-TA summary (always uses the full sla cohort, not filtered by selection) ───────────
   const perTaStats = useMemo(() => {
     return taList.map(ta => {
-      const taRows = allRows.filter(r => r.ta && canonicalizeTa(r.ta) === ta);
-      const n      = taRows.length;
-      const avg    = n ? Math.round(taRows.reduce((acc, r) => acc + r.timeToOffer, 0) / n) : 0;
-      const stageCounts = taRows.reduce<Record<string, number>>((acc, r) => {
+      const taRows       = slaRows.filter(r => r.ta && canonicalizeTa(r.ta) === ta);
+      const taOpenRows   = taRows.filter(r => !isClosedStage(r.stage));
+      const n            = taRows.length;
+      const avg          = n ? Math.round(taRows.reduce((acc, r) => acc + r.timeToOffer, 0) / n) : 0;
+      const stageCounts = taOpenRows.reduce<Record<string, number>>((acc, r) => {
         acc[r.stage] = (acc[r.stage] ?? 0) + 1;
         return acc;
       }, {});
-      const topStage = Object.entries(stageCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
-      return { ta, n, avg, topStage };
+      const topStage = Object.entries(stageCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+        ?? (n > 0 ? 'Todas concluídas' : '—');
+      return { ta, n, openCount: taOpenRows.length, avg, topStage };
     });
-  }, [taList, allRows]);
+  }, [taList, slaRows]);
 
   // ── Stats from filtered rows ───────────────────────────────────────────────
   const insights = useMemo(() => buildOutSlaInsights(rows), [rows]);
 
   const total = rows.length;
   const avg   = total ? Math.round(rows.reduce((acc, r) => acc + r.timeToOffer, 0) / total) : 0;
-  const max   = total ? Math.max(...rows.map(r => r.timeToOffer)) : 0;
 
   const byStage     = useMemo(() => sortedEntries(count(rows, 'stage')),    [rows]);
   const byReason    = useMemo(() => sortedEntries(count(rows.map(r => ({ ...r, offTimeReason: r.offTimeReason || 'Sem motivo' })) as OutSlaRow[], 'offTimeReason')), [rows]);
   const bySeniority = useMemo(() => sortedEntries(count(rows, 'seniority')), [rows]);
   const byOrigin    = useMemo(() => sortedEntries(count(rows, 'origin')),    [rows]);
+
+  // Raw `status` column mix for the sla cohort in view — cross-checks against the stage-based
+  // open/closed KPIs above. Only shown when it mixes values (a mismatch here, e.g. "done" with an
+  // active stage, usually means the status column was filled in wrong when the sheet was compiled).
+  const byStatus = useMemo(() => sortedEntries(
+    rows.reduce<Record<string, number>>((acc, r) => {
+      const val = r.status || 'on going';
+      acc[val] = (acc[val] ?? 0) + 1;
+      return acc;
+    }, {})
+  ), [rows]);
+  const showStatusBreakdown = byStatus.length > 1;
+
+  // How many vagas in the raw upload (for the active TA, if filtered) never crossed the SLA
+  // threshold at all — shown so the KPI cards' scope against the full file is never a mystery.
+  const rawCountInView = useMemo(
+    () => (activeTa ? rawRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : rawRows).length,
+    [rawRows, activeTa]
+  );
+  const withinSlaCount = rawCountInView - total;
 
   const periodLabel = pdfs[0]?.periodLabel ?? 'Out SLA';
 
@@ -143,6 +179,11 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
 
       <div className={s.toolbar}>
         <div className={s.pillList}>
+          {isIndividual && taList[0] && (
+            <span className={s.taIndividualBadge}>
+              Análise Individual · {taList[0]}
+            </span>
+          )}
           {pdfs.map((pdf, i) => (
             <PdfPill key={i} pdf={pdf} index={i} onRemove={onRemovePdf} />
           ))}
@@ -156,14 +197,8 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
         </div>
       </div>
 
-      {/* TA filter — individual badge OR team chips */}
-      {isIndividual && taList[0] ? (
-        <div className={s.toolbarSub}>
-          <span className={s.taIndividualBadge}>
-            Análise Individual · {taList[0]}
-          </span>
-        </div>
-      ) : taList.length > 1 ? (
+      {/* TA filter chips (team uploads with multiple TAs) */}
+      {!isIndividual && taList.length > 1 ? (
         <div className={s.toolbarSub}>
           <span className={s.taFilterLabel}>Filtrar por TA</span>
           <button
@@ -186,22 +221,27 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
       ) : null}
 
       {/* KPI row */}
+      <div className={s.kpiScope}>
+        <strong>{total}</strong> vaga(s) passaram de <strong>{SLA_THRESHOLD_DAYS} dias</strong> (Out SLA)
+        {' '}de um total de <strong>{rawCountInView}</strong> na planilha
+        {withinSlaCount > 0 ? <> ({withinSlaCount} dentro do SLA, não contam aqui)</> : null}
+      </div>
       <div className={s.kpiRow}>
         <div className={`${s.kpiBox} ${s.kpiTotal}`}>
           <div className={s.kpiVal}>{total}</div>
-          <div className={s.kpiLabel}>Total Out SLA{activeTa && !isIndividual ? ' (filtrado)' : ''}</div>
+          <div className={s.kpiLabel}>Vagas Out SLA (&gt;{SLA_THRESHOLD_DAYS}d){activeTa && !isIndividual ? ' (filtrado)' : ''}</div>
+        </div>
+        <div className={`${s.kpiBox} ${s.kpiOpen}`}>
+          <div className={s.kpiVal}>{openRows.length}</div>
+          <div className={s.kpiLabel}>Em Andamento / Stand By</div>
+        </div>
+        <div className={`${s.kpiBox} ${s.kpiClosed}`}>
+          <div className={s.kpiVal}>{closedRows.length}</div>
+          <div className={s.kpiLabel}>Concluídas (Offer Aceita)</div>
         </div>
         <div className={`${s.kpiBox} ${s.kpiAvg}`}>
           <div className={s.kpiVal}>{avg}</div>
-          <div className={s.kpiLabel}>Média de Dias</div>
-        </div>
-        <div className={`${s.kpiBox} ${s.kpiMax}`}>
-          <div className={s.kpiVal}>{max}</div>
-          <div className={s.kpiLabel}>Maior SLA (dias)</div>
-        </div>
-        <div className={`${s.kpiBox} ${s.kpiReason}`}>
-          <div className={s.kpiVal}>{rows.filter(r => r.offTimeReason).length}</div>
-          <div className={s.kpiLabel}>Com Motivo Registrado</div>
+          <div className={s.kpiLabel}>Média de Dias (dos {total} Out SLA)</div>
         </div>
       </div>
 
@@ -213,26 +253,45 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onRemovePdf
           {perTaStats.length > 0 && (
             <div className={s.breakdownSection}>
               <div className={s.breakdownTitle}>Por TA</div>
-              <div className={s.taTable}>
-                <div className={s.taTableHeader}>
-                  <span>TA</span>
-                  <span>Vagas</span>
-                  <span>Média</span>
-                  <span>Etapa Principal</span>
-                </div>
-                {perTaStats.map(({ ta, n, avg: taAvg, topStage }) => (
-                  <div
-                    key={ta}
-                    className={`${s.taTableRow} ${selectedTa === ta ? s.taTableRowActive : ''}`}
-                    onClick={() => setSelectedTa(selectedTa === ta ? null : ta)}
-                    title={toTitleCase(ta)}
-                  >
-                    <span className={s.taTableName}>{shortName(ta)}</span>
-                    <span className={s.taTableStat}>{n}</span>
-                    <span className={`${s.taTableStat} ${taAvg >= 90 ? s.taStatAlert : ''}`}>{taAvg}d</span>
-                    <span className={s.taTableStage}>{topStage}</span>
-                  </div>
-                ))}
+              <table className={s.taTable}>
+                <thead>
+                  <tr>
+                    <th className={s.thTa}>TA</th>
+                    <th className={s.thNum}>Out SLA</th>
+                    <th className={s.thNum}>Abertas</th>
+                    <th className={s.thNum}>Média</th>
+                    <th className={s.thStage}>Etapa da Aberta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {perTaStats.map(({ ta, n, openCount, avg: taAvg, topStage }) => (
+                    <tr
+                      key={ta}
+                      className={selectedTa === ta ? s.taTableRowActive : ''}
+                      onClick={() => setSelectedTa(selectedTa === ta ? null : ta)}
+                      title={toTitleCase(ta)}
+                    >
+                      <td className={s.taTableName}>{shortName(ta)}</td>
+                      <td className={s.taTableStat}>{n}</td>
+                      <td className={`${s.taTableStat} ${openCount > 0 ? s.taStatAlert : ''}`}>{openCount}</td>
+                      <td className={`${s.taTableStat} ${taAvg >= 90 ? s.taStatAlert : ''}`}>{taAvg}d</td>
+                      <td className={s.taTableStage}>{topStage}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {showStatusBreakdown && (
+            <div className={s.breakdownSection}>
+              <div className={s.breakdownTitle}>Por Status (coluna "status" da planilha)</div>
+              {byStatus.map(([label, val]) => (
+                <BreakdownRow key={label} label={statusLabel(label)} value={val} total={total}
+                  colorClass={label === 'on going' ? s.barNew : s.barDefault} />
+              ))}
+              <div className={s.bNote}>
+                Cruze com "Em Andamento/Stand By" e "Concluídas" acima — divergência aqui costuma indicar erro de preenchimento na planilha
               </div>
             </div>
           )}

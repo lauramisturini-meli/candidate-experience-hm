@@ -36,12 +36,21 @@ function extractJsonArray(text: string, name: string): unknown[] {
   return [];
 }
 
-type SenGroup = 'TLs' | 'Analistas & Sups' | 'Manager';
+type SenGroup =
+  | 'TLs' | 'TLs Senior' | 'Supervisão' | 'Analista Semi Senior' | 'Analista'
+  | 'Analista Senior' | 'Assistente' | 'Manager' | 'Coordenador' | 'Specialist';
 
 function senGroup(seniority: string): SenGroup | null {
-  if (/team leader|sr team leader/i.test(seniority)) return 'TLs';
+  if (/sr\.?\s*team leader/i.test(seniority)) return 'TLs Senior';
+  if (/team leader/i.test(seniority)) return 'TLs';
   if (/gerente/i.test(seniority)) return 'Manager';
-  if (/analista|supervisor|asistente|coordinator|specialist/i.test(seniority)) return 'Analistas & Sups';
+  if (/supervisor/i.test(seniority)) return 'Supervisão';
+  if (/analista\s+semi\s+s[eê]nior/i.test(seniority)) return 'Analista Semi Senior';
+  if (/analista\s+s[eê]nior/i.test(seniority)) return 'Analista Senior';
+  if (/analista/i.test(seniority)) return 'Analista';
+  if (/as?sistente/i.test(seniority)) return 'Assistente';
+  if (/coorden|coordin/i.test(seniority)) return 'Coordenador';
+  if (/specialist/i.test(seniority)) return 'Specialist';
   return null;
 }
 
@@ -83,14 +92,14 @@ function buildInsights(
     highs.push(`<strong>${porcentajeAvance.toFixed(1)}% de avanço no HP</strong> — acima do ritmo esperado para o período (${expectedPct.toFixed(0)}%)`);
   } else {
     lows.push(`<strong>${porcentajeAvance.toFixed(1)}% de avanço no HP</strong> — abaixo do ritmo esperado (${expectedPct.toFixed(0)}% esperado para o período)`);
-    actions.push(`Revisar ritmo mensal de fechamentos — com ${porcentajeAvance.toFixed(1)}% em ~6 meses, calcular quantos fechamentos semanais são necessários para fechar o ano no plano`);
+    actions.push(`<strong>Revisar ritmo mensal de fechamentos</strong> — com ${porcentajeAvance.toFixed(1)}% em ~6 meses, calcular quantos fechamentos semanais são necessários para fechar o ano no plano`);
   }
 
   // Sin activar
   const sinActivarPct = pct(P.length, total);
   if (sinActivarPct > 15) {
     lows.push(`<strong>${P.length} vagas (${sinActivarPct}% do total) ainda não ativadas</strong> — principal gargalo do pipeline`);
-    actions.push(`Priorizar ativação das ${P.length} vagas pendentes — vagas sem início consomem headcount planejado sem gerar fechamentos`);
+    actions.push(`<strong>Priorizar ativação das ${P.length} vagas pendentes</strong> — vagas sem início consomem headcount planejado sem gerar fechamentos`);
   }
 
   // SLA ativas
@@ -98,7 +107,7 @@ function buildInsights(
     highs.push(`Apenas <strong>${sla.ativasFora} vagas ativas (${sla.ativasPct}%) fora do SLA de 75 dias</strong> — pipeline saudável`);
   } else {
     lows.push(`<strong>${sla.ativasFora} vagas ativas (${sla.ativasPct}%) com mais de 75 dias em andamento</strong> — SLA máximo de ${Math.max(...A.map(r => r.aging))}d`);
-    actions.push(`Acionar BP e liderança para revisão das ${sla.ativasFora} vagas ativas fora do SLA — priorizar desbloqueio das mais antigas`);
+    actions.push(`<strong>Acionar BP e liderança</strong> — revisão das ${sla.ativasFora} vagas ativas fora do SLA, priorizando desbloqueio das mais antigas`);
   }
 
   // SLA fechadas
@@ -113,11 +122,11 @@ function buildInsights(
   const roleProf = A.filter(r => r.step === 'Role Profiling').length;
   if (roleProf > 0 && ativaTotais > 0 && roleProf / ativaTotais > 0.3) {
     lows.push(`<strong>${roleProf} vagas (${pct(roleProf, ativaTotais)}%) em Role Profiling</strong> — concentração alta no início do funil`);
-    actions.push(`Acelerar Role Profiling — vagas nessa etapa ainda não geraram candidatos; cada semana de atraso comprime o TTO disponível`);
+    actions.push(`<strong>Acelerar Role Profiling</strong> — vagas nessa etapa ainda não geraram candidatos; cada semana de atraso comprime o TTO disponível`);
   }
 
   if (actions.length === 0) {
-    actions.push('Manter cadência atual de fechamentos e monitorar vagas ativas fora do SLA semanalmente');
+    actions.push('<strong>Manter cadência atual</strong> — monitorar fechamentos e vagas ativas fora do SLA semanalmente');
   }
 
   return { highs: highs.slice(0, 4), lows: lows.slice(0, 5), actions: actions.slice(0, 4) };
@@ -141,7 +150,12 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   const porcentajeAvance = pct(cerradas, total);
 
   // ── Layer rows ─────────────────────────────────────────────────────────────
-  const GROUPS: SenGroup[] = ['TLs', 'Analistas & Sups', 'Manager'];
+  // Every seniority that occurs in this grid gets its own row, always shown (even at 0),
+  // so the breakdown never silently folds one layer into another.
+  const GROUPS: SenGroup[] = [
+    'TLs', 'TLs Senior', 'Supervisão', 'Analista Semi Senior', 'Analista',
+    'Analista Senior', 'Assistente', 'Manager', 'Coordenador', 'Specialist',
+  ];
   const rows: HpLayerRow[] = GROUPS.map(grp => ({
     equipo:                'TTE BRASIL',
     agrupLayer:            grp,

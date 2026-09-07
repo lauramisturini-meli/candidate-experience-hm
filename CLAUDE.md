@@ -35,7 +35,7 @@ This is a React 18 + TypeScript + Vite SPA. It is a **client-side-only** PDF/HTM
 
 The core data flow is: file upload → parser detection → PDF text extraction → parse to `PdfData` → `useTabs` reducer → `buildMergedView` → component rendering.
 
-1. **Upload** (`src/hooks/useUpload.ts`): A hidden `<input type="file">` accepts PDFs and HTML files. It detects the report type using `is*Report()` probes in order: PCD → OutSLA → HP (PDF) → HM → TONH → HP HTML → Qualtrics (default). Each report type has its own parser in `src/lib/`.
+1. **Upload** (`src/hooks/useUpload.ts`): A hidden `<input type="file">` accepts PDFs, HTML files, and Out SLA `.xlsx` spreadsheets. `.html`/`.htm` and `.xlsx`/`.xls` are branched off first (read as text / arraybuffer respectively) and bypass the PDF extractor entirely; everything else goes through `is*Report()` probes in order: PCD → OutSLA → HP (PDF) → HM → TONH → HP HTML → Qualtrics (default). Each report type has its own parser in `src/lib/`.
 
 2. **PDF extraction** (`src/lib/pdf-extractor.ts`): Uses `pdfjs-dist` to extract text in two representations: `fullText` (content-stream order, raw) and `positionalFullText` (sorted by Y/X coordinates to reconstruct reading order). Different parsers use different representations depending on which is more reliable for their PDF format.
 
@@ -74,7 +74,9 @@ Tabs are defined in `src/lib/constants.ts` with IDs: `external`, `internal`, `hm
 
 - **PCD** (`parser-pcd.ts`): Affirmative vacancies report. Two formats: "full table" (new, all vagas on page 1 with status) and "split" (old, vagas split across pages 1-4). HC demographic data (by seniority, BU, disability type) parsed from pages 2-5.
 
-- **OutSLA** (`parser-outsla.ts`): Uses positional text and a single large regex (`ROW_RE`) to match structured table rows. Normalizes exit reasons via `normalizeReason()`.
+- **OutSLA — PDF** (`parser-outsla.ts`): Uses positional text and a single large regex (`ROW_RE`) to match structured table rows. Normalizes exit reasons via `normalizeReason()` (exported for reuse by the xlsx parser). All rows get `status: 'on going'` since the regex only ever matches that literal.
+
+- **OutSLA — xlsx** (`parser-outsla-xlsx.ts`): Individual TA/supervisor analysis spreadsheets, compiled by hand from the raw Hiring report using the same column names as the team's master Out SLA tracker (`id_internal`, `position_code_ssff`, `on_going`, `ta_asignado`, `off_time_reason`, etc.) but in varying column order across snapshots — read via SheetJS (`xlsx` package) by header name rather than position, which sidesteps the fragility of the PDF regex approach entirely (no TA-name guessing needed — `ta_asignado` is read directly). Only the first sheet whose header row matches is parsed, to avoid duplicating vagas across a workbook with multiple dated snapshot tabs. "Out SLA" means `timeToOffer` exceeds the SLA target (`SLA_THRESHOLD_DAYS = 75`, see `src/lib/outsla-sla.ts`) — regardless of whether the vaga is still open or already closed with an offer. `OutSlaPanel` computes every KPI/breakdown from this day-based cohort, then splits it into "Em Andamento/Stand By" vs "Concluídas" using the `stage` (on_going) column, not the free-typed `status` column — `status` is manually filled when the sheet is compiled and can be wrong (e.g. `done` while `stage` still reads an active pipeline stage like `Sourcing`); a vaga only counts as closed once its stage reads `Offer accepted/extended/rejected` (`isClosedStage()`). The "Por Status" breakdown (raw `status` values) is kept alongside as a cross-check — a mismatch between it and the stage-based split usually flags a data-entry mistake in the source spreadsheet.
 
 - **TONH** (`parser-tonh.ts`): Turn Over New Hire exit discussion PDFs. Each page (or sub-section) is one person's exit case. Fields extracted via `extractAfter()`/`extractBlock()` with anchor patterns. Some PDF pages contain two cases side-by-side, handled by `splitCaseSections()`.
 

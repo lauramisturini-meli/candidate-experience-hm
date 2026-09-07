@@ -8,6 +8,17 @@ interface Props {
 }
 
 export function PdfPill({ pdf, index, onRemove }: Props) {
+  if (pdf.isOutSla) {
+    const total = pdf.outSlaPayload?.rows.length ?? 0;
+    return (
+      <span className={s.pill} title={pdf.fileName}>
+        <span className={s.name}>{pdf.fileName}</span>
+        <span className={s.n}>{total} vaga(s)</span>
+        <button className={s.remove} onClick={() => onRemove(index)} title="Remover">×</button>
+      </span>
+    );
+  }
+
   const range = pdf.overallRange || 'ALL';
   const rangeClass = range === 'ALL' ? s.all
     : /^1/.test(range) ? s.low

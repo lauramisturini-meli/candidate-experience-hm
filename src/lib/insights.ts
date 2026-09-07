@@ -581,9 +581,12 @@ export function buildHpHighs(hp: HpPayload): string[] {
       ? [...hp.rows].sort((a, b) => b.cerradas - a.cerradas)[0] as HpLayerRow
       : null;
     const layerSuffix = topLayer
-      ? ` — <strong>${escapeHtml(topLayer.agrupLayer)}</strong> lideran com ${topLayer.cerradas} fechamentos, indicando boa velocidade na camada operacional crítica`
+      // Phrased with "é a camada" (not "lidera"/"lideram") because agrupLayer mixes plural
+      // ("TLs", "Analistas & Sups") and singular ("Manager") labels — this avoids getting
+      // subject-verb agreement wrong for whichever one happens to be on top.
+      ? ` — <strong>${escapeHtml(topLayer.agrupLayer)}</strong> é a camada com mais fechamentos (${topLayer.cerradas}), indicando boa velocidade na camada operacional crítica`
       : '';
-    result.push(`<strong>${hp.cerradas} posições cerradas</strong>${layerSuffix}.`);
+    result.push(`<strong>${hp.cerradas} posições fechadas</strong>${layerSuffix}.`);
   }
 
   // 2. On Going pipeline + projected pct if converted
@@ -605,7 +608,7 @@ export function buildHpHighs(hp: HpPayload): string[] {
       const total = bestRow.cerradas + bestRow.sinActivar;
       const pct = Math.round(ratio * 100);
       result.push(
-        `<strong>Camada ${escapeHtml(bestRow.agrupLayer)} em proporção saudável</strong>: ${bestRow.cerradas} cerradas de ${total} totais (~${pct}%), melhor taxa relativa entre os grupos.`
+        `<strong>Camada ${escapeHtml(bestRow.agrupLayer)} em proporção saudável</strong>: ${bestRow.cerradas} fechadas de ${total} totais (~${pct}%), melhor taxa relativa entre os grupos.`
       );
     }
   }
@@ -641,7 +644,7 @@ export function buildHpLows(hp: HpPayload): string[] {
     const worstRow = [...hp.rows].sort((a, b) => hpLayerRatio(a) - hpLayerRatio(b))[0] as HpLayerRow;
     if (hpLayerRatio(worstRow) < 0.50) {
       result.push(
-        `<strong>${escapeHtml(worstRow.agrupLayer)} têm ${worstRow.sinActivar} posições sem ativar contra ${worstRow.cerradas} cerradas</strong> — camada mais represada, impacto direto na capacidade operacional.`
+        `<strong>${escapeHtml(worstRow.agrupLayer)} têm ${worstRow.sinActivar} posições sem ativar contra ${worstRow.cerradas} fechadas</strong> — camada mais represada, impacto direto na capacidade operacional.`
       );
     }
   }

@@ -150,6 +150,7 @@ export interface OutSlaRow {
   site: string;
   offTimeReason: string;
   ta?: string;
+  status?: string;
 }
 
 export interface OutSlaPayload {

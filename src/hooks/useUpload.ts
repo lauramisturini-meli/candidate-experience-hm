@@ -1,9 +1,11 @@
 import { useRef, useEffect, useState, useCallback, type Dispatch } from 'react';
+import * as XLSX from 'xlsx';
 import { extractPdfText } from '../lib/pdf-extractor';
 import { isHpReport, parseHpReport } from '../lib/parser-hp';
 import { isHpHtmlReport, parseHpHtmlReport } from '../lib/parser-hp-html';
 import { isHmReport, parseHmReport } from '../lib/parser-hm';
 import { isOutSlaReport, parseOutSlaReport } from '../lib/parser-outsla';
+import { isOutSlaXlsxWorkbook, parseOutSlaXlsxReport } from '../lib/parser-outsla-xlsx';
 import { parseQualtricsReport } from '../lib/parser-qualtrics';
 import { isPcdReport, parsePcdReport } from '../lib/parser-pcd';
 import { isTonhReport, parseTonhReport } from '../lib/parser-tonh';
@@ -15,6 +17,14 @@ const readFileAsText = (file: File): Promise<string> =>
     reader.onload  = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsText(file, 'utf-8');
+  });
+
+const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
   });
 
 export function useUpload(dispatch: Dispatch<TabsAction>) {
@@ -45,6 +55,17 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
             const html = await readFileAsText(file);
             if (!isHpHtmlReport(html)) throw new Error('Arquivo HTML não reconhecido como relatório HP do Grid.');
             const parsed = parseHpHtmlReport(html, file.name);
+            dispatch({ type: 'ADD_PDF', tabId, pdf: parsed });
+            added++;
+            continue;
+          }
+
+          // Out SLA spreadsheets (individual TA / supervisor analysis) — read structured cells, bypass PDF extractor
+          if (/\.xlsx?$/i.test(file.name)) {
+            const buffer = await readFileAsArrayBuffer(file);
+            const wb = XLSX.read(buffer, { type: 'array' });
+            if (!isOutSlaXlsxWorkbook(wb)) throw new Error('Planilha não reconhecida como relatório Out SLA.');
+            const parsed = parseOutSlaXlsxReport(wb, file.name);
             dispatch({ type: 'ADD_PDF', tabId, pdf: parsed });
             added++;
             continue;

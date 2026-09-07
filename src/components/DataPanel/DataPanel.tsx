@@ -75,6 +75,23 @@ function recomputeHpPayload(base: HpPayload, rows: HpRawRow[]): HpPayload {
   };
 }
 
+// A quarter that has already ended gets no more time to close its planned positions — an
+// incomplete % there is a real miss (red). A quarter still running (current or future) still
+// has runway, so an incomplete % there is just a caution (yellow), not a failure yet.
+function isQuarterClosed(qLabel: string, hpYear: string): boolean {
+  const match = /Q(\d)/i.exec(qLabel);
+  const qNum = match ? parseInt(match[1], 10) : null;
+  if (!qNum) return false;
+
+  const now = new Date();
+  const yearNum = parseInt(hpYear, 10) || now.getFullYear();
+  if (yearNum < now.getFullYear()) return true;
+  if (yearNum > now.getFullYear()) return false;
+
+  const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+  return qNum < currentQuarter;
+}
+
 const PREPS_DP = new Set(['da', 'de', 'do', 'dos', 'das', 'e', 'della', 'di']);
 function toTitleCaseDP(s: string): string {
   return s.split(' ').map(w =>
@@ -420,12 +437,14 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                     <tbody>
                       {hpPayloadForDisplay.quarters.map((q, i) => {
                         const pct = q.previstas > 0 ? Math.round((q.fechadas / q.previstas) * 100) : 0;
+                        const closed = isQuarterClosed(q.q, hpPayloadForDisplay.year);
+                        const colorClass = pct >= 100 ? s.hpColOk : closed ? s.hpColDanger : s.hpColWarn;
                         return (
                           <tr key={i}>
                             <td className={s.dimName}><strong>{q.q}</strong></td>
                             <td className={s.hpCol}>{q.previstas}</td>
                             <td className={s.hpCol}>{q.fechadas}</td>
-                            <td className={`${s.hpCol} ${pct >= 80 ? s.hpColOk : pct >= 50 ? s.hpColWarn : s.hpColDanger}`}>
+                            <td className={`${s.hpCol} ${colorClass}`}>
                               {pct}%
                             </td>
                           </tr>

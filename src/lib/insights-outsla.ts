@@ -87,27 +87,27 @@ export function buildOutSlaInsights(rows: OutSlaRow[]): OutSlaInsights {
   const actions: string[] = [];
 
   if (hmDelays > 0 || hmStage > 0) {
-    actions.push('Acionar <strong>follow-up semanal</strong> com HMs das vagas paradas para destravar decisões');
+    actions.push('<strong>Follow-up semanal com HMs</strong> — necessário para destravar decisões nas vagas paradas');
   }
 
   if (noReason > 0) {
-    actions.push(`Registrar o <strong>motivo de atraso</strong> nas <strong>${noReason}</strong> vaga(s) sem informação para embasar o diagnóstico`);
+    actions.push(`<strong>Registrar motivo de atraso</strong> — ${noReason} vaga(s) ainda sem informação, o que impede o diagnóstico`);
   }
 
   if (nicho > 0) {
-    actions.push('Revisar requisitos e <strong>ampliar canais de atração</strong> para perfis de nicho');
+    actions.push('<strong>Ampliar canais de atração</strong> — revisar requisitos para perfis de nicho');
   }
 
   if (cambio > 0) {
-    actions.push('<strong>Revisar os requisitos necessários</strong> após 30 dias de divulgação externa e realizar realinhamentos com o HM');
+    actions.push('<strong>Revisar requisitos necessários</strong> — realinhar com o HM após 30 dias de divulgação externa');
   }
 
-  if (taStage > 0 && !actions.some(a => a.includes('follow-up'))) {
-    actions.push(`Priorizar devolutiva das <strong>${taStage}</strong> entrevista(s) de TA em aberto`);
+  if (taStage > 0 && !actions.some(a => a.includes('Follow-up'))) {
+    actions.push(`<strong>Priorizar devolutivas de TA</strong> — ${taStage} entrevista(s) em aberto sem retorno`);
   }
 
   if (actions.length === 0) {
-    actions.push('Revisar individualmente cada vaga para definir próximos passos');
+    actions.push('<strong>Revisar vagas individualmente</strong> — definir próximos passos caso a caso');
   }
 
   return {

@@ -93,7 +93,7 @@ function matchRow(line: string): RowMatch | null {
 }
 
 // ── Reason normalisation ──────────────────────────────────────────────────────
-function normalizeReason(raw: string): string {
+export function normalizeReason(raw: string): string {
   if (!raw) return '';
   if (/perfil.{0,15}nicho/i.test(raw))            return 'Perfil de Nicho';
   if (/demoras?.{0,10}hiring/i.test(raw))          return 'Demoras Hiring Manager';
@@ -290,6 +290,7 @@ export function parseOutSlaReport(positionalText: string, fileName: string): Pdf
   const rows: OutSlaRow[] = rowData.map((r, i) => ({
     ...r.partial,
     ta: tas[i] || undefined,
+    status: 'on going',
   }));
 
   return {
