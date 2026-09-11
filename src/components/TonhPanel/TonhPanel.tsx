@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
-import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
+import { canonicalizeTa } from '../../lib/ta-team';
 import { buildTonhInsights } from '../../lib/insights-tonh';
-import { consolidateCurrentTeamTonhCases } from '../../lib/tonh-cases';
+import { consolidateTonhCases } from '../../lib/tonh-cases';
 import { StatusBar } from '../StatusBar/StatusBar';
 import type { PdfData, TabMeta, StatusMessage, TonhCase, TonhLayerDashboard, TabUiState } from '../../types';
 import s from './TonhPanel.module.css';
@@ -481,7 +481,7 @@ function ToGoalBlock({ label, meta, value, onChange }: { label: string; meta: nu
 
 export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
   const teamCases = useMemo(
-    () => consolidateCurrentTeamTonhCases(
+    () => consolidateTonhCases(
       pdfs.flatMap(p => p.tonhCases ?? []).filter(item => item.anoSaida === 2026),
     ),
     [pdfs],
@@ -492,7 +492,6 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
     const set = new Set<string>();
     teamCases.forEach(c => { if (c.ta) set.add(canonicalizeTa(c.ta)); });
     return Array.from(set)
-      .filter(name => TEAM_TAS.includes(name))
       .sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [teamCases]);
 

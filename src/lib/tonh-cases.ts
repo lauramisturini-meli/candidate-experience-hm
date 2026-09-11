@@ -1,5 +1,4 @@
 import type { TonhCase } from '../types';
-import { canonicalizeTa, TEAM_TAS } from './ta-team';
 
 const PERSON_NAME_ALIASES: Record<string, string> = {
   // Same employee in the tracking sheet and Exit Discussion PDF.
@@ -81,9 +80,6 @@ export function mergeTonhCases(cases: TonhCase[]): TonhCase[] {
   return [...merged.values()];
 }
 
-export function consolidateCurrentTeamTonhCases(cases: TonhCase[]): TonhCase[] {
-  return mergeTonhCases(cases).filter(item => {
-    const ta = canonicalizeTa(item.ta ?? '');
-    return TEAM_TAS.includes(ta);
-  });
+export function consolidateTonhCases(cases: TonhCase[]): TonhCase[] {
+  return mergeTonhCases(cases);
 }

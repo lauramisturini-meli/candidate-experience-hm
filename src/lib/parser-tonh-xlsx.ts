@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { PdfData, TonhCase } from '../types';
-import { canonicalizeTa, TEAM_TAS } from './ta-team';
+import { canonicalizeTa } from './ta-team';
 
 interface TonhTable {
   headers: string[];
@@ -63,8 +63,9 @@ function taName(value: unknown): string {
   const reordered = commaParts.length >= 2
     ? `${commaParts.slice(1).join(' ')} ${commaParts[0]}`
     : raw;
-  const canonical = canonicalizeTa(reordered);
-  return TEAM_TAS.includes(canonical) ? canonical : '';
+  // The Jornada is historical data. Keep former and external TA owners instead
+  // of dropping their cases when they are absent from the current team roster.
+  return canonicalizeTa(reordered);
 }
 
 function daysValue(value: unknown): number | null {

@@ -30,9 +30,9 @@ describe('TO NH tracking workbook parser', () => {
     expect(isTonhTrackingWorkbook(wb)).toBe(true);
   });
 
-  it('keeps only 2026 TO NH cases owned by the current team', () => {
+  it('keeps 2026 TO NH cases even when their owner is no longer on the current team', () => {
     const parsed = parseTonhTrackingReport(wb, 'jornada.xlsx');
-    expect(parsed.tonhCases).toHaveLength(1);
+    expect(parsed.tonhCases).toHaveLength(2);
     expect(parsed.tonhCases?.[0]).toMatchObject({
       ta: 'Leticia Navarro Silva Marcon',
       tiempoEnRolMeses: 2,
@@ -40,6 +40,8 @@ describe('TO NH tracking workbook parser', () => {
       anoSaida: 2026,
       dataSaida: '2026-03-01',
     });
-    expect(parsed.tonhCases?.some(item => item.nome === 'Pessoa B')).toBe(false);
+    expect(parsed.tonhCases?.find(item => item.nome === 'Pessoa B')).toMatchObject({
+      ta: 'Neucielle Faria',
+    });
   });
 });

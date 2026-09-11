@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TonhCase } from '../src/types';
-import { consolidateCurrentTeamTonhCases, mergeTonhCases } from '../src/lib/tonh-cases';
+import { consolidateTonhCases, mergeTonhCases } from '../src/lib/tonh-cases';
 
 function tonhCase(overrides: Partial<TonhCase>): TonhCase {
   return {
@@ -68,7 +68,7 @@ describe('TO NH case consolidation', () => {
     }
   });
 
-  it('excludes cases owned by TAs outside the current team', () => {
+  it('keeps cases owned by former TAs for historical TO NH reporting', () => {
     const currentTeamCase = tonhCase({
       nome: 'Pessoa atual',
       ta: 'Isabella Nogueira Simas',
@@ -80,7 +80,7 @@ describe('TO NH case consolidation', () => {
       anoSaida: 2026,
     });
 
-    expect(consolidateCurrentTeamTonhCases([currentTeamCase, historicalCase]))
-      .toEqual([currentTeamCase]);
+    expect(consolidateTonhCases([currentTeamCase, historicalCase]))
+      .toEqual([currentTeamCase, historicalCase]);
   });
 });
