@@ -122,6 +122,32 @@
   padding: 10px 32px 0 32px;
 }
 
+/* ── Management challenge preview ─────────────────────────────────────── */
+.challengeSection { margin: 18px 32px 0; padding: 16px; border: 1px solid #d9d4af; border-radius: 10px; background: #fffdf2; }
+.challengeHeader { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.challengeEyebrow { display: block; color: #806f00; font-size: 10px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; }
+.challengeHeader h2 { margin: 2px 0 3px; color: var(--brand-dark); font-size: 16px; }
+.challengeHeader p { margin: 0; color: var(--ink-soft); font-size: 12px; }
+.challengeLegend { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 5px; color: var(--ink-soft); font-size: 11px; white-space: nowrap; }
+.challengeLegend i { width: 8px; height: 8px; border-radius: 50%; margin-left: 5px; }
+.legendGreen { background: var(--success); }.legendYellow { background: #e6a800; }.legendRed { background: var(--danger); }
+.challengeTargets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; }
+.challengeTarget { display: grid; gap: 2px; min-width: 0; padding: 9px 10px; border: 1px solid #e8e3bc; border-radius: 7px; background: #fff; }
+.challengeTarget span { overflow: hidden; color: var(--ink); font-size: 11.5px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.challengeTarget strong { color: #07883f; font-size: 20px; line-height: 1; }.challengeTarget small { color: var(--ink-muted); font-size: 10.5px; }
+.challengeKpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.challengeKpis > div { display: flex; align-items: baseline; gap: 8px; padding: 8px 10px; border-left: 3px solid var(--success); background: rgba(255,255,255,.65); }
+.challengeKpis strong { color: var(--ink); font-size: 21px; }.challengeKpis span { color: var(--ink-soft); font-size: 11px; font-weight: 700; }.challengeKpis .challengeRisk { border-color: #e6a800; }.challengeKpis .challengeOverdue { border-color: var(--danger); }
+.challengeCases { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.challengeCaseGroup { overflow: hidden; border: 1px solid #e6e0c9; border-radius: 8px; background: #fff; }
+.challengeCaseGroupRed { border-top: 3px solid var(--danger); }.challengeCaseGroupYellow { border-top: 3px solid #e6a800; }
+.challengeCaseHeading { display: flex; justify-content: space-between; gap: 8px; padding: 9px 10px; background: #fafafa; color: var(--ink); font-size: 12px; }
+.challengeCaseHeading span { color: var(--ink-muted); font-size: 10.5px; white-space: nowrap; }
+.challengeCase { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; padding: 9px 10px; border-top: 1px solid #eee; }
+.challengeCaseMain { display: grid; min-width: 0; gap: 1px; }.challengeCaseMain strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }.challengeCaseMain span { overflow: hidden; color: var(--ink-soft); font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
+.challengeCaseDays { text-align: right; }.challengeCaseDays strong { display: block; color: var(--ink); font-size: 15px; line-height: 1; }.challengeCaseDays span { color: var(--danger); font-size: 10.5px; font-weight: 800; }.challengeCaseGroupYellow .challengeCaseDays span { color: #9a7000; }
+.challengeCaseDetails { display: flex; grid-column: 1 / -1; flex-wrap: wrap; gap: 3px 10px; color: var(--ink-soft); font-size: 10.5px; }.challengeCaseDetails b { color: var(--ink); }.challengeEmpty { margin: 0; padding: 11px 10px; color: var(--ink-muted); font-size: 11px; }
+
 /* ── KPI row ─────────────────────────────────────────────────────────────── */
 .kpiRow {
   display: grid; grid-template-columns: repeat(4, 1fr);

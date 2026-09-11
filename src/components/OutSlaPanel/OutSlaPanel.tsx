@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { buildOutSlaInsights } from '../../lib/insights-outsla';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
-import { SLA_THRESHOLD_DAYS, isClosedStage, isOutOfSla } from '../../lib/outsla-sla';
+import { SENIORITY_SLA_TARGETS, getOfficialSlaDays, getSenioritySlaTarget, isClosedOutSlaRow, isOutOfSla } from '../../lib/outsla-sla';
 import { StatusBar } from '../StatusBar/StatusBar';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
 import s from './OutSlaPanel.module.css';
@@ -88,8 +88,29 @@ const STATUS_LABEL: Record<string, string> = {
   'stand by': 'Stand by',
 };
 
+const STATUS_ORDER: Record<string, number> = {
+  done: 0,
+  'on going': 1,
+  'stand by': 2,
+  pending: 3,
+};
+
 function statusLabel(status: string): string {
   return STATUS_LABEL[status] ?? toTitleCase(status);
+}
+
+type ChallengeItem = { row: OutSlaRow; target: NonNullable<ReturnType<typeof getSenioritySlaTarget>> };
+
+function sortChallengeItems(items: ChallengeItem[], urgency: 'risk' | 'overdue'): ChallengeItem[] {
+  return [...items].sort((a, b) => {
+    // Active vacancies need intervention first; within that group, show the
+    // closest-to-breach (yellow) or furthest-over-target (red) item first.
+    const activityDiff = Number(isClosedOutSlaRow(a.row)) - Number(isClosedOutSlaRow(b.row));
+    if (activityDiff) return activityDiff;
+    const aDelta = a.row.timeToOffer - a.target.challengeDays;
+    const bDelta = b.row.timeToOffer - b.target.challengeDays;
+    return urgency === 'risk' ? bDelta - aDelta : bDelta - aDelta;
+  });
 }
 
 export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, isShareLoading }: Props) {
@@ -98,7 +119,10 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
     [pdfs]
   );
   // Every vaga past the SLA threshold — open, stand by, or already closed.
-  const slaRows = useMemo(() => rawRows.filter(r => isOutOfSla(r.timeToOffer)), [rawRows]);
+  const slaRows = useMemo(
+    () => rawRows.filter(r => isOutOfSla(r.timeToOffer, getOfficialSlaDays(r.seniority))),
+    [rawRows]
+  );
 
   // ── TA filter (canonical names) ────────────────────────────────────────────
   const taList = useMemo(() => {
@@ -117,14 +141,14 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
     () => activeTa ? slaRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : slaRows,
     [slaRows, activeTa]
   );
-  const openRows   = useMemo(() => rows.filter(r => !isClosedStage(r.stage)), [rows]);
-  const closedRows = useMemo(() => rows.filter(r =>  isClosedStage(r.stage)), [rows]);
+  const openRows   = useMemo(() => rows.filter(r => !isClosedOutSlaRow(r)), [rows]);
+  const closedRows = useMemo(() => rows.filter(r =>  isClosedOutSlaRow(r)), [rows]);
 
   // ── Per-TA summary (always uses the full sla cohort, not filtered by selection) ───────────
   const perTaStats = useMemo(() => {
     return taList.map(ta => {
       const taRows       = slaRows.filter(r => r.ta && canonicalizeTa(r.ta) === ta);
-      const taOpenRows   = taRows.filter(r => !isClosedStage(r.stage));
+      const taOpenRows   = taRows.filter(r => !isClosedOutSlaRow(r));
       const n            = taRows.length;
       const avg          = n ? Math.round(taRows.reduce((acc, r) => acc + r.timeToOffer, 0) / n) : 0;
       const stageCounts = taOpenRows.reduce<Record<string, number>>((acc, r) => {
@@ -151,13 +175,13 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
   // Raw `status` column mix for the sla cohort in view — cross-checks against the stage-based
   // open/closed KPIs above. Only shown when it mixes values (a mismatch here, e.g. "done" with an
   // active stage, usually means the status column was filled in wrong when the sheet was compiled).
-  const byStatus = useMemo(() => sortedEntries(
+  const byStatus = useMemo(() => Object.entries(
     rows.reduce<Record<string, number>>((acc, r) => {
       const val = r.status || 'on going';
       acc[val] = (acc[val] ?? 0) + 1;
       return acc;
     }, {})
-  ), [rows]);
+  ).sort(([a], [b]) => (STATUS_ORDER[a] ?? 99) - (STATUS_ORDER[b] ?? 99) || a.localeCompare(b)), [rows]);
   const showStatusBreakdown = byStatus.length > 1;
 
   // How many vagas in the raw upload (for the active TA, if filtered) never crossed the SLA
@@ -167,6 +191,24 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
     [rawRows, activeTa]
   );
   const withinSlaCount = rawCountInView - total;
+
+  // The challenge view deliberately uses every vacancy in scope, including ones
+  // below 75 days. It gives the team time to act before the formal SLA is missed.
+  const challengeRows = useMemo(
+    () => (activeTa ? rawRows.filter(r => r.ta && canonicalizeTa(r.ta) === activeTa) : rawRows)
+      .map(row => ({ row, target: getSenioritySlaTarget(row.seniority) }))
+      .filter((item): item is { row: OutSlaRow; target: NonNullable<ReturnType<typeof getSenioritySlaTarget>> } => item.target !== null),
+    [rawRows, activeTa]
+  );
+  const challengeOverdue = challengeRows.filter(({ row, target }) => row.timeToOffer > target.challengeDays);
+  const challengeAtRisk = challengeRows.filter(({ row, target }) =>
+    row.timeToOffer <= target.challengeDays && row.timeToOffer > target.challengeDays - 10
+  );
+  const challengeOnTargetPct = challengeRows.length
+    ? Math.round(((challengeRows.length - challengeOverdue.length) / challengeRows.length) * 100)
+    : 0;
+  const urgentChallengeRows = sortChallengeItems(challengeOverdue, 'overdue').slice(0, 5);
+  const riskChallengeRows = sortChallengeItems(challengeAtRisk, 'risk').slice(0, 5);
 
   const periodLabel = pdfs[0]?.periodLabel ?? 'Out SLA';
 
@@ -215,15 +257,45 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
       ) : null}
 
       {/* KPI row */}
+      <section className={s.challengeSection} aria-labelledby="sla-desafio-title">
+        <div className={s.challengeHeader}>
+          <div>
+            <span className={s.challengeEyebrow}>Visão de teste</span>
+            <h2 id="sla-desafio-title">SLA desafio por senioridade</h2>
+            <p>Antecipação da gestão. O indicador oficial de Out SLA continua sendo calculado separadamente.</p>
+          </div>
+          <div className={s.challengeLegend}><i className={s.legendGreen} /> Dentro da meta <i className={s.legendYellow} /> Até 10 dias da meta <i className={s.legendRed} /> Acima da meta</div>
+        </div>
+        <div className={s.challengeTargets}>
+          {SENIORITY_SLA_TARGETS.map(target => (
+            <div className={s.challengeTarget} key={target.label}>
+              <span>{target.label}</span>
+              <strong>{target.challengeDays}d</strong>
+              <small>SLA atual: {target.officialDays}d</small>
+            </div>
+          ))}
+        </div>
+        <div className={s.challengeKpis}>
+          <div><strong>{challengeOnTargetPct}%</strong><span>Dentro da meta desafio</span></div>
+          <div className={s.challengeRisk}><strong>{challengeAtRisk.length}</strong><span>Em risco nos próximos 10 dias</span></div>
+          <div className={s.challengeOverdue}><strong>{challengeOverdue.length}</strong><span>Acima da meta desafio</span></div>
+        </div>
+        {(urgentChallengeRows.length > 0 || riskChallengeRows.length > 0) && (
+          <div className={s.challengeCases}>
+            <ChallengeCases title="Vermelho · priorizar agora" tone="red" items={urgentChallengeRows} total={challengeOverdue.length} />
+            <ChallengeCases title="Amarelo · agir antes do estouro" tone="yellow" items={riskChallengeRows} total={challengeAtRisk.length} />
+          </div>
+        )}
+      </section>
       <div className={s.kpiScope}>
-        <strong>{total}</strong> vaga(s) passaram de <strong>{SLA_THRESHOLD_DAYS} dias</strong> (Out SLA)
+        <strong>{total}</strong> vaga(s) estão acima do <strong>SLA oficial da senioridade</strong> (Out SLA)
         {' '}de um total de <strong>{rawCountInView}</strong> na planilha
         {withinSlaCount > 0 ? <> ({withinSlaCount} dentro do SLA, não contam aqui)</> : null}
       </div>
       <div className={s.kpiRow}>
         <div className={`${s.kpiBox} ${s.kpiTotal}`}>
           <div className={s.kpiVal}>{total}</div>
-          <div className={s.kpiLabel}>Vagas Out SLA (&gt;{SLA_THRESHOLD_DAYS}d){activeTa && !isIndividual ? ' (filtrado)' : ''}</div>
+          <div className={s.kpiLabel}>Vagas Out SLA{activeTa && !isIndividual ? ' (filtrado)' : ''}</div>
         </div>
         <div className={`${s.kpiBox} ${s.kpiOpen}`}>
           <div className={s.kpiVal}>{openRows.length}</div>
@@ -231,7 +303,7 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
         </div>
         <div className={`${s.kpiBox} ${s.kpiClosed}`}>
           <div className={s.kpiVal}>{closedRows.length}</div>
-          <div className={s.kpiLabel}>Concluídas (Offer Aceita)</div>
+          <div className={s.kpiLabel}>Concluídas fora do SLA</div>
         </div>
         <div className={`${s.kpiBox} ${s.kpiAvg}`}>
           <div className={s.kpiVal}>{avg}</div>
@@ -252,9 +324,9 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
                   <tr>
                     <th className={s.thTa}>TA</th>
                     <th className={s.thNum}>Out SLA</th>
-                    <th className={s.thNum}>Abertas</th>
+                    <th className={s.thNum}>Em andamento</th>
                     <th className={s.thNum}>Média</th>
-                    <th className={s.thStage}>Etapa da Aberta</th>
+                    <th className={s.thStage}>Última etapa</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -279,13 +351,13 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
 
           {showStatusBreakdown && (
             <div className={s.breakdownSection}>
-              <div className={s.breakdownTitle}>Por Status (coluna "status" da planilha)</div>
+              <div className={s.breakdownTitle}>Status da vaga (usado nos indicadores)</div>
               {byStatus.map(([label, val]) => (
                 <BreakdownRow key={label} label={statusLabel(label)} value={val} total={total}
                   colorClass={label === 'on going' ? s.barNew : s.barDefault} />
               ))}
               <div className={s.bNote}>
-                Cruze com "Em Andamento/Stand By" e "Concluídas" acima — divergência aqui costuma indicar erro de preenchimento na planilha
+                Status define se a vaga está concluída ou em andamento; a etapa mostra o último ponto registrado no processo.
               </div>
             </div>
           )}
@@ -364,6 +436,38 @@ export function OutSlaPanel({ meta, pdfs, status, onUpload, onReset, onShare, is
         <div className={s.footerText}>{meta.section} · TA Transportes Brasil · {periodLabel}</div>
       </div>
     </>
+  );
+}
+
+function ChallengeCases({ title, tone, items, total }: { title: string; tone: 'red' | 'yellow'; items: ChallengeItem[]; total: number }) {
+  return (
+    <div className={`${s.challengeCaseGroup} ${tone === 'red' ? s.challengeCaseGroupRed : s.challengeCaseGroupYellow}`}>
+      <div className={s.challengeCaseHeading}>
+        <strong>{title}</strong>
+        <span>{total > items.length ? `Mostrando 5 de ${total}` : `${total} vaga${total === 1 ? '' : 's'}`}</span>
+      </div>
+      {items.length === 0 ? <p className={s.challengeEmpty}>Nenhuma vaga nesta faixa.</p> : items.map(({ row, target }) => {
+        const delta = row.timeToOffer - target.challengeDays;
+        const active = !isClosedOutSlaRow(row);
+        return (
+          <div className={s.challengeCase} key={`${row.idInternal}-${row.positionCode}-${row.timeToOffer}`}>
+            <div className={s.challengeCaseMain}>
+              <strong>{row.positionCode || row.idInternal || 'Vaga sem código'}</strong>
+              <span>{row.seniority} · {row.site || 'Local não informado'}</span>
+            </div>
+            <div className={s.challengeCaseDays}>
+              <strong>{row.timeToOffer}d</strong>
+              <span>{delta > 0 ? `+${delta}d da meta` : `faltam ${Math.abs(delta)}d`}</span>
+            </div>
+            <div className={s.challengeCaseDetails}>
+              <span><b>{active ? 'Aberta' : 'Concluída'}</b> · {row.stage}</span>
+              <span>TA: {row.ta ? shortName(row.ta) : 'Não informado'}</span>
+              {row.offTimeReason && <span>Motivo: {row.offTimeReason}</span>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
