@@ -239,14 +239,17 @@ function cleanArea(area: string): string {
 
 function CaseAnalysis({
   cases,
+  operationalCases,
   pendingCases,
   scheduledCases,
 }: {
   cases: TonhCase[];
+  operationalCases: TonhCase[];
   pendingCases: TonhCase[];
   scheduledCases: TonhCase[];
 }) {
   const total = cases.length;
+  const operationalTotal = operationalCases.length;
   const withFlags = cases.filter(c => hasRealFlag(c.flags)).length;
   const casesWithTime = cases.filter(c => c.tiempoEnRolMeses !== null);
   const avgMeses = casesWithTime.length
@@ -254,9 +257,12 @@ function CaseAnalysis({
     : null;
 
   const byMotivo  = sortedEntries(groupBy(cases, c => classifyExitMotivo(c.motivoSalida, c.principaisMotivos)));
-  const byArea    = sortedEntries(groupBy(cases, c => cleanArea(c.area)));
-  const byRol     = layerEntries(groupBy(cases, c => normalizeLayer(c.rol.trim())));
-  const byTempo   = sortedEntries(groupBy(cases, c => timeBucket(c.tiempoEnRolMeses)));
+  // The Jornada already provides these operational dimensions, so they include
+  // exits awaiting their Exit Discussion as well as completed discussions.
+  const byArea    = sortedEntries(groupBy(operationalCases, c => cleanArea(c.area)));
+  const byRol     = layerEntries(groupBy(operationalCases, c => normalizeLayer(c.rol.trim())));
+  const byTempo   = sortedEntries(groupBy(operationalCases, c => timeBucket(c.tiempoEnRolMeses)));
+  const operationalCasesWithTime = operationalCases.filter(c => c.tiempoEnRolMeses !== null);
 
   // Team-level analytical learnings
   const learnings: string[] = [];
@@ -366,17 +372,17 @@ function CaseAnalysis({
       <div className={s.breakdownRow2}>
         {byArea.length > 0 && (
           <div className={s.breakdown}>
-            <div className={s.breakdownTitle}>Por Localidade</div>
-            {byArea.map(([label, val]) => (
-              <BreakdownRow key={label} label={label} value={val} total={total} colorClass={s.barArea} />
+          <div className={s.breakdownTitle}>Por Localidade · todos os TO NH</div>
+          {byArea.map(([label, val]) => (
+              <BreakdownRow key={label} label={label} value={val} total={operationalTotal} colorClass={s.barArea} />
             ))}
           </div>
         )}
         {byRol.length > 0 && (
           <div className={s.breakdown}>
-            <div className={s.breakdownTitle}>Por Layer</div>
-            {byRol.map(([label, val]) => (
-              <BreakdownRow key={label} label={label} value={val} total={total} colorClass={s.barRol} />
+          <div className={s.breakdownTitle}>Por Layer · todos os TO NH</div>
+          {byRol.map(([label, val]) => (
+              <BreakdownRow key={label} label={label} value={val} total={operationalTotal} colorClass={s.barRol} />
             ))}
           </div>
         )}
@@ -387,7 +393,7 @@ function CaseAnalysis({
         <div className={s.breakdown}>
           <div className={s.breakdownTitle}>Tempo no Cargo</div>
           {byTempo.filter(([k]) => k !== 'N/A').map(([label, val]) => (
-            <BreakdownRow key={label} label={label} value={val} total={casesWithTime.length || total} colorClass={s.barTempo} />
+            <BreakdownRow key={label} label={label} value={val} total={operationalCasesWithTime.length || operationalTotal} colorClass={s.barTempo} />
           ))}
         </div>
       )}
@@ -610,6 +616,7 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
               </div>
               <CaseAnalysis
                 cases={analyzedCases}
+                operationalCases={filteredTeamCases}
                 pendingCases={pendingCases}
                 scheduledCases={scheduledCases}
               />

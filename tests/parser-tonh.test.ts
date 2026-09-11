@@ -38,6 +38,15 @@ describe('TO NH Exit Discussion parser', () => {
     expect(parsed.tonhCases?.[0].anoSaida).toBe(2026);
   });
 
+  it('ignores the blank template page included in some Exit Discussion PDFs', () => {
+    const template = exitDiscussion('(NOME COMPLETO)');
+    const validCase = exitDiscussion('Pessoa 2026');
+    const parsed = parseTonhReport(`${template}\n${validCase}`, [template, validCase], 'Exit Discussions.pdf', 2026);
+
+    expect(parsed.tonhCases).toHaveLength(1);
+    expect(parsed.tonhCases?.[0].nome).toBe('Pessoa 2026');
+  });
+
   it('does not infer the year from the file name', () => {
     const page = exitDiscussion('Pessoa sem data');
 

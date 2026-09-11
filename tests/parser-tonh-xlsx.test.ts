@@ -21,7 +21,7 @@ describe('TO NH tracking workbook parser', () => {
   const wb = workbook([
     HEADER,
     ['2026-01-01', 'SP', 'HM 1', 'Team Leader - Shipping', 1, 'a@meli.com', 'Fonte', 'NAVARRO SILVA MARCON, LETICIA', 'Pessoa A', 'F', 'SIM', 'SIM', 'Adaptação a Rotina/Liderança', 'Dificuldade com a rotina', 'Exit Discussion', '2026-03-01', 60, 'Renuncia', 'Outro trabalho', ''],
-    ['2026-01-01', 'RJ', 'HM 2', 'Supervisor', 2, 'b@meli.com', 'Fonte', 'GONCALVES DE FARIA, NEUCIELLE THAMYLA', 'Pessoa B', 'M', 'SIM', 'SIM', 'Compliance', 'Conduta inadequada', 'Exit Discussion', '2026-02-01', 31, 'Despido', 'No Aplica', ''],
+    ['2026-01-01', 'RJ', 'HM 2', 'Supervisor', 2, 'b@meli.com', 'Fonte', 'TA HISTÓRICA', 'Pessoa B', 'M', 'SIM', 'SIM', 'Compliance', 'Conduta inadequada', 'Exit Discussion', '2026-02-01', 31, 'Despido', 'No Aplica', ''],
     ['2025-01-01', 'BA', 'HM 4', 'Analista', 3, 'd@meli.com', 'Fonte', 'ISABELLA NOGUEIRA SIMAS', 'Pessoa de 2025', 'F', 'SIM', 'SIM', 'Compliance', 'Caso antigo', 'Exit Discussion', '2025-02-01', 31, 'Renuncia', 'Outro trabalho', ''],
     ['2026-01-01', 'MG', 'HM 3', 'Analista', 3, 'c@meli.com', 'Fonte', 'ISABELLA NOGUEIRA SIMAS', 'Pessoa C', 'F', 'SIM', 'NÃO', '', '', '', '', '', '', '', ''],
   ]);
@@ -41,7 +41,7 @@ describe('TO NH tracking workbook parser', () => {
       dataSaida: '2026-03-01',
     });
     expect(parsed.tonhCases?.find(item => item.nome === 'Pessoa B')).toMatchObject({
-      ta: 'Neucielle Faria',
+      ta: 'TA HISTÓRICA',
     });
   });
 });

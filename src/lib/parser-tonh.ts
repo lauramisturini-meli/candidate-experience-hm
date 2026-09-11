@@ -148,6 +148,11 @@ function deduplicateByNome(cases: TonhCase[]): TonhCase[] {
   });
 }
 
+function isTemplateCase(item: TonhCase): boolean {
+  const name = item.nome.trim().toLowerCase();
+  return !name || /\(?nome completo\)?|nombre completo|adicionar/.test(name);
+}
+
 export function parseTonhReport(
   fullText: string,
   pageTexts: string[],
@@ -172,7 +177,9 @@ export function parseTonhReport(
     );
   }
 
-  const tonhCases = deduplicateByNome(parsedCases.filter(item => item.anoSaida === 2026));
+  const tonhCases = deduplicateByNome(
+    parsedCases.filter(item => item.anoSaida === 2026 && !isTemplateCase(item)),
+  );
 
   return {
     respostas: null,
