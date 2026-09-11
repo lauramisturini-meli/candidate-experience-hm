@@ -73,6 +73,18 @@ describe('parser-outsla-xlsx', () => {
     expect(onGoing.offTimeReason).toBe('');
   });
 
+  it('repairs mis-decoded accents in the site without changing its format', () => {
+    const wb = buildWorkbook({
+      'OUT SLA': [
+        HEADER,
+        [1, 65073540, 'Q2', 'New Position', 'on going', 100, 'Specialist', 'Entrevista TA', 'Ext - SÃ£o Paulo Capital - Brazil (XSPC_EBA)', 'LIDER', 'PBP', 'LAURA MISTURINI', '', '', ''],
+      ],
+    });
+
+    const parsed = parseOutSlaXlsxReport(wb, 'out-sla.xlsx');
+    expect(parsed.outSlaPayload?.rows[0].site).toBe('Ext - São Paulo Capital - Brazil (XSPC_EBA)');
+  });
+
   it('uses only the most recent dated snapshot sheet, ignoring older tabs', () => {
     const rowOld = [69739, 65011345, 'Q4', 'New Position', 'on going', 167, 'Team Leader - Shipping',
       'Entrevista HM', 'SC (SCB6_EBA)', 'LIDER', 'PBP', 'TA UM', '', '', 'Cambio de perfil'];

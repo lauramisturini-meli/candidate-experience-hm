@@ -59,11 +59,11 @@ function extractJsonArray(text: string, name: string): unknown[] {
   return [];
 }
 
-type SenGroup =
+export type HpLayerGroup =
   | 'TLs' | 'TLs Senior' | 'Supervisão' | 'Analista Semi Senior' | 'Analista'
   | 'Analista Senior' | 'Assistente' | 'Manager' | 'Coordenador' | 'Specialist';
 
-function senGroup(seniority: string): SenGroup | null {
+export function hpLayerGroup(seniority: string): HpLayerGroup | null {
   if (/sr\.?\s*team leader/i.test(seniority)) return 'TLs Senior';
   if (/team leader/i.test(seniority)) return 'TLs';
   if (/gerente/i.test(seniority)) return 'Manager';
@@ -94,6 +94,11 @@ const Q_ORDER = ['Q1', 'Q2', 'Q3', 'Q4'];
 const STEP_ORDER = [
   'Role Profiling', 'Sourcing', 'Entrevista TA', 'Entrevista HM',
   'Entrevista L+L', 'Worksample', 'Interview Panel', 'Reference Check', 'Offer extended',
+];
+
+export const HP_LAYER_GROUPS: HpLayerGroup[] = [
+  'TLs', 'TLs Senior', 'Supervisão', 'Analista Semi Senior', 'Analista',
+  'Analista Senior', 'Assistente', 'Manager', 'Coordenador', 'Specialist',
 ];
 
 function buildInsights(
@@ -155,6 +160,30 @@ function buildInsights(
   return { highs: highs.slice(0, 4), lows: lows.slice(0, 5), actions: actions.slice(0, 4) };
 }
 
+/** Builds the contextual HP insights from a filtered group of raw vacancies. */
+export function buildHpInsightsFromRows(rows: HpRawRow[]): { highs: string[]; lows: string[]; actions: string[] } {
+  const active = rows.filter(r => r.status === 'on going');
+  const pending = rows.filter(r => r.status === 'pending');
+  const closed = rows.filter(r => r.status === 'done');
+  const sla: HpSlaStats = {
+    ativasFora: active.filter(r => r.fora_sla).length,
+    ativasTotal: active.length,
+    ativasPct: pct(active.filter(r => r.fora_sla).length, active.length),
+    ativasAvgAging: avg(active.map(r => r.aging ?? 0).filter(n => n > 0)),
+    fechadasFora: closed.filter(r => r.fora_sla).length,
+    fechadasTotal: closed.length,
+    fechadasPct: pct(closed.filter(r => r.fora_sla).length, closed.length),
+    fechadasAvgTto: avg(closed.map(r => r.tto ?? 0).filter(n => n > 0)),
+  };
+  return buildInsights(
+    active.map(row => ({ ...row, step: row.step ?? '', aging: row.aging ?? 0 })),
+    pending.map(row => ({ seniority: row.seniority, q: row.q })),
+    sla,
+    pct(closed.length, rows.length),
+    rows.length,
+  );
+}
+
 export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   const A  = extractJsonArray(html, 'A')  as VagaAtiva[];
   const CL = extractJsonArray(html, 'CL') as VagaFechada[];
@@ -175,16 +204,12 @@ export function parseHpHtmlReport(html: string, fileName: string): PdfData {
   // ── Layer rows ─────────────────────────────────────────────────────────────
   // Every seniority that occurs in this grid gets its own row, always shown (even at 0),
   // so the breakdown never silently folds one layer into another.
-  const GROUPS: SenGroup[] = [
-    'TLs', 'TLs Senior', 'Supervisão', 'Analista Semi Senior', 'Analista',
-    'Analista Senior', 'Assistente', 'Manager', 'Coordenador', 'Specialist',
-  ];
-  const rows: HpLayerRow[] = GROUPS.map(grp => ({
+  const rows: HpLayerRow[] = HP_LAYER_GROUPS.map(grp => ({
     equipo:                'TTE BRASIL',
     agrupLayer:            grp,
-    cerradas:              CL.filter(r => senGroup(r.seniority) === grp).length,
-    sinActivar:            P.filter(r  => senGroup(r.seniority) === grp).length,
-    onGoing:               A.filter(r  => senGroup(r.seniority) === grp).length,
+    cerradas:              CL.filter(r => hpLayerGroup(r.seniority) === grp).length,
+    sinActivar:            P.filter(r  => hpLayerGroup(r.seniority) === grp).length,
+    onGoing:               A.filter(r  => hpLayerGroup(r.seniority) === grp).length,
     reemplazosProyectados: 0,
     rotacionesProyectadas: 0,
   }));

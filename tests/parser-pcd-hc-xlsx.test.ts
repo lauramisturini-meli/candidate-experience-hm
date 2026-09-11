@@ -28,13 +28,13 @@ describe('PCD HC workbook parser', () => {
     const parsed = parsePcdHcWorkbook(wb, 'hc-pcd.xlsx');
     expect(parsed.pcdVagas).toBeUndefined();
     expect(parsed.pcdHcData?.porSeniority).toEqual(expect.arrayContaining([
-      expect.objectContaining({ layer: 'Assistente', hcComDiscapacidad: 25, hcTotal: 321, pct: 0.078 }),
+      expect.objectContaining({ layer: 'Assistente', hcComDiscapacidad: 25, hcTotal: 321, pct: 7.8 }),
     ]));
     expect(parsed.pcdHcData?.porBu).toEqual(expect.arrayContaining([
-      expect.objectContaining({ bu: 'Shipping', hcComDiscapacidad: 115, hcTotal: 3340, pct: 0.034 }),
+      expect.objectContaining({ bu: 'Shipping', hcComDiscapacidad: 115, hcTotal: 3340, pct: 3.4 }),
     ]));
     expect(parsed.pcdHcData?.tiposDistribucion).toEqual(expect.arrayContaining([
-      expect.objectContaining({ tipo: 'Fisica(motriz)', pct: 0.589 }),
+      expect.objectContaining({ tipo: 'Fisica(motriz)', pct: 58.9 }),
     ]));
   });
 });

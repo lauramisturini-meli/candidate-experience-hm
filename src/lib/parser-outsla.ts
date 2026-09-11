@@ -1,4 +1,5 @@
 import type { PdfData, OutSlaRow } from '../types';
+import { repairMojibake } from './utils';
 
 // ── Seniority list — longest first ───────────────────────────────────────────
 const SENIORITY_ALT = [
@@ -70,7 +71,7 @@ function matchRow(line: string): RowMatch | null {
       timeToOffer:  parseInt(mNew[5], 10),
       seniority:    mNew[6],
       stage:        mNew[7].replace('\\+', '+'),
-      site:         mNew[8].trim(),
+      site:         repairMojibake(mNew[8].trim()),
       tail:         mNew[9] ?? '',
     };
   }
@@ -85,7 +86,7 @@ function matchRow(line: string): RowMatch | null {
       timeToOffer:  parseInt(mOld[5], 10),
       stage:        mOld[6].replace('\\+', '+'),
       seniority:    mOld[7],
-      site:         mOld[8].trim(),
+      site:         repairMojibake(mOld[8].trim()),
       tail:         mOld[9] ?? '',
     };
   }

@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { PdfData, OutSlaRow } from '../types';
 import { normalizeReason } from './parser-outsla';
+import { repairMojibake } from './utils';
 
 // ── Column detection ──────────────────────────────────────────────────────────
 //
@@ -114,7 +115,7 @@ export function parseOutSlaXlsxReport(wb: XLSX.WorkBook, fileName: string): PdfD
         origin:       idxOrigin >= 0 ? String(raw[idxOrigin] ?? '').trim() : '',
         stage:        idxStage >= 0 ? String(raw[idxStage] ?? '').trim() : '',
         seniority:    idxSeniority >= 0 ? String(raw[idxSeniority] ?? '').trim() : '',
-        site:         idxSite >= 0 ? String(raw[idxSite] ?? '').trim() : '',
+        site:         idxSite >= 0 ? repairMojibake(String(raw[idxSite] ?? '').trim()) : '',
         offTimeReason: idxOffReason >= 0 ? normalizeReason(String(raw[idxOffReason] ?? '').trim()) : '',
         ta: ta || undefined,
         status: status || undefined,

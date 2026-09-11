@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { buildOutSlaInsights } from '../../lib/insights-outsla';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { SENIORITY_SLA_TARGETS, getOfficialSlaDays, getSenioritySlaTarget, isClosedOutSlaRow, isOutOfSla } from '../../lib/outsla-sla';
+import { repairMojibake } from '../../lib/utils';
 import { StatusBar } from '../StatusBar/StatusBar';
 import type { PdfData, TabMeta, StatusMessage, OutSlaRow } from '../../types';
 import s from './OutSlaPanel.module.css';
@@ -453,7 +454,7 @@ function ChallengeCases({ title, tone, items, total }: { title: string; tone: 'r
           <div className={s.challengeCase} key={`${row.idInternal}-${row.positionCode}-${row.timeToOffer}`}>
             <div className={s.challengeCaseMain}>
               <strong>{row.positionCode || row.idInternal || 'Vaga sem código'}</strong>
-              <span>{row.seniority} · {row.site || 'Local não informado'}</span>
+              <span>{row.seniority} · {repairMojibake(row.site) || 'Local não informado'}</span>
             </div>
             <div className={s.challengeCaseDays}>
               <strong>{row.timeToOffer}d</strong>

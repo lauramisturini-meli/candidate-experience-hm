@@ -17,6 +17,14 @@ function numberValue(value: unknown): number {
   return raw.includes('%') ? parsed / 100 : parsed;
 }
 
+// Excel stores percentage-formatted cells as fractions (e.g. 0.078 for 7.8%).
+// The PCD panel receives values on the 0–100 scale, so normalize both formats.
+function percentageValue(value: unknown): number {
+  const numeric = numberValue(value);
+  const pct = numeric > 0 && numeric <= 1 ? numeric * 100 : numeric;
+  return Number(pct.toFixed(4));
+}
+
 function rows(wb: XLSX.WorkBook, sheetName: string): unknown[][] {
   return XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sheetName], {
     header: 1,
@@ -36,9 +44,15 @@ export function isPcdHcWorkbook(wb: XLSX.WorkBook): boolean {
     && /distribucion tipos.*(?:pcd|all meli)/.test(content);
 }
 
-function nextValue(source: unknown[][], start: number, column: number, label: string): number {
+function nextValue(
+  source: unknown[][],
+  start: number,
+  column: number,
+  label: string,
+  transform: (value: unknown) => number = numberValue,
+): number {
   for (let row = start; row < Math.min(source.length, start + 8); row++) {
-    if (normalized(source[row][column]) === label) return numberValue(source[row][column + 1]);
+    if (normalized(source[row][column]) === label) return transform(source[row][column + 1]);
   }
   return 0;
 }
@@ -54,7 +68,7 @@ function parseSeniority(source: unknown[][]): PcdHcSeniorityRow[] {
         layer,
         hcComDiscapacidad: nextValue(source, row + 1, column, 'hc con discapacidad'),
         hcTotal: nextValue(source, row + 1, column, 'hc total'),
-        pct: nextValue(source, row + 1, column, '%'),
+        pct: nextValue(source, row + 1, column, '%', percentageValue),
       });
     }
   }
@@ -72,7 +86,7 @@ function parseBu(source: unknown[][]): PcdHcBuRow[] {
         bu,
         hcComDiscapacidad: nextValue(source, row + 1, column, 'hc con discapacidad'),
         hcTotal: nextValue(source, row + 1, column, 'hc total'),
-        pct: nextValue(source, row + 1, column, '%'),
+        pct: nextValue(source, row + 1, column, '%', percentageValue),
       });
     }
   }
@@ -87,7 +101,7 @@ function parseTypes(source: unknown[][]): PcdTipoRow[] {
     for (let column = 0; column < row.length - 1; column++) {
       const tipo = text(row[column]);
       if (!PCD_TYPES.has(normalized(tipo).replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim())) continue;
-      result.push({ tipo, pct: numberValue(row[column + 1]) });
+      result.push({ tipo, pct: percentageValue(row[column + 1]) });
     }
   }
   return result;

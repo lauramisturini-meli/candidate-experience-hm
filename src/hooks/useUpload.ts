@@ -9,6 +9,7 @@ import { isOutSlaXlsxWorkbook, parseOutSlaXlsxReport } from '../lib/parser-outsl
 import { isWfhPositionsWorkbook, parseWfhOutSlaReport, parseWfhPcdReport } from '../lib/parser-wfh-positions';
 import { parseQualtricsReport } from '../lib/parser-qualtrics';
 import { isPcdReport, parsePcdReport } from '../lib/parser-pcd';
+import { isPcdHcWorkbook, parsePcdHcWorkbook } from '../lib/parser-pcd-hc-xlsx';
 import { isTonhReport, parseTonhReport } from '../lib/parser-tonh';
 import { isTonhTrackingWorkbook, parseTonhTrackingReport } from '../lib/parser-tonh-xlsx';
 import type { PdfData, TabId, TabsAction, StatusMessage } from '../types';
@@ -73,6 +74,12 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
           if (/\.(?:csv|xlsx?)$/i.test(file.name)) {
             const buffer = await readFileAsArrayBuffer(file);
             const wb = XLSX.read(buffer, { type: 'array' });
+            if (isPcdHcWorkbook(wb)) {
+              if (tabId !== 'pcd') throw new Error('A Base HC PCD deve ser enviada na aba PCD.');
+              dispatch({ type: 'ADD_PDF', tabId, pdf: parsePcdHcWorkbook(wb, file.name) });
+              added++;
+              continue;
+            }
             if (isWfhPositionsWorkbook(wb)) {
               if (tabId === 'pcd') {
                 const parsed = parseWfhPcdReport(wb, file.name);

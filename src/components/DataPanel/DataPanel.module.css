@@ -291,6 +291,9 @@
 
 /* HP breakdown table */
 .hpCol { color: var(--ink); font-weight: 700; text-align: center; width: 13%; font-size: 13.5px; }
+.hpLayerRow { cursor: pointer; transition: background 0.12s; }
+.hpLayerRow:hover td, .hpLayerRow:focus-visible td { background: #fff8df; }
+.hpLayerRowActive td { background: #fff8df; border-color: var(--brand-yellow); }
 .hpColDanger { color: var(--danger); }
 .hpColWarn   { color: #e65100; }
 .hpColOk     { color: var(--success); }

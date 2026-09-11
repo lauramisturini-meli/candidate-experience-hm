@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { buildMergedView } from '../../lib/merger';
 import { canonicalizeTa, TEAM_TAS } from '../../lib/ta-team';
 import { buildHmDimensionInsights } from '../../lib/insights';
+import { buildHpInsightsFromRows, HP_LAYER_GROUPS, hpLayerGroup } from '../../lib/parser-hp-html';
 import { StatusBar } from '../StatusBar/StatusBar';
 import type { PdfData, TabId, TabMeta, StatusMessage, TabUiState, DimOverrides, HpPayload, HpRawRow } from '../../types';
 import s from './DataPanel.module.css';
@@ -60,6 +61,17 @@ function recomputeHpPayload(base: HpPayload, rows: HpRawRow[]): HpPayload {
     fechadas:  closed.filter(r => r.q === q).length,
   })).filter(r => r.previstas > 0);
 
+  const layerRows = HP_LAYER_GROUPS.map(agrupLayer => ({
+    equipo: 'TTE BRASIL',
+    agrupLayer,
+    cerradas: closed.filter(r => hpLayerGroup(r.seniority) === agrupLayer).length,
+    sinActivar: pending.filter(r => hpLayerGroup(r.seniority) === agrupLayer).length,
+    onGoing: active.filter(r => hpLayerGroup(r.seniority) === agrupLayer).length,
+    reemplazosProyectados: 0,
+    rotacionesProyectadas: 0,
+  }));
+  const contextualInsights = buildHpInsightsFromRows(rows);
+
   return {
     ...base,
     posicionesTotal: total,
@@ -70,6 +82,8 @@ function recomputeHpPayload(base: HpPayload, rows: HpRawRow[]): HpPayload {
     sla,
     pipeline,
     quarters,
+    rows: layerRows,
+    ...contextualInsights,
   };
 }
 
@@ -139,17 +153,31 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
 
   const isIndividualHP = hpTaList.length === 1;
   const [selectedHpTa, setSelectedHpTa] = useState<string | null>(null);
+  const [selectedHpLayer, setSelectedHpLayer] = useState<string | null>(null);
   const activeHpTa = selectedHpTa ?? (isIndividualHP ? hpTaList[0] : null);
 
   const data = useMemo(() => buildMergedView(filteredPdfs, tabId), [filteredPdfs, tabId]);
 
-  // Recompute hpPayload when HP TA filter is active
+  const hpRowsForTa = useMemo(() => {
+    const rows = data.hpPayload?.hpRawRows ?? [];
+    return activeHpTa ? rows.filter(r => canonicalizeTa(r.ta ?? '') === activeHpTa) : rows;
+  }, [data.hpPayload, activeHpTa]);
+
+  // Recompute HP KPIs and insights when a TA or Layer filter is active.
   const hpPayloadForDisplay = useMemo((): HpPayload | undefined => {
     const base = data.hpPayload;
-    if (tabId !== 'hpc' || !activeHpTa || !base?.hpRawRows) return base;
-    const filtered = base.hpRawRows.filter((r: HpRawRow) => canonicalizeTa(r.ta ?? '') === activeHpTa);
+    if (tabId !== 'hpc' || !base?.hpRawRows || (!activeHpTa && !selectedHpLayer)) return base;
+    const filtered = selectedHpLayer
+      ? hpRowsForTa.filter(r => hpLayerGroup(r.seniority) === selectedHpLayer)
+      : hpRowsForTa;
     return recomputeHpPayload(base, filtered);
-  }, [tabId, activeHpTa, data.hpPayload]);
+  }, [tabId, activeHpTa, selectedHpLayer, data.hpPayload, hpRowsForTa]);
+
+  const hpLayerRows = useMemo(() => {
+    const base = data.hpPayload;
+    if (!base?.hpRawRows) return base?.rows ?? [];
+    return activeHpTa ? recomputeHpPayload(base, hpRowsForTa).rows : base.rows;
+  }, [data.hpPayload, activeHpTa, hpRowsForTa]);
   const overrides: DimOverrides = ui?.dimOverrides ?? {};
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
@@ -193,6 +221,13 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
   );
 
   const { highs, lows, actions } = useMemo(() => {
+    if (tabId === 'hpc' && hpPayloadForDisplay) {
+      return {
+        highs: hpPayloadForDisplay.highs ?? [],
+        lows: hpPayloadForDisplay.lows ?? [],
+        actions: hpPayloadForDisplay.actions ?? [],
+      };
+    }
     if (tabId === 'hm' && (hasDesfavOverride || (kpiNeutros && !DASH(kpiNeutros)) || (kpiDesfav && !DASH(kpiDesfav)))) {
       const dim = buildHmDimensionInsights(effectiveDims, effectiveHmNeutros, effectiveHmDesfav);
       // Merge dimension-based (quantitative) with comment-based (qualitative), dim insights first
@@ -203,7 +238,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
       };
     }
     return { highs: data.highs, lows: data.lows, actions: data.actions };
-  }, [tabId, hasDesfavOverride, kpiNeutros, kpiDesfav, effectiveHmNeutros, effectiveHmDesfav, effectiveDims, data.highs, data.lows, data.actions]);
+  }, [tabId, hpPayloadForDisplay, hasDesfavOverride, kpiNeutros, kpiDesfav, effectiveHmNeutros, effectiveHmDesfav, effectiveDims, data.highs, data.lows, data.actions]);
 
   return (
     <>
@@ -257,7 +292,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
           <div className={s.filterOptions}>
           <button
             className={`${s.taChip} ${activeHpTa === null ? s.taChipActive : ''}`}
-            onClick={() => setSelectedHpTa(null)}
+            onClick={() => { setSelectedHpTa(null); setSelectedHpLayer(null); }}
           >
             Todos
           </button>
@@ -265,7 +300,10 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
             <button
               key={ta}
               className={`${s.taChip} ${activeHpTa === ta ? s.taChipActive : ''}`}
-              onClick={() => setSelectedHpTa(activeHpTa === ta ? null : ta)}
+              onClick={() => {
+                setSelectedHpTa(activeHpTa === ta ? null : ta);
+                setSelectedHpLayer(null);
+              }}
               title={toTitleCaseDP(ta)}
             >
               {shortNameDP(ta)}
@@ -375,7 +413,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
               {/* ── Breakdown por Layer ──────────────────────────────────── */}
               {hpPayloadForDisplay.rows.length > 0 && (
                 <>
-                  <div className={s.dimSectionTitle}>Breakdown por Layer</div>
+                  <div className={s.dimSectionTitle}>Breakdown por Layer {selectedHpLayer ? `· ${selectedHpLayer}` : ''}</div>
                   <table className={s.dimTable}>
                     <thead>
                       <tr>
@@ -386,8 +424,19 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                       </tr>
                     </thead>
                     <tbody>
-                      {hpPayloadForDisplay!.rows.map((row, i) => (
-                        <tr key={i}>
+                      {hpLayerRows.map((row, i) => (
+                        <tr
+                          key={i}
+                          className={`${s.hpLayerRow} ${selectedHpLayer === row.agrupLayer ? s.hpLayerRowActive : ''}`}
+                          onClick={() => setSelectedHpLayer(previous => previous === row.agrupLayer ? null : row.agrupLayer)}
+                          tabIndex={0}
+                          role="button"
+                          onKeyDown={event => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              setSelectedHpLayer(previous => previous === row.agrupLayer ? null : row.agrupLayer);
+                            }
+                          }}
+                        >
                           <td className={s.dimName}>{row.agrupLayer}</td>
                           <td className={s.hpCol}>{row.cerradas}</td>
                           <td className={s.hpCol}>{row.sinActivar}</td>
