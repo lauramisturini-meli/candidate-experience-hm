@@ -117,10 +117,19 @@ function layerEntries(map: Record<string, number>): [string, number][] {
 
 // ── Breakdown row (same style as OutSlaPanel) ─────────────────────────────────
 
-function BreakdownRow({ label, value, total, colorClass }: { label: string; value: number; total: number; colorClass: string }) {
+function BreakdownRow({ label, value, total, colorClass, isActive, onClick }: {
+  label: string; value: number; total: number; colorClass: string;
+  isActive?: boolean; onClick?: () => void;
+}) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className={s.bRow}>
+    <div
+      className={`${s.bRow} ${onClick ? s.bRowInteractive : ''} ${isActive ? s.bRowActive : ''}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={event => { if (onClick && (event.key === 'Enter' || event.key === ' ')) onClick(); }}
+    >
       <div className={s.bLabel}>{label}</div>
       <div className={s.bBarWrap}>
         <div className={`${s.bBar} ${colorClass}`} style={{ width: `${pct}%` }} />
@@ -240,16 +249,23 @@ function cleanArea(area: string): string {
 function CaseAnalysis({
   cases,
   operationalCases,
+  breakdownCases,
   pendingCases,
   scheduledCases,
+  activeContext,
+  onContextClick,
 }: {
   cases: TonhCase[];
   operationalCases: TonhCase[];
+  breakdownCases: TonhCase[];
   pendingCases: TonhCase[];
   scheduledCases: TonhCase[];
+  activeContext: { dimension: 'area' | 'rol'; value: string } | null;
+  onContextClick: (context: { dimension: 'area' | 'rol'; value: string }) => void;
 }) {
   const total = cases.length;
   const operationalTotal = operationalCases.length;
+  const breakdownTotal = breakdownCases.length;
   const withFlags = cases.filter(c => hasRealFlag(c.flags)).length;
   const casesWithTime = cases.filter(c => c.tiempoEnRolMeses !== null);
   const avgMeses = casesWithTime.length
@@ -259,8 +275,9 @@ function CaseAnalysis({
   const byMotivo  = sortedEntries(groupBy(cases, c => classifyExitMotivo(c.motivoSalida, c.principaisMotivos)));
   // The Jornada already provides these operational dimensions, so they include
   // exits awaiting their Exit Discussion as well as completed discussions.
-  const byArea    = sortedEntries(groupBy(operationalCases, c => cleanArea(c.area)));
-  const byRol     = layerEntries(groupBy(operationalCases, c => normalizeLayer(c.rol.trim())));
+  // Keep these options based on the full TA cohort after a contextual selection.
+  const byArea    = sortedEntries(groupBy(breakdownCases, c => cleanArea(c.area)));
+  const byRol     = layerEntries(groupBy(breakdownCases, c => normalizeLayer(c.rol.trim())));
   const byTempo   = sortedEntries(groupBy(operationalCases, c => timeBucket(c.tiempoEnRolMeses)));
   const operationalCasesWithTime = operationalCases.filter(c => c.tiempoEnRolMeses !== null);
 
@@ -374,7 +391,9 @@ function CaseAnalysis({
           <div className={s.breakdown}>
           <div className={s.breakdownTitle}>Por Localidade · todos os TO NH</div>
           {byArea.map(([label, val]) => (
-              <BreakdownRow key={label} label={label} value={val} total={operationalTotal} colorClass={s.barArea} />
+              <BreakdownRow key={label} label={label} value={val} total={breakdownTotal} colorClass={s.barArea}
+                isActive={activeContext?.dimension === 'area' && activeContext.value === label}
+                onClick={() => onContextClick({ dimension: 'area', value: label })} />
             ))}
           </div>
         )}
@@ -382,7 +401,9 @@ function CaseAnalysis({
           <div className={s.breakdown}>
           <div className={s.breakdownTitle}>Por Layer · todos os TO NH</div>
           {byRol.map(([label, val]) => (
-              <BreakdownRow key={label} label={label} value={val} total={operationalTotal} colorClass={s.barRol} />
+              <BreakdownRow key={label} label={label} value={val} total={breakdownTotal} colorClass={s.barRol}
+                isActive={activeContext?.dimension === 'rol' && activeContext.value === label}
+                onClick={() => onContextClick({ dimension: 'rol', value: label })} />
             ))}
           </div>
         )}
@@ -503,24 +524,37 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
 
   const isIndividualTA = taList.length === 1;
   const [selectedTa, setSelectedTa] = useState<string | null>(null);
+  const [selectedContext, setSelectedContext] = useState<{ dimension: 'area' | 'rol'; value: string } | null>(null);
   const activeTa = selectedTa ?? (isIndividualTA ? taList[0] : null);
-  const toggleTa = useCallback((ta: string) => setSelectedTa(prev => prev === ta ? null : ta), []);
+  const activeContext = selectedContext;
+  const toggleTa = useCallback((ta: string) => {
+    setSelectedTa(prev => prev === ta ? null : ta);
+    setSelectedContext(null);
+  }, []);
 
   const filteredTeamCases = useMemo(
     () => activeTa ? teamCases.filter(c => canonicalizeTa(c.ta ?? '') === activeTa) : teamCases,
     [teamCases, activeTa],
   );
+  const contextualCases = useMemo(
+    () => !activeContext ? filteredTeamCases : filteredTeamCases.filter(caseItem =>
+      activeContext.dimension === 'area'
+        ? cleanArea(caseItem.area) === activeContext.value
+        : normalizeLayer(caseItem.rol.trim()) === activeContext.value,
+    ),
+    [filteredTeamCases, activeContext],
+  );
   const analyzedCases = useMemo(
-    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'analyzed'),
-    [filteredTeamCases],
+    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'analyzed'),
+    [contextualCases],
   );
   const pendingCases = useMemo(
-    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'pending'),
-    [filteredTeamCases],
+    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'pending'),
+    [contextualCases],
   );
   const scheduledCases = useMemo(
-    () => filteredTeamCases.filter(caseItem => exitDiscussionState(caseItem) === 'scheduled'),
-    [filteredTeamCases],
+    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'scheduled'),
+    [contextualCases],
   );
 
   const tlDashboard = useMemo(
@@ -608,17 +642,23 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
       {/* ── Main two-column area ── */}
       <div className={s.main}>
         <div className={s.colLeft}>
-          {analyzedCases.length > 0 ? (
+          {contextualCases.length > 0 ? (
             <>
               <div className={s.colTitle}>
                 Análise · Exit Discussions <span className={s.colCount}>{analyzedCases.length}</span>
                 {activeTa && <span className={s.taActiveTag}>· {shortNameTN(activeTa)}</span>}
+                {activeContext && <span className={s.taActiveTag}>· {activeContext.dimension === 'area' ? 'Localidade' : 'Layer'}: {activeContext.value}</span>}
               </div>
               <CaseAnalysis
                 cases={analyzedCases}
-                operationalCases={filteredTeamCases}
+                operationalCases={contextualCases}
+                breakdownCases={filteredTeamCases}
                 pendingCases={pendingCases}
                 scheduledCases={scheduledCases}
+                activeContext={activeContext}
+                onContextClick={context => setSelectedContext(previous =>
+                  previous?.dimension === context.dimension && previous.value === context.value ? null : context
+                )}
               />
             </>
           ) : (
