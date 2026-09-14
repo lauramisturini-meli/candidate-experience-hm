@@ -93,7 +93,10 @@ function parseBu(source: unknown[][]): PcdHcBuRow[] {
   return result;
 }
 
-const PCD_TYPES = new Set(['fisica motriz', 'auditiva', 'visual', 'mental psicosocial', 'intelectual', 'rehabilitado']);
+const PCD_TYPES = new Set([
+  'fisica motriz', 'auditiva', 'visual', 'mental psicosocial',
+  'intelectual', 'rehabilitado', 'multiple', 'outra',
+]);
 
 function parseTypes(source: unknown[][]): PcdTipoRow[] {
   const result: PcdTipoRow[] = [];

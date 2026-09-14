@@ -151,7 +151,17 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, i
   const maxSla         = vagas.length ? Math.max(...vagas.map(v => v.sla)) : 0;
 
   const pctInput = ui?.metaInput ?? '';
-  const pctAtual = pctInput.trim() ? (parseFloat(pctInput.replace(',', '.')) || null) : null;
+  const pctManual = pctInput.trim() ? (parseFloat(pctInput.replace(',', '.')) || null) : null;
+  const shippingHc = hcData?.porBu.find(row => row.bu.trim().toLowerCase() === 'shipping');
+  const pctShipping = shippingHc && shippingHc.hcTotal > 0
+    ? Math.round((shippingHc.hcComDiscapacidad / shippingHc.hcTotal) * 1000) / 10
+    : null;
+  const pctAtual = pctManual ?? pctShipping;
+  const pctAtualLabel = pctManual !== null
+    ? '% PCD atual (informado manualmente)'
+    : pctShipping !== null
+      ? '% PCD atual — Shipping (base HC)'
+      : '% PCD atual (do dashboard Diversity)';
 
   const highs: string[] = useMemo(() => {
     const items: string[] = [];
@@ -356,7 +366,7 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, i
             {pctAtual === null ? (
               /* ── empty state: big input ── */
               <div className={s.goalEmpty}>
-                <span className={s.goalEmptyLabel}>% PCD atual (do dashboard Diversity)</span>
+                <span className={s.goalEmptyLabel}>{pctAtualLabel}</span>
                 <div className={s.goalEmptyRow}>
                   <input
                     className={s.goalInputBig}
@@ -377,11 +387,11 @@ export function PcdPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, i
                 <div className={s.goalBody}>
                   <div className={s.goalLeft}>
                     <span className={s.goalBigNum}>{pctAtual.toLocaleString('pt-BR')}%</span>
-                    <span className={s.goalBigLabel}>% PCD atual</span>
+                    <span className={s.goalBigLabel}>{pctAtualLabel}</span>
                     <input
                       className={s.goalInput}
                       type="text"
-                      placeholder="ex: 3,8"
+                      placeholder={pctShipping !== null ? `base: ${pctShipping.toLocaleString('pt-BR')}%` : 'ex: 3,8'}
                       value={pctInput}
                       onChange={e => onUiChange({ metaInput: e.target.value })}
                     />

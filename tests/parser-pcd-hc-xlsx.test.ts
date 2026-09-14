@@ -16,6 +16,7 @@ function workbook(): XLSX.WorkBook {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ['Distribucion Tipos de PCD ALL Meli'],
     ['Fisica(motriz)', 0.589], ['Auditiva', 0.098], ['Visual', 0.205],
+    ['Multiple', 0.007], ['Outra', 0.007],
   ]), 'Tipos');
   return wb;
 }
@@ -35,6 +36,8 @@ describe('PCD HC workbook parser', () => {
     ]));
     expect(parsed.pcdHcData?.tiposDistribucion).toEqual(expect.arrayContaining([
       expect.objectContaining({ tipo: 'Fisica(motriz)', pct: 58.9 }),
+      expect.objectContaining({ tipo: 'Multiple', pct: 0.7 }),
+      expect.objectContaining({ tipo: 'Outra', pct: 0.7 }),
     ]));
   });
 });
