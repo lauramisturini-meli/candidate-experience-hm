@@ -170,8 +170,8 @@
 .kpiFav .kpiVal { color: var(--success); }
 .kpiDesfav { border-left: 3px solid var(--danger); }
 .kpiDesfav .kpiVal { color: var(--danger); }
-.kpiNeutral { border-color: #ffe082; }
-.kpiNeutral .kpiVal { color: #c08000; }
+.kpiNeutral { border-left: 3px solid #b0bec5; }
+.kpiNeutral .kpiVal { color: #78909c; }
 
 /* Detractor callout */
 .detractorCallout {
@@ -195,7 +195,7 @@
 .dimTable tr:last-child td { border-bottom: none; }
 .dimName { color: var(--ink); width: 46%; }
 .dimFav   { color: var(--success); font-weight: 800; width: 24%; }
-.dimNeutro{ color: var(--warning); font-weight: 800; width: 20%; }
+.dimNeutro{ color: #78909c; font-weight: 800; width: 20%; }
 .dimDesf  { color: var(--danger);  font-weight: 800; width: 24%; }
 .dimFav, .dimNeutro, .dimDesf { text-align: center; vertical-align: middle; }
 .dimTable thead td { font-size: 11.5px; font-weight: 800; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.6px; padding-bottom: 8px; border-bottom: 1px solid var(--divider); }
@@ -215,7 +215,7 @@
 .dimInput::placeholder { color: var(--ink-muted); font-weight: 400; }
 .dimInput:focus { border-bottom-style: solid; }
 .dimInput:not(:placeholder-shown) { border-bottom: none; }
-.dimInputNeutro { color: var(--warning); border-bottom-color: var(--warning); }
+.dimInputNeutro { color: #78909c; border-bottom-color: #78909c; }
 .dimInputDesf   { color: var(--danger);  border-bottom-color: var(--danger);  }
 
 .kpiInput {
@@ -239,7 +239,7 @@
 
 .dimInputWrap { display: inline-flex; align-items: baseline; justify-content: center; }
 .dimInputPct  { font-size: 13.5px; font-weight: 800; margin-left: -0.05em; }
-.kpiInputNeutral { color: var(--warning); }
+.kpiInputNeutral { color: #78909c; }
 .kpiInputDesfav  { color: var(--danger);  }
 
 /* Insight column */

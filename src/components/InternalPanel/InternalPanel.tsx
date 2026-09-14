@@ -275,13 +275,13 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onSha
                       {DASH(effDesfav) || autoDesfav
                         ? <span className={s.dimInputWrap}>
                             <input
-                              className={s.dimInput}
+                              className={`${s.dimInput} ${s.dimInputNeutral}`}
                               value={pctDisplay(manualNeutro)}
                               placeholder="—"
                               style={{ width: `${Math.max(1, pctDisplay(manualNeutro).length || 1) * 0.7}em` }}
                               onChange={e => onUiChange({ dimOverrides: { ...overrides, [i]: { ...overrides[i], neutros: pctStore(e.target.value) } } })}
                             />
-                            {!DASH(manualNeutro) && <span className={s.dimInputPct}>%</span>}
+                            {!DASH(manualNeutro) && <span className={`${s.dimInputPct} ${s.dimInputPctNeutral}`}>%</span>}
                           </span>
                         : neutro}
                     </td>

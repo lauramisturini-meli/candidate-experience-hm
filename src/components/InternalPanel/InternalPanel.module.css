@@ -255,6 +255,8 @@
 .dimInput:not(:placeholder-shown) { border-bottom: none; }
 .dimInput::placeholder { color: var(--ink-muted); font-weight: 400; }
 .dimInputPct { font-size: 14px; font-weight: 700; color: var(--danger); }
+.dimInputNeutral { color: #78909c; border-bottom-color: #78909c; }
+.dimInputPctNeutral { color: #78909c; }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .footer {
