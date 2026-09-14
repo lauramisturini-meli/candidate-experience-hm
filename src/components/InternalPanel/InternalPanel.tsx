@@ -76,6 +76,7 @@ type DimOverrides = Record<number, { neutros?: string; desfav?: string }>;
 export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, isShareLoading, onUiChange }: Props) {
   const data = useMemo(() => buildMergedView(pdfs, 'internal'), [pdfs]);
 
+  const kpiFav     = ui?.kpiFav     ?? '';
   const kpiDesfav  = ui?.kpiDesfav  ?? '';
   const kpiNeutros = ui?.kpiNeutros ?? '';
   const overrides: DimOverrides = (ui?.dimOverrides ?? {}) as DimOverrides;
@@ -83,8 +84,9 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onSha
   const pctStore = (raw: string) => { const n = raw.replace(/[^0-9,.]/g, ''); return n ? n + '%' : '—'; };
   const pctDisplay = (v: string) => DASH(v) ? '' : v.replace('%', '');
 
-  const hasData = data.kpis.favorabilidade !== '—';
-  const favPct  = parsePct(data.kpis.favorabilidade);
+  const effectiveFav = kpiFav ? pctStore(kpiFav) : data.kpis.favorabilidade;
+  const hasData = !DASH(effectiveFav);
+  const favPct  = parsePct(effectiveFav);
 
   const effDesfavNum = kpiDesfav
     ? parseInt(kpiDesfav) || 0
@@ -172,10 +174,22 @@ export function InternalPanel({ meta, pdfs, ui, status, onUpload, onReset, onSha
             <div className={s.donutTitle}>Sendo 1 ruim e 5 excelente</div>
             <div className={s.donutSubtitle}>Como viveu este processo?</div>
             <div className={s.donutLegend}>
-              {hasData && (
+              {(
                 <span className={s.lgFav}>
                   <span className={s.dot} style={{ background: '#1bbc9b' }} />
-                  {data.kpis.favorabilidade} favorável
+                  {kpiFav || !DASH(data.kpis.favorabilidade)
+                    ? effectiveFav
+                    : <span className={s.lgInputRow}>
+                        <input
+                          className={s.lgInput}
+                          value={kpiFav}
+                          placeholder="—"
+                          style={{ width: `${Math.max(1, kpiFav.length || 1) * 0.65}em` }}
+                          onChange={e => onUiChange({ kpiFav: e.target.value.replace(/[^0-9,.]/g, '') })}
+                        />
+                        {kpiFav && <span className={s.lgUnit}>%</span>}
+                      </span>
+                  } favorável
                 </span>
               )}
 

@@ -198,13 +198,13 @@ function extractDimensionsInternal(rawText: string): Array<{ name: string; fav: 
 
     // Primary: look for "[count] [avg] [fav%]" — the specific table-row format
     // This avoids capturing percentages from adjacent rows
-    const rowM = after.match(/\d{1,4}[\s\n]+\d[\s\n]+(\d{1,3})%/);
+    const rowM = after.match(/\d{1,4}[\s\n]+\d[\s\n]+(\d{1,3})\s*%/);
     if (rowM) {
       const fav = rowM[1] + '%';
       // After fav%, look for up to 2 more consecutive percentages (neutral, desfav)
       const matchIndex = rowM.index ?? 0;
       const afterFav = after.slice(matchIndex + rowM[0].length, matchIndex + rowM[0].length + 60);
-      const extraPcts = [...afterFav.matchAll(/\b(\d{1,3})%\b/g)].map(x => parseInt(x[1], 10));
+      const extraPcts = [...afterFav.matchAll(/\b(\d{1,3})\s*%/g)].map(x => parseInt(x[1], 10));
       const favNum = parseInt(rowM[1], 10);
       let desfav = '—';
       if (extraPcts.length >= 2) {
@@ -220,7 +220,7 @@ function extractDimensionsInternal(rawText: string): Array<{ name: string; fav: 
     }
 
     // Fallback: first percentage within window
-    const pctM = after.match(/\b(\d{1,3})%/);
+    const pctM = after.match(/\b(\d{1,3})\s*%/);
     dims.push({
       name:   m[0].trim().replace(/\s+/g, ' '),
       fav:    pctM ? pctM[1] + '%' : '—',
@@ -232,7 +232,7 @@ function extractDimensionsInternal(rawText: string): Array<{ name: string; fav: 
   // Positional fallback: if any fav still missing, pair with ordered pcts
   if (dims.some(d => d.fav === '—')) {
     const allPcts: string[] = [];
-    const pctRe = /\b(\d{1,3})%\b/g;
+    const pctRe = /\b(\d{1,3})\s*%/g;
     let pm: RegExpExecArray | null;
     while ((pm = pctRe.exec(searchText)) !== null) allPcts.push(pm[1] + '%');
     const sorted = [...dims].sort((a, b) => a.pos - b.pos);
@@ -247,13 +247,13 @@ function extractDimensionsInternal(rawText: string): Array<{ name: string; fav: 
 
 function extractFavDesfavInternal(text: string): { fav: string | null; desfav: string | null } {
   // NPS question — Spanish or Portuguese variant
-  const npsM = text.match(/(?:Siendo\s+1\s+malo|Sendo\s+1\s+ruim)[\s\S]{0,250}?(\d{1,3})%/i);
+  const npsM = text.match(/(?:Siendo\s+1\s+malo|Sendo\s+1\s+ruim)[\s\S]{0,250}?(\d{1,3})\s*%/i);
   if (npsM) return { fav: npsM[1] + '%', desfav: null };
 
   // Fallback: find any standalone pct (50–100) before the dimension table
   const tableStart = text.search(/(?:Teniendo|Tendo)\s+en?\s+cuenta[\s\S]{0,20}afirmac/i);
   const searchArea  = tableStart > 200 ? text.slice(0, tableStart) : text.slice(0, 3000);
-  const pcts = [...searchArea.matchAll(/\b(\d{1,3})%\b/g)]
+  const pcts = [...searchArea.matchAll(/\b(\d{1,3})\s*%/g)]
     .map(m => parseInt(m[1], 10))
     .filter(v => v >= 50 && v <= 100);
   if (pcts.length) return { fav: pcts[pcts.length - 1] + '%', desfav: null };

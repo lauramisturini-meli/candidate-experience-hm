@@ -109,6 +109,7 @@ export interface TabMeta {
 export type DimOverrides = Record<number, { fav?: string; neutros?: string; desfav?: string }>;
 
 export interface TabUiState {
+  kpiFav?: string;
   kpiDesfav?: string;
   kpiNeutros?: string;
   dimOverrides?: DimOverrides;
