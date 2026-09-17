@@ -146,6 +146,7 @@
 
 /* KPI grid */
 .kpiGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+.kpiGridThree { grid-template-columns: repeat(3, 1fr); }
 .analysisCoverage {
   display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
   margin: -10px 0 22px; padding: 9px 12px;

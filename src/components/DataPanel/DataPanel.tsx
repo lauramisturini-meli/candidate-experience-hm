@@ -505,7 +505,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
             </>
           ) : (
             <>
-              <div className={s.kpiGrid}>
+              <div className={`${s.kpiGrid} ${tabId === 'external' ? s.kpiGridThree : ''}`}>
                 <div className={`${s.kpiBox} ${s.kpiTotal}`}>
                   <div className={s.kpiVal}>{data.kpis.respostas}</div>
                   <div className={s.kpiLabel}>Respostas</div>
@@ -514,7 +514,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                   <div className={s.kpiVal}>{data.kpis.favorabilidade}</div>
                   <div className={s.kpiLabel}>Favorabilidade</div>
                 </div>
-                <div className={`${s.kpiBox} ${s.kpiNeutral}`}>
+                {tabId !== 'external' && <div className={`${s.kpiBox} ${s.kpiNeutral}`}>
                   <div className={s.kpiVal}>
                     {hmAutoNeutral
                       ? `${remainingHmPct(kpiDesfav)}%`
@@ -532,7 +532,7 @@ export function DataPanel({ tabId, meta, pdfs, ui, status, onUpload, onReset, on
                       : data.kpis.neutros}
                   </div>
                   <div className={s.kpiLabel}>Neutros</div>
-                </div>
+                </div>}
                 <div className={`${s.kpiBox} ${s.kpiDesfav}`}>
                   <div className={s.kpiVal}>
                     {hmAutoDesfav
