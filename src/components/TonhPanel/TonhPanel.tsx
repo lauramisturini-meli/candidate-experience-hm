@@ -338,7 +338,7 @@ function CaseAnalysis({
         </div>
         <div className={s.summaryChip}>
           <span className={s.summaryVal}>{total}</span>
-          <span className={s.summaryLbl}>casos analisados · Exit Discussion feita</span>
+          <span className={s.summaryLbl}>casos analisados · Exit Discussions feitas</span>
         </div>
         {pendingCases.length > 0 && (
           <div
