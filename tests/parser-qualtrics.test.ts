@@ -36,3 +36,49 @@ Comprendí de manera clara y precisa los desafíos y el alcance del rol
     expect(parsed.dimensions.map(d => d.fav)).toEqual(['71%', '79%', '58%', '79%', '92%']);
   });
 });
+
+describe('parseQualtricsReport external candidate', () => {
+  it('reads individual-export NPS values instead of nearby chart-axis percentages', () => {
+    const page = `Siendo 1 malo y 5 excelente, ¿cómo viviste este proceso?
+97%
+Recuento
+0%
+30%
+70%
+100%
+Siendo 1 malo y 5 excelente, ¿cómo viviste este proceso?
+3%
+Recuento
+0%
+20%
+50%
+100%
+Favorabilidad por sentencia
+Descripción posición
+Recuento
+95%
+100%
+93%
+98%
+Desfavorabilidad por sentencia
+Descripción posición
+Recuento
+2%
+0%
+0%
+0%
+Filters
+Datos embebidos - Candidate TA Owner
+:
+Beatriz Amorim Da Silva
+Fecha inicio encuesta
+:
+This Year`;
+
+    const parsed = parseQualtricsReport(page, [page]);
+
+    expect(parsed.fav).toBe('97%');
+    expect(parsed.desfav).toBe('3%');
+    expect(parsed.filters['TA Owner']).toBe('Beatriz Amorim Da Silva');
+  });
+});

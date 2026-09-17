@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { canonicalizeTa, TEAM_TAS } from '../src/lib/ta-team';
 import { buildHighs } from '../src/lib/insights';
+import { buildMergedView } from '../src/lib/merger';
 
 describe('TA team', () => {
   it('includes the incoming team members', () => {
@@ -30,5 +31,25 @@ describe('TA team', () => {
     expect(result.join(' ')).toContain('Isabella');
     expect(result.join(' ')).toContain('Fabio');
     expect(result.join(' ')).toContain('Rafaela');
+  });
+
+  it('omits TA-name recognition from a TA-filtered external export', () => {
+    const view = buildMergedView([{
+      respostas: 2,
+      fav: '100%',
+      desfav: '0%',
+      dimensions: [],
+      comments: [
+        { score: 5, division: 'Shipping', name: 'Candidato 1', text: 'A Beatriz conduziu muito bem o processo.' },
+        { score: 5, division: 'Shipping', name: 'Candidato 2', text: 'Beatriz foi muito atenciosa.' },
+      ],
+      filters: { 'TA Owner': 'Beatriz Amorim Da Silva' },
+      overallRange: 'ALL',
+      periodLabel: '2026',
+      isHm: false,
+      fileName: 'beatriz.pdf',
+    }], 'external');
+
+    expect(view.highs.join(' ')).not.toContain('TAs citados por nome');
   });
 });

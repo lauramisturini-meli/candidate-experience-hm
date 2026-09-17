@@ -106,6 +106,15 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
 
   const isHm       = !!(primary?.isHm);
   const isInternal = tabId === 'internal';
+  // A TA-filtered Qualtrics export already attributes every comment to the
+  // same person, so repeating that person as a "TA cited by name" insight
+  // adds no analytical value.
+  const taOwners = new Set(
+    pdfs
+      .map(pdf => pdf.filters?.['TA Owner']?.trim())
+      .filter((owner): owner is string => Boolean(owner)),
+  );
+  const isIndividualExternal = tabId === 'external' && taOwners.size === 1;
 
   const rawDimensions = (primary?.dimensions?.length
     ? primary.dimensions
@@ -150,7 +159,7 @@ export function buildMergedView(pdfs: PdfData[], tabId: TabId): MergedView {
     lows    = internalInsights.lows;
     actions = internalInsights.actions;
   } else {
-    highs   = buildHighs(positives, allComments);
+    highs   = buildHighs(positives, allComments, { skipTaMentions: isIndividualExternal });
     lows    = buildLows(detractors.length >= 3 ? detractors : allComments);
     actions = buildActions(lows);
   }

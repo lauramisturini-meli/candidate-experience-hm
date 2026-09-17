@@ -112,6 +112,23 @@ function extractFavDesfav(pageText: string): { fav: string | null; desfav: strin
   return { fav, desfav };
 }
 
+/**
+ * The external Qualtrics export shows the overall score twice: once for
+ * favorability and once for unfavorability, immediately below the same NPS
+ * question.  Reading the closest percentage to the later chart headings is
+ * unsafe: those headings are surrounded by axis labels and dimension values.
+ */
+function extractOverallNps(pageText: string): { fav: string | null; desfav: string | null } {
+  const questionRe = /(?:Siendo\s+1\s+malo\s+y\s+5\s+excelente|Sendo\s+1\s+ruim\s+e\s+5\s+excelente)[\s\S]{0,180}?(\d{1,3})\s*%\s*\n\s*Recuento\b/gi;
+  const values: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = questionRe.exec(pageText.normalize('NFC'))) !== null) {
+    const value = parseInt(match[1], 10);
+    if (value >= 0 && value <= 100) values.push(`${value}%`);
+  }
+  return { fav: values[0] ?? null, desfav: values[1] ?? null };
+}
+
 function extractDimensions(pageText: string): Array<{ name: string; fav: string; desfav: string }> {
   const desfavRe   = /Desfavorabilidad[ae]?\s+por\s+(?:sentencia|pregunta|afirmaci[oó]n|quest[aã]o|senten[çc]a|dimens[aã]o|dimensi[oó]n)/i;
   const favSplitRe = /(?<!des)Favorabilidad[ae]?\s+por\s+(?:sentencia|pregunta|afirmaci[oó]n|quest[aã]o|senten[çc]a|dimens[aã]o|dimensi[oó]n)/i;
@@ -280,7 +297,7 @@ function extractRespuestasInternal(text: string): number | null {
 }
 
 function extractFilters(pageText: string): Record<string, string> {
-  const m = pageText.match(/Filtros\s*\n([\s\S]+?)(?=\n(?:Candidate Experience|Cantidad de|Pregunta abierto|$))/);
+  const m = pageText.match(/(?:Filtros|Filters)\s*\n([\s\S]+?)(?=\n(?:Candidate Experience|Cantidad de|Pregunta abierto)|$)/i);
   if (!m) return {};
   const raw = m[1].replace(/\s+/g, ' ').trim();
   const result: Record<string, string> = { raw };
@@ -393,9 +410,10 @@ export function parseQualtricsReport(fullText: string, pageTexts: string[]): Pdf
       /favorabilidad/i.test(p) && /desfavorabilidad/i.test(p)
     ) ?? normPages.find(p => /favorabilidad/i.test(p)) ?? normFirst;
 
+    const nps = extractOverallNps(summaryPage);
     const fd = extractFavDesfav(summaryPage);
-    fav    = fd.fav;
-    desfav = fd.desfav;
+    fav    = nps.fav ?? fd.fav;
+    desfav = nps.desfav ?? fd.desfav;
 
     // Use fullText for dimensions — fav and desfav sections may be on different pages
     dimensions = extractDimensions(normFull);
