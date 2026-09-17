@@ -34,15 +34,11 @@ function shortNameTN(fullName: string): string {
   return `${parts[0]} ${parts[lastIdx]}`;
 }
 
-type ExitDiscussionState = 'analyzed' | 'pending' | 'scheduled';
-
-function exitDiscussionState(caseItem: TonhCase): ExitDiscussionState {
-  // The tracking workbook stores the operational status in the macro conclusion.
-  // A case only becomes analytical input after its Exit Discussion is completed.
-  const status = caseItem.conclusoes.trim().toLowerCase();
-  if (/^pendente\s+exit\s+discussion/.test(status)) return 'pending';
-  if (/^agendad[oa]\b/.test(status)) return 'scheduled';
-  return 'analyzed';
+function hasCompletedExitDiscussion(caseItem: TonhCase): boolean {
+  // The tracking workbook's Exit Discussion link is the operational source of
+  // truth. PDFs are marked at parse time. The fallbacks retain old shared links.
+  return caseItem.hasExitDiscussion
+    ?? Boolean(caseItem.acuerdos.trim() || caseItem.origem === 'exit-discussion');
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -251,7 +247,6 @@ function CaseAnalysis({
   operationalCases,
   breakdownCases,
   pendingCases,
-  scheduledCases,
   activeContext,
   onContextClick,
 }: {
@@ -259,15 +254,13 @@ function CaseAnalysis({
   operationalCases: TonhCase[];
   breakdownCases: TonhCase[];
   pendingCases: TonhCase[];
-  scheduledCases: TonhCase[];
   activeContext: { dimension: 'area' | 'rol'; value: string } | null;
   onContextClick: (context: { dimension: 'area' | 'rol'; value: string }) => void;
 }) {
   const total = cases.length;
-  const operationalTotal = operationalCases.length;
   const breakdownTotal = breakdownCases.length;
-  const withFlags = cases.filter(c => hasRealFlag(c.flags)).length;
-  const casesWithTime = cases.filter(c => c.tiempoEnRolMeses !== null);
+  const withFlags = operationalCases.filter(c => hasRealFlag(c.flags)).length;
+  const casesWithTime = operationalCases.filter(c => c.tiempoEnRolMeses !== null);
   const avgMeses = casesWithTime.length
     ? Math.round(casesWithTime.reduce((s, c) => s + (c.tiempoEnRolMeses ?? 0), 0) / casesWithTime.length)
     : null;
@@ -340,8 +333,12 @@ function CaseAnalysis({
       {/* Summary stats */}
       <div className={s.summaryRow}>
         <div className={s.summaryChip}>
+          <span className={s.summaryVal}>{operationalCases.length}</span>
+          <span className={s.summaryLbl}>casos totais de TO NH · 2026</span>
+        </div>
+        <div className={s.summaryChip}>
           <span className={s.summaryVal}>{total}</span>
-          <span className={s.summaryLbl}>casos analisados</span>
+          <span className={s.summaryLbl}>casos analisados · Exit Discussion feita</span>
         </div>
         {pendingCases.length > 0 && (
           <div
@@ -352,19 +349,10 @@ function CaseAnalysis({
             <span className={s.summaryLbl}>exit discussions pendentes</span>
           </div>
         )}
-        {scheduledCases.length > 0 && (
-          <div
-            className={`${s.summaryChip} ${s.summaryChipScheduled}`}
-            title={scheduledCases.map(caseItem => `${caseItem.nome} · ${shortNameTN(caseItem.ta ?? '')}`).join('\n')}
-          >
-            <span className={s.summaryVal}>{scheduledCases.length}</span>
-            <span className={s.summaryLbl}>exit discussions agendadas</span>
-          </div>
-        )}
         {withFlags > 0 && (
           <div className={`${s.summaryChip} ${s.summaryChipDanger}`}>
             <span className={s.summaryVal}>{withFlags}</span>
-            <span className={s.summaryLbl}>com flags na contratação</span>
+            <span className={s.summaryLbl}>TO NH com flags na contratação</span>
           </div>
         )}
         {avgMeses !== null && (
@@ -414,7 +402,7 @@ function CaseAnalysis({
         <div className={s.breakdown}>
           <div className={s.breakdownTitle}>Tempo no Cargo</div>
           {byTempo.filter(([k]) => k !== 'N/A').map(([label, val]) => (
-            <BreakdownRow key={label} label={label} value={val} total={operationalCasesWithTime.length || operationalTotal} colorClass={s.barTempo} />
+            <BreakdownRow key={label} label={label} value={val} total={operationalCasesWithTime.length || operationalCases.length} colorClass={s.barTempo} />
           ))}
         </div>
       )}
@@ -545,15 +533,11 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
     [filteredTeamCases, activeContext],
   );
   const analyzedCases = useMemo(
-    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'analyzed'),
+    () => contextualCases.filter(hasCompletedExitDiscussion),
     [contextualCases],
   );
   const pendingCases = useMemo(
-    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'pending'),
-    [contextualCases],
-  );
-  const scheduledCases = useMemo(
-    () => contextualCases.filter(caseItem => exitDiscussionState(caseItem) === 'scheduled'),
+    () => contextualCases.filter(caseItem => !hasCompletedExitDiscussion(caseItem)),
     [contextualCases],
   );
 
@@ -654,7 +638,6 @@ export function TonhPanel({ meta, pdfs, ui, status, onUpload, onReset, onShare, 
                 operationalCases={contextualCases}
                 breakdownCases={filteredTeamCases}
                 pendingCases={pendingCases}
-                scheduledCases={scheduledCases}
                 activeContext={activeContext}
                 onContextClick={context => setSelectedContext(previous =>
                   previous?.dimension === context.dimension && previous.value === context.value ? null : context

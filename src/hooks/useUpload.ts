@@ -47,6 +47,11 @@ export function useUpload(dispatch: Dispatch<TabsAction>) {
       if (!files.length || !currentTabRef.current) return;
       const tabId = currentTabRef.current;
 
+      // TO NH uploads are current snapshots. Clear the prior upload once per
+      // selected batch so the Jornada and Exit Discussions selected together
+      // are the only sources considered by the panel.
+      if (tabId === 'tonh') dispatch({ type: 'CLEAR_TAB_DATA', tabId });
+
       let added = 0;
       let totalComments = 0;
 

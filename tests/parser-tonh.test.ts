@@ -27,6 +27,7 @@ describe('TO NH Exit Discussion parser', () => {
       nome: 'Pessoa 2026',
       dataSaida: '15/03/2026',
       anoSaida: 2026,
+      hasExitDiscussion: true,
     });
   });
 

@@ -144,6 +144,7 @@ export function parseTonhTrackingReport(wb: XLSX.WorkBook, fileName: string): Pd
         dataSaida: exitDate.label,
         anoSaida: exitDate.year,
         origem: 'base',
+        hasExitDiscussion: Boolean(text(cell(table, row, /^exit discussion/))),
       });
     }
   }
@@ -160,6 +161,7 @@ export function parseTonhTrackingReport(wb: XLSX.WorkBook, fileName: string): Pd
     isHm: false,
     fileName,
     isTonhExit: true,
+    tonhSource: 'tracking',
     tonhCases: cases,
   };
 }

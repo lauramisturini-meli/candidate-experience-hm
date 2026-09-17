@@ -6,16 +6,21 @@ const initialState: TabsState = Object.fromEntries(
   TAB_IDS.map(id => [id, { pdfs: [] }])
 ) as unknown as TabsState;
 
-function tabsReducer(state: TabsState, action: TabsAction): TabsState {
+export function tabsReducer(state: TabsState, action: TabsAction): TabsState {
   switch (action.type) {
     case 'ADD_PDF':
-      return { ...state, [action.tabId]: { pdfs: [...state[action.tabId].pdfs, action.pdf] } };
+      return {
+        ...state,
+        [action.tabId]: { ...state[action.tabId], pdfs: [...state[action.tabId].pdfs, action.pdf] },
+      };
     case 'REMOVE_PDF': {
       const pdfs = state[action.tabId].pdfs.filter((_, i) => i !== action.index);
       return { ...state, [action.tabId]: { pdfs } };
     }
     case 'RESET_TAB':
       return { ...state, [action.tabId]: { pdfs: [] } };
+    case 'CLEAR_TAB_DATA':
+      return { ...state, [action.tabId]: { ...state[action.tabId], pdfs: [] } };
     case 'HYDRATE':
       return { ...state, ...action.state };
     case 'SET_UI':

@@ -45,6 +45,7 @@ describe('TO NH case consolidation', () => {
       comentarios: 'Relato detalhado da conversa.',
       conclusoes: 'Conclusão detalhada.',
       acuerdos: 'Acompanhar o plano de ação.',
+      hasExitDiscussion: true,
       anoSaida: 2026,
       origem: 'exit-discussion',
       fileName: 'exit-discussion.pdf',

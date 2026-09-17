@@ -94,6 +94,7 @@ export interface PdfData {
   pcdHcData?: PcdHcData;
   outSlaPayload?: OutSlaPayload;
   isTonhExit?: boolean;
+  tonhSource?: 'tracking' | 'exit-discussion';
   tonhCases?: TonhCase[];
   tonhDashboard?: TonhLayerDashboard;
 }
@@ -124,6 +125,7 @@ export type TabsAction =
   | { type: 'ADD_PDF'; tabId: TabId; pdf: PdfData }
   | { type: 'REMOVE_PDF'; tabId: TabId; index: number }
   | { type: 'RESET_TAB'; tabId: TabId }
+  | { type: 'CLEAR_TAB_DATA'; tabId: TabId }
   | { type: 'HYDRATE'; state: TabsState }
   | { type: 'SET_UI'; tabId: TabId; ui: Partial<TabUiState> };
 
@@ -179,6 +181,7 @@ export interface TonhCase {
   dataSaida?: string;
   anoSaida?: number;
   origem?: 'base' | 'exit-discussion';
+  hasExitDiscussion?: boolean;
 }
 
 export interface TonhMonthlyPoint {

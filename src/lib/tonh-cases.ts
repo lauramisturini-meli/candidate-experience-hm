@@ -57,6 +57,7 @@ function mergePair(first: TonhCase, second: TonhCase): TonhCase {
     ta: prefer(base.ta, discussion.ta) || undefined,
     dataSaida: prefer(base.dataSaida, discussion.dataSaida) || undefined,
     anoSaida: base.anoSaida ?? discussion.anoSaida,
+    hasExitDiscussion: Boolean(base.hasExitDiscussion || discussion.hasExitDiscussion),
     panelEntrevistador: prefer(discussion.panelEntrevistador, base.panelEntrevistador),
     flags: prefer(discussion.flags, base.flags),
     comentarios: prefer(discussion.comentarios, base.comentarios),

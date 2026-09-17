@@ -20,6 +20,9 @@ function workbook(rows: unknown[][]): XLSX.WorkBook {
 describe('TO NH tracking workbook parser', () => {
   const wb = workbook([
     HEADER,
+    // A TO NH is operationally valid from the tracking data; an Exit Discussion
+    // link is not required for it to be counted.
+    ['2026-08-03', 'SCSB_EBA-SC - Sao Bernardo Campo SSP17', 'JEBER MACHADO, THIAGO', 'Sr Team Leader - Shipping', 4, 'rone.firmino@meli.com', 'Consultoria', 'GLAUCIANE SANTOS ANDRADE', 'RONE FIRMINO', 'M', 'SIM', 'SIM', 'Adaptacao a Rotina/Lideranca', 'Purga nao solicitada por erro de processo', '', '2026-09-10', 38, 'Despido', 'No Aplica', ''],
     ['2026-01-01', 'SP', 'HM 1', 'Team Leader - Shipping', 1, 'a@meli.com', 'Fonte', 'NAVARRO SILVA MARCON, LETICIA', 'Pessoa A', 'F', 'SIM', 'SIM', 'Adaptação a Rotina/Liderança', 'Dificuldade com a rotina', 'Exit Discussion', '2026-03-01', 60, 'Renuncia', 'Outro trabalho', ''],
     ['2026-01-01', 'RJ', 'HM 2', 'Supervisor', 2, 'b@meli.com', 'Fonte', 'TA HISTÓRICA', 'Pessoa B', 'M', 'SIM', 'SIM', 'Compliance', 'Conduta inadequada', 'Exit Discussion', '2026-02-01', 31, 'Despido', 'No Aplica', ''],
     ['2025-01-01', 'BA', 'HM 4', 'Analista', 3, 'd@meli.com', 'Fonte', 'ISABELLA NOGUEIRA SIMAS', 'Pessoa de 2025', 'F', 'SIM', 'SIM', 'Compliance', 'Caso antigo', 'Exit Discussion', '2025-02-01', 31, 'Renuncia', 'Outro trabalho', ''],
@@ -32,13 +35,21 @@ describe('TO NH tracking workbook parser', () => {
 
   it('keeps 2026 TO NH cases even when their owner is no longer on the current team', () => {
     const parsed = parseTonhTrackingReport(wb, 'jornada.xlsx');
-    expect(parsed.tonhCases).toHaveLength(2);
-    expect(parsed.tonhCases?.[0]).toMatchObject({
+    expect(parsed.tonhCases).toHaveLength(3);
+    expect(parsed.tonhCases?.find(item => item.nome === 'RONE FIRMINO')).toMatchObject({
+      dataSaida: '2026-09-10',
+      anoSaida: 2026,
+      tiempoEnRolMeses: 1.2,
+      acuerdos: '',
+      hasExitDiscussion: false,
+    });
+    expect(parsed.tonhCases?.find(item => item.nome === 'Pessoa A')).toMatchObject({
       ta: 'Leticia Navarro Silva Marcon',
       tiempoEnRolMeses: 2,
       motivoSalida: 'Renuncia — Outro trabalho',
       anoSaida: 2026,
       dataSaida: '2026-03-01',
+      hasExitDiscussion: true,
     });
     expect(parsed.tonhCases?.find(item => item.nome === 'Pessoa B')).toMatchObject({
       ta: 'TA HISTÓRICA',

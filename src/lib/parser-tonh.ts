@@ -123,6 +123,7 @@ function parseCasePage(page: string, fileName: string, fallbackYear?: number | n
     dataSaida: exitDate.label,
     anoSaida: exitDate.year ?? undefined,
     origem: 'exit-discussion',
+    hasExitDiscussion: true,
   };
 }
 
@@ -193,6 +194,7 @@ export function parseTonhReport(
     isHm: false,
     fileName,
     isTonhExit: true,
+    tonhSource: 'exit-discussion',
     tonhCases,
   };
 }
